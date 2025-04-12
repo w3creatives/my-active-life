@@ -1,0 +1,37 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('team_membership_invites', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->bigInteger('prospective_member_id')->index('index_team_membership_invites_on_prospective_member_id');
+            $table->bigInteger('team_id')->index('index_team_membership_invites_on_team_id');
+            $table->bigInteger('event_id')->nullable()->index('index_team_membership_invites_on_event_id');
+            $table->timestamp('created_at');
+            $table->timestamp('updated_at');
+
+            $table->unique(['prospective_member_id', 'team_id', 'event_id'], 'idx_pf_t_e_irequests');
+            $table->index(['prospective_member_id', 'team_id'], 'idx_pm_t_irequests');
+        });
+        DB::statement("alter table \"team_membership_invites\" add column \"status\" t_team_request null default 'invite_to_join_issued'");
+        DB::statement("create index \"index_team_membership_invites_on_status\" on \"team_membership_invites\" (\"status\")");
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('team_membership_invites');
+    }
+};
