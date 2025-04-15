@@ -40,6 +40,15 @@ class UserFollowsController extends BaseController
         }
         
         $users = EventParticipation::where('event_id',$eventId)
+        ->whereHas('user', function($query) use ($searchTerm){
+            if($searchTerm) {
+                $query->where('first_name','LIKE',"{$searchTerm}%")
+                ->orWhere('last_name','LIKE',"{$searchTerm}%")
+                ->orWhere('display_name','LIKE',"{$searchTerm}%");
+            }
+            
+            return $query;
+        })
         ->simplePaginate($pageLimit)
           ->through(function ($participation) use($user,$eventId){
               $member = $participation->user;
