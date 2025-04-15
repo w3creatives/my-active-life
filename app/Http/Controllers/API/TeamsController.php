@@ -235,8 +235,11 @@ class TeamsController extends BaseController
         
         $users = $team->memberships()->where('event_id', $request->event_id)->with('user')->get();
         
-        $users = $users->map(function($item) use($request,$startOfYear, $endOfYear,$year){
+        $users = $users->map(function($item) use($request, $startOfYear, $endOfYear, $year, $team){
             $user = $item->user->only(['id','display_name']);
+            
+            // Add is_admin flag
+            $user['is_admin'] = $team->owner_id === $item->user->id;
             
             $point = $item->user->monthlyPoints()->selectRaw('SUM(amount) as totalPoint')
             ->hasEvent($request->event_id)
@@ -818,7 +821,7 @@ class TeamsController extends BaseController
             return $this->sendError('User is not a member of given team', ['error'=>'User is not a member of given team']);
         }
         
-         $team->fill(['owner_id' => $member->user_id]);
+         $team->fill(['owner_id' => $member->user_id])->save();
                
         return $this->sendResponse([], 'Team admin role has been transferred');
     }
