@@ -181,7 +181,7 @@ class UserFollowsController extends BaseController
             
         }
         
-    public function followinRequests(Request $request) : JsonResponse
+    public function followingRequests(Request $request) : JsonResponse
     {
         $user = $request->user();
    
@@ -200,7 +200,12 @@ class UserFollowsController extends BaseController
         
         $pageLimit = $request->page_limit??100;
         
-        $followingRequests = $user->followRequests()->where('event_id',$request->event_id)
+        // $query = $user->followRequests()->where('event_id', $request->event_id);
+        // dd($query->toSql());
+        
+        $followingRequests = $user->followRequests()
+        ->whereIn('status',['request_to_follow_issued','request_to_follow_ignored'])
+        ->where('event_id',$request->event_id)
         ->simplePaginate($pageLimit)
          ->through(function ($item) use($user){
               $follower = $item->follower;
@@ -308,7 +313,13 @@ class UserFollowsController extends BaseController
         
         if($isAccepted) {
             
-        $user->followers()->create(['event_id' => $request->event_id,'follower_id' => $request->user_id]);
+        $hasFollower = $user->followers()->where(['event_id' => $request->event_id,'follower_id' => $request->user_id])->count();
+        
+        if($hasFollower) {
+            return $this->sendResponse([], 'Following request is already accepted');
+        }
+            
+        $user->followers()->updateOrCreate(['event_id' => $request->event_id,'follower_id' => $request->user_id],['event_id' => $request->event_id,'follower_id' => $request->user_id]);
          return $this->sendResponse([], 'Following request accepted');
         }
         
