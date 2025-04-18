@@ -2,27 +2,39 @@
 
 namespace App\Services;
 
+use App\Interfaces\DataSource;
 use Illuminate\Support\Facades\Http;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
-class GarminService
+class GarminService  implements DataSource
 {
     private $consumerKey;
     private $consumerSecret;
     private $healthApiUrl = 'https://apis.garmin.com/wellness-api/rest';
-    
+    private $baseUrl = "https://connectapi.garmin.com/oauth-service/oauth/";
+
     public function __construct()
     {
         $this->consumerKey = config('services.garmin.consumer_key');
         $this->consumerSecret = config('services.garmin.consumer_secret');
     }
-    
+
+    public function authUrl() {}
+
+    public function authorize($code) {}
+
+    public function refreshToken($refreshToken) {}
+
+    public function activities() {}
+
+    public function verifyWebhook() {}
+
     public function getUserActivities($accessToken, $accessTokenSecret, $startTime, $endTime)
     {
         try {
             $url = $this->healthApiUrl . '/dailies';
-            
+
             $params = [
                 'oauth_consumer_key' => $this->consumerKey,
                 'oauth_token' => $accessToken,
@@ -40,7 +52,7 @@ class GarminService
             $response = Http::withHeaders([
                 'Authorization' => $this->buildAuthorizationHeader($params)
             ])->get($url . '?' . http_build_query($params));
-            
+
             dd($response->json());
 
             if (!$response->successful()) {
@@ -52,7 +64,6 @@ class GarminService
             }
 
             return $response->json();
-
         } catch (Exception $e) {
             Log::error('Garmin Service Error', [
                 'message' => $e->getMessage(),

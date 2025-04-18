@@ -3,54 +3,63 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Request;
-use Exception;
 use Carbon\Carbon;
 
-class StravaService
-{
+use App\Interfaces\DataSource;
 
+class StravaService implements DataSource
+{
     private $apiUrl;
+
     private $accessToken;
-    
+
     private $clientId;
-    
+
     private $redirectUrl;
-    
-    
+
+    private $clientSecret;
+
+    private $authUrl = "https://www.strava.com/oauth/authorize";
+
+    private $authTokenUrl = "https://www.strava.com/oauth/token";
+
+    private $authResponse;
+
     private $modalities = [
         'run' => ['Run', 'VirtualRun'],
         'walk' => ['Walk'],
-        'bike'=> ['EBikeRide', 'MountainBikeRide', 'EMountainBikeRide', 'GravelRide', 'Handcycle', 'Ride', 'VirtualRide'],
+        'bike' => ['EBikeRide', 'MountainBikeRide', 'EMountainBikeRide', 'GravelRide', 'Handcycle', 'Ride', 'VirtualRide'],
         'swim' => ['Swim'],
         'other' => ['Elliptical', 'Hike', 'StairStepper', 'Snowshoe']
     ];
-    
+
     public function __construct($accessToken = null)
     {
-        $this->apiUrl = env('STRAVA_API_BASE_URL');
         $this->accessToken = $accessToken;
-        
-        $this->clientId = env('STRAVA_CLIENT_ID');
-        $this->redirectUrl = env('STRAVA_REDIRECT_URI');
-        $this->clientSecret = env('STRAVA_CLIENT_SECRET');
+
+        $this->apiUrl = config('services.strava.api_url');
+        $this->clientId = config('services.strava.client_id');
+        $this->redirectUrl = config('services.strava.redirect_url');
+        $this->clientSecret = config('services.strava.client_secret');
     }
-    
-    public function findModality($modality, $type){
-        
+
+    public function findModality($modality, $type)
+    {
         $modalities = $this->modalities[$modality];
-        
+
         return in_array($type, $modalities);
     }
-    
-    public function setAccessToken($accessToken){
+
+    public function setAccessToken($accessToken)
+    {
         $this->accessToken = $accessToken;
-        
+
         return $this;
     }
-    
-    public function authUrl($state='web'){
-         return "https://www.strava.com/oauth/authorize?" . http_build_query([
+
+    public function authUrl($state = 'web')
+    {
+        return $this->authUrl."?" . http_build_query([
             'client_id' => $this->clientId,
             'response_type' => 'code',
             'redirect_uri' => $this->redirectUrl,
@@ -59,49 +68,64 @@ class StravaService
             'state' => $state
         ]);
     }
-    
-    public function authorize($code){
- 
-        $response = Http::post('https://www.strava.com/oauth/token',[
+
+    public function authorize($code)
+    {
+
+        $response = Http::post($this->authTokenUrl, [
             'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
             'code' => $code,
             'grant_type' => 'authorization_code',
         ]);
-        
-        if($response->successful()){
-            return $response->object();
+
+        if ($response->successful()) {
+            $this->authResponse = $response->object();
         }
-        
-        return false;
+
+        $this->authResponse = null;
+
+        return $this;
     }
-    
-    function activities($date = null, $page=1)
+
+    public function response()
     {
-         $date = is_null($date)?Carbon::now():Carbon::parse($date);
-        
+        return $this->authResponse;
+    }
+
+    public function refreshToken($refreshToken) {}
+
+    function activities($date = null, $page = 1)
+    {
+        $date = is_null($date) ? Carbon::now() : Carbon::parse($date);
+
         $startOfDay = $date->copy()->startOfDay()->timestamp;
         $endOfDay = $date->copy()->endOfDay()->timestamp;
-       // dd($date->copy()->startOfDay(), $date->copy()->endOfDay());
+        // dd($date->copy()->startOfDay(), $date->copy()->endOfDay());
         $endpoint = $this->apiUrl . 'athlete/activities';
-        
+
         //$startOfDay = strtotime('today midnight');
         //$endOfDay = strtotime('tomorrow midnight') - 1;
-    
+
         $params = [
             'after' => $startOfDay,
             'before' => $endOfDay,
             'per_page' => 30,
             'page' => $page
         ];
-    
+
         $url = $endpoint . '?' . http_build_query($params);
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer '. $this->accessToken
+            'Authorization' => 'Bearer ' . $this->accessToken
         ])->get($url);
-        if($response->successful()){
-        return $response->object();
+        if ($response->successful()) {
+            return $response->object();
         }
         return [];
+    }
+
+    public function verifyWebhook()
+    {
+        return true;
     }
 }

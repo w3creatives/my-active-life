@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Interfaces\DataSource;
+use App\Services\StravaService;
 use Illuminate\Support\ServiceProvider;
 
 final class AppServiceProvider extends ServiceProvider
@@ -13,7 +15,15 @@ final class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        app()->bind(
+            DataSource::class,
+            function ($app) {
+                return collect([
+                    'strava' => app(StravaService::class),
+                    'garmin' => app(StravaService::class),
+                ]);
+            }
+        );
     }
 
     /**
