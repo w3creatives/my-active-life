@@ -10,7 +10,10 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 use Carbon\Carbon;
-use App\Services\UserService;
+use App\Services\{
+    UserService,
+    EventService
+};
 use App\Models\{
     User,
     DataSource,
@@ -23,12 +26,28 @@ class ProfilesController extends BaseController
 {
     public function show(Request $request, UserService $userService): JsonResponse
     {
+        $user = $request->user();
         
-        $user = $userService->basic($request);
+        $basicProfile = $userService->basic($request);
+        unset($basicProfile['display_name']);
         
-        $user['timezones'] = $userService->timezones();
+        // Add additional fields similar to login endpoint
+        $preferredTeam = Team::where(function($query) use ($user){
+            return $query->where('owner_id', $user->id)->where('event_id', $user->preferred_event_id)
+            ->orWhereHas('memberships', function($query) use($user) {
+                return $query->where('user_id', $user->id)->where('event_id', $user->preferred_event_id);
+            });
+        })->first();
+        
+        $basicProfile['id'] = $user->id;
+        $basicProfile['name'] = $user->display_name;
+        $basicProfile['has_team'] = !!$preferredTeam;
+        $basicProfile['preferred_team_id'] = $preferredTeam ? $preferredTeam->id : NULL;
+        $basicProfile['preferred_team'] = $preferredTeam;
+        
+        $basicProfile['timezones'] = $userService->timezones();
          
-        return $this->sendResponse($user, 'Response');
+        return $this->sendResponse($basicProfile, 'Response');
     }
     
     public function all(Request $request, UserService $userService){
@@ -130,7 +149,7 @@ class ProfilesController extends BaseController
     }
     
     
-    public function destroy(Request $request) : JsonResponse 
+    public function destroy(Request $request, EventService $eventService) : JsonResponse 
     {
         $user = $request->user();
         
@@ -138,7 +157,12 @@ class ProfilesController extends BaseController
             'data_source_id' => [
                 'required'
             ],
+            'synced_mile_action' => 'required|in:preserve,delete'
         ]);
+        
+        if($request->synced_mile_action == 'delete'){
+            $eventService->deleteSourceSyncedMile($user,$request->data_source_id);
+        }
         
        $profile = $user->profiles()->where('data_source_id', $request->data_source_id)->first();
        

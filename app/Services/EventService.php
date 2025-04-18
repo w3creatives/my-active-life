@@ -380,4 +380,13 @@ class EventService
             $team->achievements()->create(['achievement' => 'best_day','event_id' => $event->id,'accomplishment' => $bestDay->amount,'date' => $bestDay->date]); 
         }
     }
+    
+    public function deleteSourceSyncedMile($user, $dataSourceId){
+        $participations = $user->participations()->get();
+        
+        foreach($participations as $participation){
+            $user->points()->where('event_id', $participation->event->id)->where('data_source_id',$dataSourceId)->delete();
+            $this->createOrUpdateUserPoint($user, $participation->event);
+        }
+    }
 }

@@ -76,7 +76,7 @@ class TeamsController extends BaseController
                 }
                 
                 if($searchTerm) {
-                    $query->where('name','LIKE',"{$searchTerm}%");
+                    $query->where('name','ILIKE',"{$searchTerm}%");
                 }
            
                return $query;
@@ -212,6 +212,8 @@ class TeamsController extends BaseController
        ->where('id', $request->team_id)
        ->first();
        
+     //  dd($team,$user->id);
+       
        if(is_null($team)){
             return $this->sendError('Event or Team not found.', ['error'=>'User is not associated with this event or team']);
        }
@@ -310,6 +312,11 @@ class TeamsController extends BaseController
                                 return false;
                            }
                            
+                        $membership = $member->participations()->where(['event_id' => $request->event_id])->count();
+                           if(!$membership){
+                               $fail("Unfortunately, user {$value} is not participating in the event");
+                               return false;
+                           }
                          
                         return true;
                     }
@@ -845,7 +852,7 @@ class TeamsController extends BaseController
         ->where(function($query) use($email){
             
             if($email) {
-                return $query->where('email','LIKE','%'.$email.'%');
+                return $query->where('email','ILIKE','%'.$email.'%');
             }
             
             return $query;
