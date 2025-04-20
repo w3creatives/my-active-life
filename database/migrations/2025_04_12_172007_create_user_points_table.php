@@ -19,16 +19,17 @@ return new class extends Migration
             $table->bigInteger('user_id')->nullable()->index('index_user_points_on_user_id');
             $table->bigInteger('data_source_id')->nullable()->index('index_user_points_on_data_source_id');
             $table->bigInteger('event_id')->nullable()->index('index_user_points_on_event_id');
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
             $table->string('transaction_id')->nullable()->index('index_user_points_on_transaction_id');
             $table->string('note', 100)->nullable();
+            $table->string('modality', 100)->nullable()->default('run');
+            $table->timestamp('created_at');
+            $table->timestamp('updated_at');
 
             $table->index(['date', 'transaction_id'], 'index_user_points_on_date_and_transaction_id');
             $table->index(['event_id', 'user_id'], 'index_user_points_on_event_id_and_user_id');
             $table->index(['event_id', 'user_id', 'date'], 'index_user_points_on_event_id_and_user_id_and_date');
         });
-        DB::statement("alter table \"user_points\" add column \"modality\" modality null default 'run'");
+        //DB::statement("alter table \"user_points\" add column \"modality\" modality null default 'run'");
         DB::statement("create index \"index_user_points_on_user_id_and_date_and_modality\" on \"user_points\" (\"user_id\", \"date\", \"modality\")");
     }
 

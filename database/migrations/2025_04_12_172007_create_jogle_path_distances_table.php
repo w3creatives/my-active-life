@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('created_at');
             $table->timestamp('updated_at');
 
-            $table->spatialIndex(['distance'], 'index_jogle_path_distances_on_distance');
+            $table->index(['distance'], 'index_jogle_path_distances_on_distance');
         });
     }
 

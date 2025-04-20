@@ -17,13 +17,14 @@ return new class extends Migration
             $table->bigInteger('prospective_member_id')->index('index_team_membership_invites_on_prospective_member_id');
             $table->bigInteger('team_id')->index('index_team_membership_invites_on_team_id');
             $table->bigInteger('event_id')->nullable()->index('index_team_membership_invites_on_event_id');
+            $table->string('status')->nullable()->default('invite_to_join_issued');
             $table->timestamp('created_at');
             $table->timestamp('updated_at');
 
             $table->unique(['prospective_member_id', 'team_id', 'event_id'], 'idx_pf_t_e_irequests');
             $table->index(['prospective_member_id', 'team_id'], 'idx_pm_t_irequests');
         });
-        DB::statement("alter table \"team_membership_invites\" add column \"status\" t_team_request null default 'invite_to_join_issued'");
+        //DB::statement("alter table \"team_membership_invites\" add column \"status\" t_team_request null default 'invite_to_join_issued'");
         DB::statement("create index \"index_team_membership_invites_on_status\" on \"team_membership_invites\" (\"status\")");
     }
 

@@ -23,8 +23,6 @@ return new class extends Migration
             $table->string('registration_url')->default('#');
             $table->integer('team_size')->default(4);
             $table->bigInteger('organization_id')->nullable()->index('index_events_on_organization_id');
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
             $table->integer('supported_modalities')->nullable()->default(0);
             $table->boolean('open')->nullable();
             $table->integer('template')->nullable()->default(1);
@@ -32,8 +30,11 @@ return new class extends Migration
             $table->string('bibs_name', 50)->nullable();
             $table->string('event_group', 100)->nullable();
             $table->integer('calendar_days')->nullable();
+            $table->string('event_type')->nullable()->default('regular');
+            $table->timestamp('created_at');
+            $table->timestamp('updated_at');
         });
-        DB::statement("alter table \"events\" add column \"event_type\" event_type null default 'regular'");
+        //DB::statement("alter table \"events\" add column \"event_type\" event_type null default 'regular'");
     }
 
     /**

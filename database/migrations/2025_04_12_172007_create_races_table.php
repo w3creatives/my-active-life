@@ -19,12 +19,13 @@ return new class extends Migration
             $table->date('start_date')->default('1970-01-01');
             $table->date('end_date')->default('1971-01-01');
             $table->float('total_points')->default(0);
+            $table->string('virtual_race_type')->nullable()->default('rte');
             $table->timestamp('created_at');
             $table->timestamp('updated_at');
             $table->bigInteger('event_id')->nullable()->index('index_races_on_event_id');
             $table->string('social_hashtags')->nullable();
         });
-        DB::statement("alter table \"races\" add column \"virtual_race_type\" t_virtual_race_type null default 'rte'");
+        //DB::statement("alter table \"races\" add column \"virtual_race_type\" t_virtual_race_type null default 'rte'");
     }
 
     /**

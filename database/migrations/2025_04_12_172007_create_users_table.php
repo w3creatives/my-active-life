@@ -39,18 +39,20 @@ return new class extends Migration
             $table->string('state')->nullable()->index('index_users_on_state');
             $table->string('country')->nullable()->index('index_users_on_country');
             $table->string('zipcode')->nullable()->index('index_users_on_zipcode');
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
             $table->timestamp('announcements_last_read_at')->nullable();
             $table->jsonb('settings')->default('{}');
             $table->timestamp('broadcasts_last_read_at')->nullable();
             $table->string('notes', 1000)->nullable();
             $table->string('avatar_type')->nullable();
+            $table->string('gender', 100)->nullable()->default('unknown');
+            $table->string('shirt_size', 100)->nullable();
+            $table->timestamp('created_at');
+            $table->timestamp('updated_at');
 
             $table->unique(['email'], 'index_users_on_email');
         });
-        DB::statement("alter table \"users\" add column \"gender\" gender null default 'unknown'");
-        DB::statement("alter table \"users\" add column \"shirt_size\" shirt_size null");
+        //DB::statement("alter table \"users\" add column \"gender\" gender null default 'unknown'");
+        //DB::statement("alter table \"users\" add column \"shirt_size\" shirt_size null");
     }
 
     /**

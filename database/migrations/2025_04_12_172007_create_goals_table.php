@@ -19,9 +19,10 @@ return new class extends Migration
             $table->float('distance')->nullable();
             $table->integer('time')->nullable();
             $table->integer('duration')->nullable();
+            $table->string('measurement')->nullable()->default('time');
             $table->bigInteger('user_id')->nullable()->index('index_goals_on_user_id');
         });
-        DB::statement("alter table \"goals\" add column \"measurement\" t_goal_type null default 'time'");
+        //DB::statement("alter table \"goals\" add column \"measurement\" t_goal_type null default 'time'");
     }
 
     /**
