@@ -9,15 +9,13 @@ use App\Http\Controllers\{
     GarminAuthController
 };
 
-use App\Http\Controllers\Shopify\{
-    WebhooksController,
-    OrdersController
-};
 use App\Http\Controllers\Webhook\{
     TrackersController,
     TestTrackersController,
     HubspotsController,
-    UserActivitiesController
+    UserActivitiesController,
+    WebhooksController,
+    OrdersController
 };
 
 Route::group(['prefix' => 'tracker'], function(){

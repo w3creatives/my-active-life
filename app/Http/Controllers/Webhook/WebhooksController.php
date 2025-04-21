@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Shopify;
+namespace App\Http\Controllers\Webhook;
 use App\Http\Controllers\Controller;
 use App\Models\ShopifyOrder;
 use Illuminate\Http\Request;
