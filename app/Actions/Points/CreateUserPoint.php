@@ -2,18 +2,23 @@
 
 namespace App\Actions\Points;
 
-use App\Models\User;
 use App\Services\UserPointService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class CreateUserPoint
 {
     use AsAction;
-    use UserPointService;
 
-    public function handle(User $user, $data)
+    private $userPointService;
+
+    public function __construct(UserPointService $userPointService)
     {
-        $this->createOrUpdate($data);
+        $this->userPointService = $userPointService;
+    }
+
+    public function handle($user, $data)
+    {
+        $this->userPointService->createOrUpdate($user, $data);
     }
 
     public function rules(): array

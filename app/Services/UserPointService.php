@@ -2,31 +2,32 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
 use App\Models\User;
 use App\Repositories\UserPointRepository;
 
-trait UserPointService
+class UserPointService
 {
 
-    use UserPointRepository;
+    private $userPointRepository;
 
-    private $user;
-
-    public function __construct(
-        User $user
-    ) {
-        $this->user = $user;
+    public function __construct(UserPointRepository $userPointRepository)
+    {
+        $this->userPointRepository = $userPointRepository;
     }
 
-    public function createOrUpdate(array $point, bool $skipUpdate = false)
+    public function createOrUpdate(object $user, array $point, bool $skipUpdate = false)
     {
+        $point['date'] = Carbon::parse($point['date'])
+            ->setTimezone($user->time_zone ?? 'UTC');
+
         $condition = $skipUpdate ? [] : [
-            'date' => $point['data'],
+            'date' => $point['date'],
             'modality' => $point['modality'],
             'event_id' => $point['eventId'],
             'data_source_id' => $point['dataSourceId']
         ];
 
-        $this->create($point, $condition);
+        $this->userPointRepository->create($user, $point, $condition);
     }
 }
