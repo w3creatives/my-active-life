@@ -70,7 +70,7 @@ class EventsController extends BaseController
             $events = Event::where('event_type', '!=', 'promotional')->where('start_date','<=', $currentDate)->whereHas('participations', function($query) use($user, $currentDate){
                 return $query->where('user_id',$user->id);
             })
-            ->with('participations', function($query) use($user){
+            ->with('participations', function($query) use($user, $currentDate){
                 return $query->where('user_id',$user->id)->where('subscription_end_date','>=',$currentDate);
             })
             ->where(function($query) use($listType){

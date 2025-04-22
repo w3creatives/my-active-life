@@ -449,6 +449,7 @@ class UserPointsController extends BaseController
        foreach($points as $point){
            $note = $point->note;
            $data[] = [
+               'id' => $point->id,
                'modality' => $point->modality,
                'amount' => $point->amount,
                'data_source_id' => $point->data_source_id
@@ -909,57 +910,15 @@ class UserPointsController extends BaseController
         }
         */
         
-        switch( $request->data_source ) {
+        switch($request->data_source) {
             case 'fitbit':
                 return $this->syncFitbitPoints($sourceProfile, $request, $eventService);
                 
             case 'garmin':
-                try {
-                    $response = Http::post('https://staging-tracker.runtheedge.com/users/profiles/connect_device', [
-                        'user_id' => $request->user()->id,
-                        'event_id' => $request->get('event_id'),
-                        'sync_start_date' => $request->get('sync_start_date'),
-                        'data_source' => 'garmin'
-                    ]);
-                    
-                    if (!$response->successful()) {
-                        return $this->sendError('ERROR', ['error' => 'Unable to process your request.']);
-                    }
-                    
-                    $responseData = [
-                        'processed_job_id' => $response->json()['data']
-                    ];
-
-                    return $this->sendResponse($responseData, 'The data sync request has been successfully initiated.');
-                    
-                } catch (\Exception $e) {
-                    \Log::error('Device connection error: ' . $e->getMessage());
-                    return $this->sendError('ERROR', ['error' => 'Unable to connect to device']);
-                }
+                return $this->syncGarminPoints($sourceProfile, $request, $eventService, $garminService);
                 
             case 'strava':
-                try {
-                    $response = Http::post('https://staging-tracker.runtheedge.com/users/profiles/connect_device', [
-                        'user_id' => $request->user()->id,
-                        'event_id' => $request->get('event_id'),
-                        'sync_start_date' => $request->get('sync_start_date'),
-                        'data_source' => 'strava'
-                    ]);
-                    
-                    if (!$response->successful()) {
-                        return $this->sendError('ERROR', ['error' => 'Unable to process your request.']);
-                    }
-                    
-                    $responseData = [
-                        'processed_job_id' => $response->json()['data']
-                    ];
-
-                    return $this->sendResponse($responseData, 'The data sync request has been successfully initiated.');
-                    
-                } catch (\Exception $e) {
-                    \Log::error('Device connection error: ' . $e->getMessage());
-                    return $this->sendError('ERROR', ['error' => 'Unable to connect to device']);
-                }
+                return $this->syncStravaPoints($sourceProfile, $request, $eventService);
                 
             default:
                 return $this->sendError("ERROR", ["error" => "Unsupported data source"]);
@@ -1012,17 +971,146 @@ class UserPointsController extends BaseController
     
     private function syncGarminPoints($sourceProfile, $request, $eventService, $garminService)
     {
-        $startDate = Carbon::parse($request->sync_start_date);
-        $endDate = Carbon::now();
-        
-        $activities = $garminService->getUserActivities(
-            $sourceProfile->access_token,
-            $sourceProfile->access_token_secret,
-            $startDate->timestamp,
-            $endDate->timestamp
-        );
-        
-        dd($activities);
+        try {
+            $startDate = $request->get('sync_start_date');
+            $endDate   = Carbon::now()->format('Y-m-d');
+
+            $response = $garminService->processBackfillDailies(
+                $startDate,
+                $endDate,
+                $sourceProfile->access_token,
+                $sourceProfile->access_token_secret
+            );
+            
+            if($response->status() === 202) {
+                return $this->sendResponse(['sync_start_date' => $startDate], "Your data will be processed shortly.");
+            }
+            
+            if($response->status() === 409) {
+                return $this->sendResponse($response->json(), "We've already processed your data.");
+            }
+        } catch (\Exception $e) {
+            \Log::error('Garmin sync error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $this->sendError('ERROR', ['error' => 'Unable to process Garmin sync: ' . $e->getMessage()]);
+        }
+    }
+    
+    
+    /**
+     * Sync Strava activities and insert them into the database
+     *
+     * @param object $sourceProfile User's Strava profile
+     * @param Request $request The HTTP request
+     * @param EventService $eventService Event service instance
+     * @return JsonResponse
+     */
+    private function syncStravaPoints($sourceProfile, $request, $eventService)
+    {
+        try {
+            $startDate = $request->get('sync_start_date');
+            $endDate   = Carbon::now()->format('Y-m-d');
+
+            // Check if token is expired and refresh if needed
+            if (Carbon::parse($sourceProfile->token_expires_at)->lt(Carbon::now())) {
+                $refreshed = $this->refreshStravaToken($sourceProfile);
+                if (!$refreshed) {
+                    return $this->sendError('ERROR', ['error' => 'Failed to refresh Strava access token']);
+                }
+            }
+
+            // Initialize Strava service with the access token
+            $stravaService = new \App\Services\StravaService($sourceProfile->access_token);
+
+            // Get activities from Strava API
+            $activities = $stravaService->getActivities($startDate, $endDate);
+
+            // dd($activities);
+
+            if (empty($activities)) {
+                return $this->sendError('ERROR', ['error' => 'No Strava activities found for the specified date range']);
+            }
+
+            $processedCount = 0;
+
+            // Process each activity
+            foreach ($activities as $activity) {
+                $date = Carbon::parse($activity['start_date_local'])->format('Y-m-d');
+
+                // Convert meters to miles
+                $distance = $activity['distance'] * 0.000621371; // Convert meters to miles
+
+                try {
+                    // Create points for this activity
+                    $this->createPoints($eventService, $request->user(), $date, $distance, $sourceProfile);
+                    $processedCount++;
+                } catch (\Exception $e) {
+                    Log::error('Error creating points for Strava activity', [
+                        'message' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                        'activity' => $activity
+                    ]);
+                }
+            }
+
+            return $this->sendResponse(
+                [
+                    'sync_start_date' => $startDate,
+                    'activities_processed' => $processedCount
+                ],
+                'Strava activities synced successfully'
+            );
+        } catch (\Exception $e) {
+            Log::error('Strava sync error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return $this->sendError('ERROR', ['error' => 'Unable to process Strava activities: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Refresh Strava access token
+     *
+     * @param object $profile User's Strava profile
+     * @return bool
+     */
+    private function refreshStravaToken($profile)
+    {
+        try {
+            $response = Http::post('https://www.strava.com/oauth/token', [
+                'client_id' => config('services.strava.client_id'),
+                'client_secret' => config('services.strava.client_secret'),
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $profile->refresh_token
+            ]);
+
+            if (!$response->successful()) {
+                Log::error('Failed to refresh Strava token', [
+                    'status' => $response->status(),
+                    'body' => $response->json()
+                ]);
+                return false;
+            }
+
+            $data = $response->json();
+
+            $profile->access_token = $data['access_token'];
+            $profile->refresh_token = $data['refresh_token'];
+            $profile->token_expires_at = Carbon::createFromTimestamp($data['expires_at']);
+            $profile->save();
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Exception while refreshing Strava token', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return false;
+        }
     }
     
     private function createPoints($eventService, $user, $date, $distance, $sourceProfile){
