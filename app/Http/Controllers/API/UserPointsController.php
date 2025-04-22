@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
 use GuzzleHttp\Client;
+use Closure;
 use Illuminate\Support\Facades\Cache;
 use App\Services\{
     EventService,
@@ -20,7 +21,8 @@ use App\Models\{
     FitLifeActivityRegistration,
     PointMonthly,
     PointTotal,
-    User
+    User,
+    UserPoint
 };
 use Carbon\Carbon;
 use Illuminate\Support\Str;
@@ -767,6 +769,48 @@ class UserPointsController extends BaseController
         $eventService->createOrUpdateUserPoint($user, $request->event_id, $request->date);
         return $this->sendResponse([], 'User Points added');
 
+    }
+    
+    public function updatePoints(Request $request, EventService $eventService): JsonResponse
+    {
+        
+        $user = $request->user();
+        
+        $request->validate([
+            'note' => 'max:100',
+            'event_id' => [
+                'required',
+                Rule::exists(Event::class,'id'),
+            ],
+            "points.*.point_id" =>  [
+            "required",
+            Rule::exists(UserPoint::class,'id'),
+                    function (string $attribute, mixed $value, Closure $fail) use($request, $user){
+                        
+                        $hasPoint = $user->points()->find($value);
+                        
+                        if(!$hasPoint){
+                            $fail("Point ID {$value} does not belong to user activity");
+                            return false;
+                        } 
+                        return true;
+                    }
+            ],
+            "points.*.amount" =>  "required|numeric",
+        ]);
+        
+        
+        foreach($request->points as $point) {
+            
+            $userPoint = $user->points()->find($point['point_id']);
+            
+            $userPoint->update(['amount' => $point['amount'],'note' => $request->note]);
+            
+            $eventService->createOrUpdateUserPoint($user, $request->event_id, $request->date);
+            
+        }
+        
+        return $this->sendResponse([], 'User Points updated');
     }
     
     private function questMilestoneAcheivement($user, $date, $eventId){
