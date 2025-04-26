@@ -4,81 +4,195 @@ namespace App\Services;
 
 use App\Interfaces\DataSource;
 use Illuminate\Support\Facades\Http;
-use Exception;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
+use Exception;
+use Carbon\Carbon;
 
 class GarminService  implements DataSource
 {
+    private $accessToken;
+
+    private $accessTokenSecret;
+
+    private $oauthTimestamp = null;
+
+    private $oauthNonce = null;
+
+    private $signature = null;
+
+    private $oauthToken = null;
+
+    private $oauthVerifier = null;
+
+    private $authResponse = null;
+
     private $consumerKey;
     private $consumerSecret;
+
     private $healthApiUrl = 'https://apis.garmin.com/wellness-api/rest';
     private $baseUrl = "https://connectapi.garmin.com/oauth-service/oauth/";
+    private $oauthConfirmUrl = 'https://connect.garmin.com/oauthConfirm';
+    private $oathCallbackUrl;
 
     public function __construct()
     {
         $this->consumerKey = config('services.garmin.consumer_key');
         $this->consumerSecret = config('services.garmin.consumer_secret');
+        $this->oathCallbackUrl = config('services.garmin.callback_url');
     }
 
-    public function authUrl() {}
+    public function setAccessToken($accessToken)
+    {
+        $this->accessToken = $accessToken;
 
-    public function authorize($code) {}
+        return $this;
+    }
+
+    public function setAccessTokenSecret($accessTokenSecret)
+    {
+        $this->accessTokenSecret = $accessTokenSecret;
+
+        return $this;
+    }
+
+    public function authUrl()
+    {
+
+        $params = $this->getAuthParams();
+
+        ksort($params);
+
+        $this->createSignature('POST', $this->baseUrl . 'request_token', $params);
+
+        $authHeaders = $this->authHeaders();
+
+        try {
+            $response = Http::withHeaders(['Authorization' => $authHeaders])->post($this->baseUrl . 'request_token');
+
+            parse_str($response->body(), $result);
+
+            if (isset($result['oauth_token']) && isset($result['oauth_token_secret'])) {
+                // Store token secret in session for later use
+                Session::put('garmin_token_secret', $result['oauth_token_secret']);
+
+                // Redirect to Garmin authorization page
+                return $this->oauthConfirmUrl . '?' .
+                    http_build_query([
+                        'oauth_token' => $result['oauth_token'],
+                        'oauth_callback' => $this->oathCallbackUrl,
+                    ]);
+            }
+
+            throw new Exception('Failed to get request token');
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage());
+        }
+    }
+
+    public function authorize($config)
+    {
+        list($oauthToken, $oauthVerifier) = $config;
+
+        $this->oauthToken = $oauthToken;
+        $this->oauthVerifier = $oauthVerifier;
+
+        $params = $this->getAuthParams();
+
+        ksort($params);
+
+        $this->accessTokenSecret = Session::get('garmin_token_secret');
+
+        // Generate signature
+        $this->createSignature('POST', $this->baseUrl . 'access_token', $params);
+
+        $oauthParams['oauth_signature'] = $this->signature;
+
+        $authHeaders = $this->authHeaders();
+
+        $response = Http::withHeaders(['Authorization' => $authHeaders])
+            ->post($this->baseUrl . 'access_token');
+
+        if ($response->successful()) {
+            $this->authResponse = $response->object();
+        }
+
+        $this->authResponse = null;
+
+        return $this;
+    }
+
+    public function response()
+    {
+        return $this->authResponse;
+    }
 
     public function refreshToken($refreshToken) {}
 
-    public function activities() {}
+    public function activities($startDate = null, $endDate = null)
+    {
+        $startTimeInSeconds = Carbon::parse($startDate)->timestamp;
+        $endTimeInSeconds = Carbon::parse($endDate)->timestamp;
+
+        $queryParams = [
+            'summaryStartTimeInSeconds' => $startTimeInSeconds,
+            'summaryEndTimeInSeconds' => $endTimeInSeconds,
+        ];
+
+        $oauthParams = $this->getAuthParams();
+
+        $oauthParams['oauth_token'] = $this->accessToken;
+
+        // Merge all parameters for signature generation
+        $params = array_merge($queryParams, $oauthParams);
+
+        $backfillUrl = $this->healthApiUrl . '/backfill/dailies';
+
+        // Generate signature
+        $this->createSignature('GET', $backfillUrl, $params);
+
+        $oauthParams['oauth_signature'] = $this->signature;
+
+        // Build authorization header
+        $authHeader = $this->buildAuthorizationHeader($oauthParams);
+
+        $response = Http::withHeaders(['Authorization' => $authHeader])->get($backfillUrl . '?' . http_build_query($queryParams));
+
+        if ($response->successful()) {
+            $activities = collect($response->object());
+        } else {
+            $activities = collect([]);
+        }
+
+        if (!$activities->count()) {
+            return $activities;
+        }
+
+        return $activities->map(function ($activity) {
+            $date = Carbon::createFromTimestamp($activity['startTimeInSeconds'])->format('Y-m-d');
+            $distance = round(($activity['distanceInMeters'] / 1609.344), 3);
+            $modality = $this->getModality($activity['activityType']);
+
+            return compact('date', 'distance', 'modality');
+        });
+    }
 
     public function verifyWebhook() {}
 
-    public function getUserActivities($accessToken, $accessTokenSecret, $startTime, $endTime)
+    private function getTimestamp()
     {
-        try {
-            $url = $this->healthApiUrl . '/dailies';
-
-            $params = [
-                'oauth_consumer_key' => $this->consumerKey,
-                'oauth_token' => $accessToken,
-                'oauth_signature_method' => 'HMAC-SHA1',
-                'oauth_timestamp' => time(),
-                'oauth_nonce' => $this->generateNonce(),
-                'oauth_version' => '1.0',
-                'uploadStartTimeInSeconds' => $startTime,
-                'uploadEndTimeInSeconds' => $endTime
-            ];
-
-            $signature = $this->createSignature('GET', $url, $params, $accessTokenSecret);
-            $params['oauth_signature'] = $signature;
-
-            $response = Http::withHeaders([
-                'Authorization' => $this->buildAuthorizationHeader($params)
-            ])->get($url . '?' . http_build_query($params));
-
-            dd($response->json());
-
-            if (!$response->successful()) {
-                Log::error('Garmin API Error', [
-                    'status' => $response->status(),
-                    'body' => $response->body()
-                ]);
-                return null;
-            }
-
-            return $response->json();
-        } catch (Exception $e) {
-            Log::error('Garmin Service Error', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            throw new Exception('Failed to fetch Garmin activities: ' . $e->getMessage());
-        }
+        $this->oauthTimestamp = time();
+        return $this;
     }
 
     private function generateNonce()
     {
-        return md5(uniqid(rand(), true));
+        $this->oauthNonce = Str::random(32);
+        return $this;
     }
 
-    private function createSignature($method, $url, $params, $tokenSecret)
+    private function createSignature($method, $url, $params)
     {
         ksort($params);
         $paramString = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
@@ -87,13 +201,15 @@ class GarminService  implements DataSource
             rawurlencode($url) . '&' .
             rawurlencode($paramString);
 
-        $signingKey = rawurlencode($this->consumerSecret) . '&' . rawurlencode($tokenSecret);
+        $signingKey = rawurlencode($this->consumerSecret) . '&' . rawurlencode($this->accessTokenSecret);
 
-        return rawurlencode(
+        $this->signature = rawurlencode(
             base64_encode(
                 hash_hmac('sha1', $baseString, $signingKey, true)
             )
         );
+
+        return $this;
     }
 
     private function buildAuthorizationHeader($params)
@@ -105,5 +221,69 @@ class GarminService  implements DataSource
             }
         }
         return 'OAuth ' . implode(', ', $headerParams);
+    }
+
+    private function getAuthTimestampNonce()
+    {
+        $oauthTimestamp = $this->oauthTimestamp;
+        $oauthNonce = $this->oauthNonce;
+
+        if (!$oauthTimestamp) {
+            $oauthTimestamp = $this->getTimestamp();
+        }
+
+        if (!$oauthNonce) {
+            $oauthNonce = $this->generateNonce();
+        }
+
+        return [$oauthTimestamp, $oauthNonce];
+    }
+
+    private function getAuthParams()
+    {
+        list($oauthTimestamp, $oauthNonce) = $this->getAuthTimestampNonce();
+
+        $params = [
+            'oauth_consumer_key' => $this->consumerKey,
+        ];
+        if ($this->oauthToken) {
+            $params['oauth_token'] = $this->oauthToken;
+        }
+
+        $params['oauth_nonce'] = $oauthNonce;
+        $params['oauth_signature_method'] = 'HMAC-SHA1';
+        $params['oauth_timestamp'] = $oauthTimestamp;
+
+        if ($this->oauthVerifier) {
+            $params['oauth_verifier'] = $this->oauthVerifier;
+        }
+
+        $params['oauth_version'] = '1.0';
+
+        return $params;
+    }
+
+    private function authHeaders()
+    {
+
+        list($oauthTimestamp, $oauthNonce) = $this->getAuthTimestampNonce();
+
+        $authHeaders = 'OAuth ' . 'oauth_consumer_key="' . urlencode($this->consumerKey) . '", ';
+
+        if ($this->oauthToken) {
+            $authHeaders .= 'oauth_token="' . urlencode($this->oauthToken) . '", ';
+        }
+
+        $authHeaders .= 'oauth_nonce="' . urlencode($oauthNonce) . '", ' .
+            'oauth_signature="' . urlencode($this->signature) . '", ' .
+            'oauth_signature_method="HMAC-SHA1", ' .
+            'oauth_timestamp="' . $oauthTimestamp . '", ';
+
+        if ($this->oauthVerifier) {
+            $authHeaders .= 'oauth_verifier="' . urlencode($this->oauthVerifier) . '", ';
+        }
+        $authHeaders .= 'oauth_version="1.0"';
+
+        return $authHeaders;
     }
 }
