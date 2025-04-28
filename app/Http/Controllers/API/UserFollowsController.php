@@ -289,7 +289,7 @@ class UserFollowsController extends BaseController
         }
         
         if($action == 'cancel') {
-            $followingRequest = $user->followingRequests()->where(['event_id' => $request->event_id,'followed_id' => $member->user_id])->first();
+            $followingRequest = $user->followingRequests()->where(['event_id' => $request->event_id,'followed_id' => $request->user_id])->first();
             
             if(is_null($followingRequest)) {
                 return $this->sendError('ERROR', ['error'=>'Invalid action']);
