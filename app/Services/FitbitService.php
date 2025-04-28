@@ -6,8 +6,14 @@ use App\Interfaces\DataSource;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 
+use App\Traits\CalculateDays;
+
+use function Pest\Laravel\get;
+
 class FitbitService implements DataSource
 {
+
+    use CalculateDays;
 
     private $apiUrl;
     private $accessToken;
@@ -21,14 +27,18 @@ class FitbitService implements DataSource
     private $authUrl = "https://www.fitbit.com/oauth2/authorize";
     private $authTokenUrl = "https://api.fitbit.com/oauth2/token";
 
-
+    private $activityBaseUrl = 'https://api.fitbit.com/1/';
     private $authResponse;
+
+    private $startDate;
+    private $endDate;
+
+    private $dateDays;
 
     public function __construct($accessToken = null)
     {
         $this->accessToken = $accessToken;
 
-        $this->apiUrl = config('services.fitbit.api_url');
         $this->clientId = config('services.fitbit.client_id');
         $this->redirectUrl = config('services.fitbit.redirect_url');
         $this->clientSecret = config('services.fitbit.client_secret');
@@ -38,6 +48,11 @@ class FitbitService implements DataSource
     {
         $this->accessToken = $accessToken;
 
+        return $this;
+    }
+
+    public function setAccessTokenSecret($accessTokenSecret)
+    {
         return $this;
     }
 
@@ -102,31 +117,80 @@ class FitbitService implements DataSource
         return $this->authResponse;
     }
 
-    function activities($date = null)
+    public function setDate($startDate, $endDate = null)
     {
-        $date = is_null($date) ? Carbon::now() : Carbon::parse($date);
+        list($startDate, $endDate, $dateDays) = $this->daysFromStartEndDate($startDate, $endDate);
 
-        $startOfDay = $date->copy()->startOfDay()->timestamp;
-        $endOfDay = $date->copy()->endOfDay()->timestamp;
-        // dd($date->copy()->startOfDay(), $date->copy()->endOfDay());
-        $endpoint = $this->apiUrl . 'athlete/activities';
+        $this->startDate = $startDate;
 
-        //$startOfDay = strtotime('today midnight');
-        //$endOfDay = strtotime('tomorrow midnight') - 1;
+        $this->endDate = $endDate;
 
-        $params = [
-            'after' => $startOfDay,
-            'before' => $endOfDay,
-            'per_page' => 10,
-        ];
+        $this->dateDays = $dateDays;
 
-        $url = $endpoint . '?' . http_build_query($params);
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->accessToken
-        ])->get($url);
-        if ($response->successful()) {
-            return $response->object();
+        return $this;
+    }
+
+    function activities()
+    {
+        $data = [];
+
+        if ($this->dateDays) {
+            for ($day = 0; $day <= $this->dateDays; $day++) {
+                $items = $this->findActivities($this->startDate->addDays($day)->format('Y-m-d'));
+                $data = array_merge($data, $items);
+            }
+        } else {
+            $items = $this->findActivities($this->startDate->format('Y-m-d'));
+            $data = array_merge($data, $items);
         }
-        return [];
+
+        return collect($data);
+    }
+
+    private function findActivities($date)
+    {
+        $response = Http::baseUrl($this->activityBaseUrl)
+            ->withToken($this->accessToken)
+            ->get(sprintf('user/-/activities/date/%s.json', $date));
+
+        if ($response->successful()) {
+            $activities = collect($response->json('activities'));
+        } else {
+            $activities = collect([]);
+        }
+
+        $activities = $activities->map(function ($item) {
+            $modality = $this->modality($item['name']);
+            $date = $item['startDate'];
+            $distance = $item['distance'] * 0.621371;
+            return compact('date', 'distance', 'modality');
+        });
+
+        $items = $activities->reduce(function ($data, $item) {
+
+            if (!isset($data[$item['modality']])) {
+                $data[$item['modality']] = $item;
+
+                return $data;
+            }
+
+            $data[$item['modality']]['distance'] += $item['distance'];
+
+            return $data;
+        }, []);
+
+        return collect($items)->values()->toArray();
+    }
+
+    private function modality(string $modality): string
+    {
+        return match ($modality) {
+            'Run' => 'run',
+            'Walk' => 'walk',
+            'Bike', 'Bicycling' => 'bike',
+            'Swim' => 'swim',
+            'Hike' => 'other',
+            default => 'daily_steps',
+        };
     }
 }

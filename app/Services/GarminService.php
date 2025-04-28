@@ -36,6 +36,9 @@ class GarminService  implements DataSource
     private $oauthConfirmUrl = 'https://connect.garmin.com/oauthConfirm';
     private $oathCallbackUrl;
 
+    private $startDate;
+    private $endDate;
+
     public function __construct()
     {
         $this->consumerKey = config('services.garmin.consumer_key');
@@ -172,7 +175,7 @@ class GarminService  implements DataSource
         return $activities->map(function ($activity) {
             $date = Carbon::createFromTimestamp($activity['startTimeInSeconds'])->format('Y-m-d');
             $distance = round(($activity['distanceInMeters'] / 1609.344), 3);
-            $modality = $this->getModality($activity['activityType']);
+            $modality = $this->modality($activity['activityType']);
 
             return compact('date', 'distance', 'modality');
         });
@@ -285,5 +288,24 @@ class GarminService  implements DataSource
         $authHeaders .= 'oauth_version="1.0"';
 
         return $authHeaders;
+    }
+    public function setDate($startDate, $endDate = null){
+        $this->startDate = $startDate;
+
+        $this->endDate = $endDate??$startDate;
+
+        return $this;
+    }
+    private function modality(string $modality): string
+    {
+        return match ($modality) {
+            'RUNNING', 'TRACK_RUNNING', 'STREET_RUNNING', 'TREADMILL_RUNNING', 'TRAIL_RUNNING', 'VIRTUAL_RUN', 'INDOOR_RUNNING', 'OBSTACLE_RUN', 'OBSTACLE_RUNNING', 'ULTRA_RUN', 'ULTRA_RUNNING' => 'run',
+            'WALKING', 'CASUAL_WALKING', 'SPEED_WALKING', 'GENERIC' => 'walk',
+            'CYCLING', 'CYCLOCROSS', 'DOWNHILL_BIKING', 'INDOOR_CYCLING', 'MOUNTAIN_BIKING', 'RECUMBENT_CYCLING', 'ROAD_BIKING', 'TRACK_CYCLING', 'VIRTUAL_RIDE' => 'bike',
+            'SWIMMING', 'LAP_SWIMMING', 'OPEN_WATER_SWIMMING' => 'swim',
+            'WALKING', 'CASUAL_WALKING', 'SPEED_WALKING', 'GENERIC' => 'daily_steps',
+            'HIKING', 'CROSS_COUNTRY_SKIING', 'MOUNTAINEERING', 'ELLIPTICAL', 'STAIR_CLIMBING' => 'other',
+            default => 'daily_steps',
+        };
     }
 }

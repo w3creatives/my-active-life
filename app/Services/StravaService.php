@@ -25,13 +25,8 @@ class StravaService implements DataSource
 
     private $authResponse;
 
-    private $modalities = [
-        'run' => ['Run', 'VirtualRun'],
-        'walk' => ['Walk'],
-        'bike' => ['EBikeRide', 'MountainBikeRide', 'EMountainBikeRide', 'GravelRide', 'Handcycle', 'Ride', 'VirtualRide'],
-        'swim' => ['Swim'],
-        'other' => ['Elliptical', 'Hike', 'StairStepper', 'Snowshoe']
-    ];
+    private $startDate;
+    private $endDate;
 
     public function __construct($accessToken = null)
     {
@@ -43,17 +38,34 @@ class StravaService implements DataSource
         $this->clientSecret = config('services.strava.client_secret');
     }
 
-    public function findModality($modality, $type)
-    {
-        $modalities = $this->modalities[$modality];
+    public function setDate($startDate, $endDate = null){
+        $this->startDate = $startDate;
 
-        return in_array($type, $modalities);
+        $this->endDate = $endDate??$startDate;
+
+        return $this;
+    }
+
+    public function modality($modality)
+    {
+        return match ($modality) {
+            'Run', 'VirtualRun' => 'run',
+            'Walk' => 'walk',
+            'EBikeRide', 'MountainBikeRide', 'EMountainBikeRide', 'GravelRide', 'Handcycle', 'Ride', 'VirtualRide' => 'bike',
+            'Swim' => 'swim',
+            'Elliptical', 'Hike', 'StairStepper', 'Snowshoe' => 'other',
+            default => 'daily_steps',
+        };
     }
 
     public function setAccessToken($accessToken)
     {
         $this->accessToken = $accessToken;
 
+        return $this;
+    }
+
+    public function setAccessTokenSecret($accessTokenSecret){
         return $this;
     }
 
@@ -118,10 +130,24 @@ class StravaService implements DataSource
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->accessToken
         ])->get($url);
+        
         if ($response->successful()) {
-            return $response->object();
+            $activities = collect($response->object());
+        } else {
+            $activities = collect([]);
         }
-        return [];
+
+        if (!$activities->count()) {
+            return $activities;
+        }
+
+        return $activities->map(function ($activity) {
+            $date = Carbon::createFromTimestamp($activity['startTimeInSeconds'])->format('Y-m-d');
+            $distance = round(($activity['distanceInMeters'] / 1609.344), 3);
+            $modality = $this->modality($activity['activityType']);
+
+            return compact('date', 'distance', 'modality');
+        });
     }
 
     public function verifyWebhook()

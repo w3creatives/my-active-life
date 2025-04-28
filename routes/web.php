@@ -37,7 +37,12 @@ use App\Http\Controllers\Webhook\{
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
+Route::get('test', function(){
+    $tracker = app(\App\Interfaces\DataSource::class);
 
+    $accesToken = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkNLRzIiLCJzdWIiOiJDOVZHV1AiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyYWN0IHJzZXQgcndlaSBybnV0IHJwcm8gcnNsZSIsImV4cCI6MTc0NTg4NzEyMCwiaWF0IjoxNzQ1ODU4MzIwfQ.FbY5-5T7mN1vtRaXg6lW0MNA3LBwnZjEx3xk0Qmizig";
+    return ($tracker->get('fitbit')->setAccessToken($accesToken)->setDate('2025-01-12','2025-01-18')->activities());
+});
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
