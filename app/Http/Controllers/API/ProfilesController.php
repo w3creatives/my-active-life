@@ -620,8 +620,8 @@ class ProfilesController extends BaseController
             return $this->sendResponse([], 'Following');
         }
 
-        $team->followerRequests()->create(['prospective_follower_id' => $user->id, 'event_id' => $request->event_id, 'status' => 'request_to_follow_issued']);
-
+        $team->followerRequests()->updateOrcreate(['prospective_follower_id' => $user->id,'event_id' => $request->event_id],['prospective_follower_id' => $user->id,'event_id' => $request->event_id,'status' => 'request_to_follow_issued']);
+        
         return $this->sendResponse([], "Follow requested");
     }
 
@@ -698,7 +698,7 @@ class ProfilesController extends BaseController
         // return $this->sendResponse($item, 'Response'); 
         //           }
 
-        $followings = TeamFollowRequest::where('status', '!=', 'request_to_follow_approved')->whereHas('team', function ($query) use ($user, $request) {
+        $followings = TeamFollowRequest::whereNotIn('status',['request_to_follow_approved','request_to_follow_ignored'])->whereHas('team', function ($query) use ($user, $request) {
             return $query->where('event_id', $request->event_id)->where('owner_id', $user->id);
         })
             ->with('user', function ($query) {
