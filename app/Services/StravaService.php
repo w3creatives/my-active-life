@@ -44,7 +44,7 @@ class StravaService implements DataSource
         $this->clientSecret = config('services.strava.client_secret');
     }
 
-     public function setDate($startDate, $endDate = null)
+    public function setDate($startDate, $endDate = null)
     {
         list($startDate, $endDate, $dateDays) = $this->daysFromStartEndDate($startDate, $endDate);
 
@@ -65,7 +65,7 @@ class StravaService implements DataSource
             'EBikeRide', 'MountainBikeRide', 'EMountainBikeRide', 'GravelRide', 'Handcycle', 'Ride', 'VirtualRide' => 'bike',
             'Swim' => 'swim',
             'Elliptical', 'Hike', 'StairStepper', 'Snowshoe' => 'other',
-            default => 'daily_steps',
+            default => 'none',
         };
     }
 
@@ -76,13 +76,14 @@ class StravaService implements DataSource
         return $this;
     }
 
-    public function setAccessTokenSecret($accessTokenSecret){
+    public function setAccessTokenSecret($accessTokenSecret)
+    {
         return $this;
     }
 
     public function authUrl($state = 'web')
     {
-        return $this->authUrl."?" . http_build_query([
+        return $this->authUrl . "?" . http_build_query([
             'client_id' => $this->clientId,
             'response_type' => 'code',
             'redirect_uri' => $this->redirectUrl,
@@ -118,17 +119,35 @@ class StravaService implements DataSource
 
     public function refreshToken($refreshToken) {}
 
-    function activities($page = 1)
+    function activities()
     {
-       
-        $startOfDay = $this->startDate->copy()->startOfDay()->timestamp;
-        $endOfDay = $this->endDate->endOfDay()->timestamp;
-        // dd($date->copy()->startOfDay(), $date->copy()->endOfDay());
-        $endpoint = $this->apiUrl . 'athlete/activities';
 
-        //$startOfDay = strtotime('today midnight');
-        //$endOfDay = strtotime('tomorrow midnight') - 1;
+        $data = [];
 
+        if ($this->dateDays) {
+            for ($day = 0; $day <= $this->dateDays; $day++) {
+
+                $startOfDay = $this->startDate->addDays($day)->copy()->startOfDay()->timestamp;
+                $endOfDay = $this->startDate->addDays($day)->copy()->endOfDay()->timestamp;
+
+                $items = $this->findActivities($startOfDay, $endOfDay, $data);
+                $data = $items;
+            }
+        } else {
+            $startOfDay = $this->startDate->copy()->startOfDay()->timestamp;
+            $endOfDay = $this->startDate->copy()->endOfDay()->timestamp;
+
+            $items = $this->findActivities($startOfDay, $endOfDay, $data);
+            $data = $items;
+        }
+
+        return collect($data)->reject(function($item){
+            return $item['modality'] == 'none';
+        })->values();
+    }
+
+    private function findActivities($startOfDay, $endOfDay, $data, $page = 1)
+    {
         $params = [
             'after' => $startOfDay,
             'before' => $endOfDay,
@@ -136,26 +155,45 @@ class StravaService implements DataSource
             'page' => $page
         ];
 
-        $url = $endpoint;// . '?' . http_build_query($params);
-        $response = Http::withToken($this->accessToken)->get($url,$params);
-        dd($url,$response->json());
+        $response = Http::withToken($this->accessToken)->get($this->apiUrl . 'athlete/activities?'.http_build_query($params));
+
         if ($response->successful()) {
-            $activities = collect($response->object());
-        } else {
-            $activities = collect([]);
+            $activities = collect($response->json());
+
+            if ($activities->count()) {
+                $page++;
+            
+                $data = array_merge($data, $activities->toArray());
+                return $this->findActivities($startOfDay, $endOfDay, $data, $page);
+            }
         }
 
-        if (!$activities->count()) {
-            return $activities;
-        }
+        $activities = collect($data)->map(function ($activity) {
+            if (!isset($activity['start_date'])) {
+                return $activity;
+            }
 
-        return $activities->map(function ($activity) {
-            $date = Carbon::createFromTimestamp($activity['startTimeInSeconds'])->format('Y-m-d');
-            $distance = round(($activity['distanceInMeters'] / 1609.344), 3);
-            $modality = $this->modality($activity['activityType']);
+            $date = Carbon::parse($activity['start_date'])->format('Y-m-d');
+            $distance = round(($activity['distance'] / 1609.344), 3);
+            $modality = $this->modality($activity['sport_type']);
 
             return compact('date', 'distance', 'modality');
         });
+
+        $items = $activities->reduce(function ($data, $item) {
+
+            if (!isset($data[$item['modality']])) {
+                $data[$item['modality']] = $item;
+
+                return $data;
+            }
+
+            $data[$item['modality']]['distance'] += $item['distance'];
+
+            return $data;
+        }, []);
+
+        return collect($items)->values()->toArray();
     }
 
     public function verifyWebhook()
