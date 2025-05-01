@@ -7,8 +7,12 @@ use Carbon\Carbon;
 
 use App\Interfaces\DataSource;
 
+use App\Traits\CalculateDays;
+
 class StravaService implements DataSource
 {
+    use CalculateDays;
+
     private $apiUrl;
 
     private $accessToken;
@@ -28,6 +32,8 @@ class StravaService implements DataSource
     private $startDate;
     private $endDate;
 
+    private $dateDays;
+
     public function __construct($accessToken = null)
     {
         $this->accessToken = $accessToken;
@@ -38,10 +44,15 @@ class StravaService implements DataSource
         $this->clientSecret = config('services.strava.client_secret');
     }
 
-    public function setDate($startDate, $endDate = null){
+     public function setDate($startDate, $endDate = null)
+    {
+        list($startDate, $endDate, $dateDays) = $this->daysFromStartEndDate($startDate, $endDate);
+
         $this->startDate = $startDate;
 
-        $this->endDate = $endDate??$startDate;
+        $this->endDate = $endDate;
+
+        $this->dateDays = $dateDays;
 
         return $this;
     }
@@ -107,12 +118,11 @@ class StravaService implements DataSource
 
     public function refreshToken($refreshToken) {}
 
-    function activities($date = null, $page = 1)
+    function activities($page = 1)
     {
-        $date = is_null($date) ? Carbon::now() : Carbon::parse($date);
-
-        $startOfDay = $date->copy()->startOfDay()->timestamp;
-        $endOfDay = $date->copy()->endOfDay()->timestamp;
+       
+        $startOfDay = $this->startDate->copy()->startOfDay()->timestamp;
+        $endOfDay = $this->endDate->endOfDay()->timestamp;
         // dd($date->copy()->startOfDay(), $date->copy()->endOfDay());
         $endpoint = $this->apiUrl . 'athlete/activities';
 
@@ -126,11 +136,9 @@ class StravaService implements DataSource
             'page' => $page
         ];
 
-        $url = $endpoint . '?' . http_build_query($params);
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->accessToken
-        ])->get($url);
-        
+        $url = $endpoint;// . '?' . http_build_query($params);
+        $response = Http::withToken($this->accessToken)->get($url,$params);
+        dd($url,$response->json());
         if ($response->successful()) {
             $activities = collect($response->object());
         } else {
