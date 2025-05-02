@@ -42,6 +42,7 @@ class SessionsController extends BaseController
             $success['last_name'] =  $user->last_name;
             $success['email'] =  $user->email;
             $success['time_zone'] = $user->time_zone;
+            $success['time_zone_name'] = $user->time_zone_name;
             $success['settings'] = $user->settings;
             $success['preferred_event_id'] = $user->preferred_event_id;
             

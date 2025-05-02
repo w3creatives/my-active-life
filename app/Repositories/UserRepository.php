@@ -25,7 +25,7 @@ class UserRepository
         return $user->only([
             'email','first_name','last_name',
             'display_name','birthday','bio',
-            'time_zone','street_address1','street_address2',
+            'time_zone','time_zone_name','street_address1','street_address2',
             'city','state','country','zipcode','gender','settings',
             'shirt_size','preferred_event_id'
         ]);
@@ -39,11 +39,13 @@ class UserRepository
         $profile = $user->only([
             'email','first_name','last_name',
             'display_name','birthday','bio',
-            'time_zone','street_address1','street_address2',
+            'time_zone','time_zone_name','street_address1','street_address2',
             'city','state','country','zipcode','gender','settings',
             'shirt_size','preferred_event_id'
         ]);
-       
+        $profile['name'] = $profile['display_name'];
+        unset($profile['display_name']);
+
         $eventId = $request->event_id??$user->preferred_event_id;
         
         $year = $request->year?$request->year:Carbon::now()->format('Y');

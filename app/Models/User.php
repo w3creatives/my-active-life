@@ -39,6 +39,21 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'encrypted_password' => 'hashed',
     ];
+
+    protected $appends = ['time_zone_name'];
+    
+    public function getTimeZoneNameAttribute() {
+        if(!$this->time_zone){
+            return null;
+        }
+
+        $timezones = config('timezones.timezone');
+        $zones = config('timezones.zones');
+
+        preg_match('#\((.*?)\)#', $timezones[$this->time_zone], $match);
+
+        return $zones[$match[1]];
+    }
     
     public function getAuthPassword() {
         return $this->encrypted_password;
