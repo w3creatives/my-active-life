@@ -51,6 +51,7 @@ return [
     'garmin' => [
         'consumer_key' => env('GARMIN_CONSUMER_KEY'),
         'consumer_secret' => env('GARMIN_CONSUMER_SECRET'),
+        'callback_url' => env('GARMIN_CALLBACK_URL')
     ]
 
 ];

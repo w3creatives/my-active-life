@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Interfaces\DataSource;
 use App\Services\FitbitService;
+use App\Services\GarminService;
 use App\Services\StravaService;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,7 +23,7 @@ final class AppServiceProvider extends ServiceProvider
                 return collect([
                     'fitbit' => app(FitbitService::class),
                     'strava' => app(StravaService::class),
-                    'garmin' => app(StravaService::class),
+                    'garmin' => app(GarminService::class),
                 ]);
             }
         );

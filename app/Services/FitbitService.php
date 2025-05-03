@@ -8,8 +8,6 @@ use Carbon\Carbon;
 
 use App\Traits\CalculateDays;
 
-use function Pest\Laravel\get;
-
 class FitbitService implements DataSource
 {
 

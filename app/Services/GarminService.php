@@ -9,9 +9,12 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Exception;
 use Carbon\Carbon;
+use App\Traits\CalculateDays;
 
 class GarminService  implements DataSource
 {
+    use CalculateDays;
+
     private $accessToken;
 
     private $accessTokenSecret;
@@ -36,8 +39,15 @@ class GarminService  implements DataSource
     private $oauthConfirmUrl = 'https://connect.garmin.com/oauthConfirm';
     private $oathCallbackUrl;
 
+    private $queryParams = [];
+    private $garminRequestUrl;
+
+    private $requestType;
+
     private $startDate;
     private $endDate;
+
+    private $dateDays;
 
     public function __construct()
     {
@@ -133,14 +143,83 @@ class GarminService  implements DataSource
 
     public function refreshToken($refreshToken) {}
 
-    public function activities($startDate = null, $endDate = null)
+    public function setDate($startDate, $endDate = null)
     {
-        $startTimeInSeconds = Carbon::parse($startDate)->timestamp;
-        $endTimeInSeconds = Carbon::parse($endDate)->timestamp;
+        list($startDate, $endDate, $dateDays) = $this->daysFromStartEndDate($startDate, $endDate);
 
+        $this->startDate = $startDate;
+
+        $this->endDate = $endDate;
+
+        $this->dateDays = $dateDays;
+
+        return $this;
+    }
+
+    public function parseUrl($url)
+    {
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+        $host = parse_url($url, PHP_URL_HOST);
+        $path = parse_url($url, PHP_URL_PATH);
+
+        $this->garminRequestUrl = $scheme . '://' . $host . $path;
+
+        $queryParamsString = parse_url($url, PHP_URL_QUERY);
+        $queryParams = [];
+        parse_str($queryParamsString, $queryParams);
+
+        $this->queryParams = $queryParams;
+
+        return $this;
+    }
+
+    public function setRequestType(string $requestType)
+    {
+
+        if (!in_array($requestType, ['backfill', 'activities'])) {
+            throw new Exception('request type does not match');
+        }
+
+        $endpoint = $requestType == 'activities' ? "/activities" : '/backfill/dailies';
+
+        $this->garminRequestUrl = $this->healthApiUrl . $endpoint;
+
+        return $this;
+    }
+
+    function activities()
+    {
+
+        $data = [];
+
+        if ($this->dateDays) {
+            for ($day = 0; $day <= $this->dateDays; $day++) {
+
+                $startOfDay = $this->startDate->addDays($day)->copy()->startOfDay()->timestamp;
+                $endOfDay = $this->startDate->addDays($day)->copy()->endOfDay()->timestamp;
+
+                $items = $this->findActivities($startOfDay, $endOfDay);
+                $data[$startOfDay] = array_merge($data, $items);
+            }
+        } else {
+            $startOfDay = $this->startDate->copy()->startOfDay()->timestamp;
+            $endOfDay = $this->startDate->copy()->endOfDay()->timestamp;
+
+            $items = $this->findActivities($startOfDay, $endOfDay);
+            $data = array_merge($data, $items);
+        }
+
+        return collect($data);
+    }
+
+    public function findActivities($startTimeInSeconds, $endTimeInSeconds)
+    {
+        
         $queryParams = [
             'summaryStartTimeInSeconds' => $startTimeInSeconds,
             'summaryEndTimeInSeconds' => $endTimeInSeconds,
+            //'uploadStartTimeInSeconds' => $startTimeInSeconds,
+            //'uploadEndTimeInSeconds' => $endTimeInSeconds
         ];
 
         $oauthParams = $this->getAuthParams();
@@ -160,7 +239,78 @@ class GarminService  implements DataSource
         // Build authorization header
         $authHeader = $this->buildAuthorizationHeader($oauthParams);
 
-        $response = Http::withHeaders(['Authorization' => $authHeader])->get($backfillUrl . '?' . http_build_query($queryParams));
+        $response = Http::withHeaders(['Authorization' => $authHeader])
+            ->get($backfillUrl, $queryParams);
+
+
+        if ($response->successful()) {
+            $activities = collect($response->json());
+        } else {
+            $activities = collect([]);
+        }
+
+        $activities = $activities->map(function ($activity) use ($startTimeInSeconds, $endTimeInSeconds) {
+            // dd($activity, $startTimeInSeconds, $endTimeInSeconds);
+            $date = Carbon::createFromTimestamp($activity['startTimeInSeconds'])->format('Y-m-d');
+            $distance = round(($activity['distanceInMeters'] / 1609.344), 3);
+            $modality = $this->modality($activity['activityType']);
+
+            return compact('date', 'distance', 'modality');
+        });
+
+        return $activities->toArray();
+
+        $items = $activities->reduce(function ($data, $item) {
+
+            if (!isset($data[$item['modality']])) {
+                $data[$item['modality']] = $item;
+
+                return $data;
+            }
+
+            $data[$item['modality']]['distance'] += $item['distance'];
+
+            return $data;
+        }, []);
+
+        return collect($items)->values()->toArray();
+    }
+
+    public function activitiesTested()
+    {
+
+        $startTimeInSeconds = Carbon::parse($this->startDate)->timestamp - 1;
+        $endTimeInSeconds = Carbon::parse($this->startDate)->timestamp;
+
+        $queryParams = [
+            //'summaryStartTimeInSeconds' => $startTimeInSeconds,
+            //'summaryEndTimeInSeconds' => $endTimeInSeconds,
+            'uploadStartTimeInSeconds' => $startTimeInSeconds,
+            'uploadEndTimeInSeconds' => $endTimeInSeconds
+        ];
+
+        $oauthParams = $this->getAuthParams();
+
+        //$oauthParams = array_merge($oauthParams, $queryParams);
+
+        $oauthParams['oauth_token'] = $this->accessToken;
+
+        // Merge all parameters for signature generation
+        $params = array_merge($queryParams, $oauthParams);
+
+        $backfillUrl = $this->healthApiUrl . '/activities';
+
+        // Generate signature
+        $this->createSignature('GET', $backfillUrl, $params);
+
+        $oauthParams['oauth_signature'] = $this->signature;
+
+        // Build authorization header
+        $authHeader = $this->buildAuthorizationHeader($oauthParams);
+
+        $response = Http::withHeaders(['Authorization' => $authHeader])
+            ->get($backfillUrl, $queryParams);
+
 
         if ($response->successful()) {
             $activities = collect($response->object());
@@ -172,13 +322,28 @@ class GarminService  implements DataSource
             return $activities;
         }
 
-        return $activities->map(function ($activity) {
+        $activities = $activities->map(function ($activity) {
             $date = Carbon::createFromTimestamp($activity['startTimeInSeconds'])->format('Y-m-d');
             $distance = round(($activity['distanceInMeters'] / 1609.344), 3);
             $modality = $this->modality($activity['activityType']);
 
             return compact('date', 'distance', 'modality');
         });
+
+        $items = $activities->reduce(function ($data, $item) {
+
+            if (!isset($data[$item['modality']])) {
+                $data[$item['modality']] = $item;
+
+                return $data;
+            }
+
+            $data[$item['modality']]['distance'] += $item['distance'];
+
+            return $data;
+        }, []);
+
+        return collect($items)->values()->toArray();
     }
 
     public function verifyWebhook() {}
@@ -228,16 +393,17 @@ class GarminService  implements DataSource
 
     private function getAuthTimestampNonce()
     {
+
+        if (!$this->oauthTimestamp) {
+            $this->getTimestamp();
+        }
+
+        if (!$this->oauthNonce) {
+            $this->generateNonce();
+        }
+
         $oauthTimestamp = $this->oauthTimestamp;
         $oauthNonce = $this->oauthNonce;
-
-        if (!$oauthTimestamp) {
-            $oauthTimestamp = $this->getTimestamp();
-        }
-
-        if (!$oauthNonce) {
-            $oauthNonce = $this->generateNonce();
-        }
 
         return [$oauthTimestamp, $oauthNonce];
     }
@@ -289,13 +455,7 @@ class GarminService  implements DataSource
 
         return $authHeaders;
     }
-    public function setDate($startDate, $endDate = null){
-        $this->startDate = $startDate;
 
-        $this->endDate = $endDate??$startDate;
-
-        return $this;
-    }
     private function modality(string $modality): string
     {
         return match ($modality) {
