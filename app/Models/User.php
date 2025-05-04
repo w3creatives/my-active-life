@@ -4,9 +4,9 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-#use Laravel\Sanctum\HasApiTokens;
 use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable
@@ -40,10 +40,13 @@ class User extends Authenticatable
         'encrypted_password' => 'hashed',
     ];
 
+    protected $authPasswordName = 'encrypted_password';
+
     protected $appends = ['time_zone_name'];
-    
-    public function getTimeZoneNameAttribute() {
-        if(!$this->time_zone){
+
+    public function getTimeZoneNameAttribute()
+    {
+        if (! $this->time_zone) {
             return null;
         }
 
@@ -54,87 +57,104 @@ class User extends Authenticatable
 
         return $zones[$match[1]];
     }
-    
-    public function getAuthPassword() {
-        return $this->encrypted_password;
-    }
-    
-    public function memberships(){
+
+    public function memberships(): HasMany
+    {
         return $this->hasMany(TeamMembership::class);
     }
-    
-    public function points(){
+
+    public function points(): HasMany
+    {
         return $this->hasMany(UserPoint::class);
     }
-    
-    public function participations(){
+
+    public function participations(): HasMany
+    {
         return $this->hasMany(EventParticipation::class);
     }
-    
-    public function achievements(){
+
+    public function achievements(): HasMany
+    {
         return $this->hasMany(UserAchievement::class);
     }
-     
-    public function monthlyPoints(){
+
+    public function monthlyPoints(): HasMany
+    {
         return $this->hasMany(PointMonthly::class);
     }
-    public function weeklyPoints(){
+
+    public function weeklyPoints(): HasMany
+    {
         return $this->hasMany(PointWeekly::class);
     }
-    
-    public function totalPoints(){
+
+    public function totalPoints(): HasMany
+    {
         return $this->hasMany(PointTotal::class);
     }
-    
-    public function profiles(){
+
+    public function profiles(): HasMany
+    {
         return $this->hasMany(DataSourceProfile::class);
     }
-    
-    public function invites(){
-        return $this->hasMany(TeamMembershipInvite::class, 'prospective_member_id','id');
+
+    public function invites(): HasMany
+    {
+        return $this->hasMany(TeamMembershipInvite::class, 'prospective_member_id', 'id');
     }
-    
-    public function requests(){
-        return $this->hasMany(TeamMembershipRequest::class, 'prospective_member_id','id');
+
+    public function requests(): HasMany
+    {
+        return $this->hasMany(TeamMembershipRequest::class, 'prospective_member_id', 'id');
     }
-    
-    public function teams(){
-        return $this->hasMany(Team::class, 'owner_id','id');
+
+    public function teams(): HasMany
+    {
+        return $this->hasMany(Team::class, 'owner_id', 'id');
     }
-    
-    public function teamFollowings(){
-        return $this->hasMany(TeamFollow::class,'follower_id','id');
+
+    public function teamFollowings(): HasMany
+    {
+        return $this->hasMany(TeamFollow::class, 'follower_id', 'id');
     }
-     
-    public function teamFollowingRequests(){
-        return $this->hasMany(TeamFollowRequest::class,'prospective_follower_id','id');
+
+    public function teamFollowingRequests(): HasMany
+    {
+        return $this->hasMany(TeamFollowRequest::class, 'prospective_follower_id', 'id');
     }
-    
-    public function questRegistrations(){
+
+    public function questRegistrations(): HasMany
+    {
         return $this->hasMany(FitLifeActivityRegistration::class);
     }
-    
-    public function questMilestones(){
+
+    public function questMilestones(): HasMany
+    {
         return $this->hasMany(FitLifeActivityMilestone::class);
     }
-    
-    public function profilePoints(){
+
+    public function profilePoints(): HasMany
+    {
         return $this->hasMany(UserProfilePoint::class);
     }
-    
-    public function following(){
-        return $this->hasMany(UserFollow::class,'follower_id','id');
+
+    public function following(): HasMany
+    {
+        return $this->hasMany(UserFollow::class, 'follower_id', 'id');
     }
-    
-    public function followers(){
-        return $this->hasMany(UserFollow::class,'followed_id','id');
+
+    public function followers(): HasMany
+    {
+        return $this->hasMany(UserFollow::class, 'followed_id', 'id');
     }
-    
-    public function followRequests(){
-        return $this->hasMany(UserFollowRequest::class,'followed_id','id');
+
+    public function followRequests(): HasMany
+    {
+        return $this->hasMany(UserFollowRequest::class, 'followed_id', 'id');
     }
-    
-    public function followingRequests(){
-        return $this->hasMany(UserFollowRequest::class,'prospective_follower_id','id');
+
+    public function followingRequests(): HasMany
+    {
+        return $this->hasMany(UserFollowRequest::class, 'prospective_follower_id', 'id');
     }
 }

@@ -36,7 +36,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     };
 
     return (
-        <AuthLayout title="Log in to your account" description="Enter your email and password below to log in">
+        <AuthLayout title="Log In to Run The Edge" description="Enter your email and password below to log in">
             <Head title="Log in" />
 
             <form className="flex flex-col gap-6" onSubmit={submit}>
@@ -52,7 +52,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             autoComplete="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            placeholder="email@example.com"
+                            placeholder="Email"
                         />
                         <InputError message={errors.email} />
                     </div>
@@ -94,6 +94,10 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
                         Log in
                     </Button>
+                </div>
+
+                <div className="text-muted-foreground text-center text-sm">
+                    <p>Need help logging in? We have superpowers and can help! Just email us at <TextLink href="mailto:info@runtheedge.com">info@runtheedge.com</TextLink></p>
                 </div>
 
                 <div className="text-muted-foreground text-center text-sm">
