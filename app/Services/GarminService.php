@@ -156,7 +156,7 @@ class GarminService  implements DataSource
         return $this;
     }
 
-    public function parseUrl($url)
+    public function processWebhook($url)
     {
         $scheme = parse_url($url, PHP_URL_SCHEME);
         $host = parse_url($url, PHP_URL_HOST);
@@ -192,6 +192,12 @@ class GarminService  implements DataSource
 
         $data = [];
 
+        if ($this->queryParams && $this->garminRequestUrl) {
+            $items = $this->findActivities();
+            $data = array_merge($data, $items);
+            return collect($data);
+        }
+
         if ($this->dateDays) {
             for ($day = 0; $day <= $this->dateDays; $day++) {
 
@@ -212,15 +218,21 @@ class GarminService  implements DataSource
         return collect($data);
     }
 
-    public function findActivities($startTimeInSeconds, $endTimeInSeconds)
+    public function findActivities($startTimeInSeconds = null, $endTimeInSeconds = null)
     {
-        
-        $queryParams = [
-            'summaryStartTimeInSeconds' => $startTimeInSeconds,
-            'summaryEndTimeInSeconds' => $endTimeInSeconds,
-            //'uploadStartTimeInSeconds' => $startTimeInSeconds,
-            //'uploadEndTimeInSeconds' => $endTimeInSeconds
-        ];
+
+        if ($this->queryParams) {
+            $queryParams = $this->queryParams;
+        } else {
+            $queryParams = [
+                'summaryStartTimeInSeconds' => $startTimeInSeconds,
+                'summaryEndTimeInSeconds' => $endTimeInSeconds,
+                //'uploadStartTimeInSeconds' => $startTimeInSeconds,
+                //'uploadEndTimeInSeconds' => $endTimeInSeconds
+            ];
+        }
+
+        $backfillUrl = $this->garminRequestUrl ? $this->garminRequestUrl : $this->healthApiUrl . '/backfill/dailies';
 
         $oauthParams = $this->getAuthParams();
 
@@ -228,8 +240,6 @@ class GarminService  implements DataSource
 
         // Merge all parameters for signature generation
         $params = array_merge($queryParams, $oauthParams);
-
-        $backfillUrl = $this->healthApiUrl . '/backfill/dailies';
 
         // Generate signature
         $this->createSignature('GET', $backfillUrl, $params);
