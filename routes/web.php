@@ -46,7 +46,8 @@ Route::get('test', function () {
     $accesToken = "a34e18a6-2473-42a4-b8e6-bb8df5061fd8";
     return ($tracker->get('garmin')->setAccessToken($accesToken)
     ->setAccessTokenSecret("1N0baQBO247cGPk8iKd0w4KvEVnPA4HZm96")
-    ->setDate('2025-04-18')->activities());
+    ->setRequestType('upload')
+    ->setDate('2025-04-13','2025-04-20')->activities());
 });
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {

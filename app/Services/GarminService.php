@@ -42,7 +42,7 @@ class GarminService  implements DataSource
     private $queryParams = [];
     private $garminRequestUrl;
 
-    private $requestType;
+    private $requestType = 'summary';
 
     private $startDate;
     private $endDate;
@@ -176,15 +176,26 @@ class GarminService  implements DataSource
     public function setRequestType(string $requestType)
     {
 
-        if (!in_array($requestType, ['backfill', 'activities'])) {
+        if (!in_array($requestType, ['upload', 'summary'])) {
             throw new Exception('request type does not match');
         }
 
-        $endpoint = $requestType == 'activities' ? "/activities" : '/backfill/dailies';
+        $endpoint = $requestType == 'summary' ? '/backfill/dailies' : "/activities";
+
+        $this->requestType = $requestType;
 
         $this->garminRequestUrl = $this->healthApiUrl . $endpoint;
 
         return $this;
+    }
+
+    private function buildParams($startTimeInSeconds, $endTimeInSeconds)
+    {
+
+        return [
+            $this->requestType . 'StartTimeInSeconds' => $startTimeInSeconds,
+            $this->requestType . 'EndTimeInSeconds' => $endTimeInSeconds,
+        ];
     }
 
     function activities()
@@ -195,7 +206,7 @@ class GarminService  implements DataSource
         if ($this->queryParams && $this->garminRequestUrl) {
             $items = $this->findActivities();
             $data = array_merge($data, $items);
-            return collect($data);
+            return $this->formatActivities($data);
         }
 
         if ($this->dateDays) {
@@ -205,7 +216,7 @@ class GarminService  implements DataSource
                 $endOfDay = $this->startDate->addDays($day)->copy()->endOfDay()->timestamp;
 
                 $items = $this->findActivities($startOfDay, $endOfDay);
-                $data[$startOfDay] = array_merge($data, $items);
+                $data = array_merge($data, $items);
             }
         } else {
             $startOfDay = $this->startDate->copy()->startOfDay()->timestamp;
@@ -215,7 +226,7 @@ class GarminService  implements DataSource
             $data = array_merge($data, $items);
         }
 
-        return collect($data);
+        return $this->formatActivities($data);
     }
 
     public function findActivities($startTimeInSeconds = null, $endTimeInSeconds = null)
@@ -224,12 +235,7 @@ class GarminService  implements DataSource
         if ($this->queryParams) {
             $queryParams = $this->queryParams;
         } else {
-            $queryParams = [
-                'summaryStartTimeInSeconds' => $startTimeInSeconds,
-                'summaryEndTimeInSeconds' => $endTimeInSeconds,
-                //'uploadStartTimeInSeconds' => $startTimeInSeconds,
-                //'uploadEndTimeInSeconds' => $endTimeInSeconds
-            ];
+            $queryParams = $this->buildParams($startTimeInSeconds, $endTimeInSeconds);
         }
 
         $backfillUrl = $this->garminRequestUrl ? $this->garminRequestUrl : $this->healthApiUrl . '/backfill/dailies';
@@ -252,38 +258,61 @@ class GarminService  implements DataSource
         $response = Http::withHeaders(['Authorization' => $authHeader])
             ->get($backfillUrl, $queryParams);
 
-
         if ($response->successful()) {
             $activities = collect($response->json());
         } else {
             $activities = collect([]);
         }
 
-        $activities = $activities->map(function ($activity) use ($startTimeInSeconds, $endTimeInSeconds) {
-            // dd($activity, $startTimeInSeconds, $endTimeInSeconds);
+        return $activities->map(function ($activity) use ($startTimeInSeconds, $endTimeInSeconds) {
+
             $date = Carbon::createFromTimestamp($activity['startTimeInSeconds'])->format('Y-m-d');
             $distance = round(($activity['distanceInMeters'] / 1609.344), 3);
             $modality = $this->modality($activity['activityType']);
-
+            $time = $activity['startTimeInSeconds'];
             return compact('date', 'distance', 'modality');
-        });
+        })->toArray();
 
-        return $activities->toArray();
+        /*return collect($items)
+        ->values()
+        ->toArray();*/
+    }
 
-        $items = $activities->reduce(function ($data, $item) {
+    public function formatActivities($activities)
+    {
+        $items = collect($activities)->reduce(function ($data, $item) {
 
-            if (!isset($data[$item['modality']])) {
-                $data[$item['modality']] = $item;
+            if (isset($data[$item['date']])) {
+
+                if ($data[$item['date']]['modality'] == $item['modality']) {
+                    $data[$item['date']]['distance'] += $item['distance'];
+                } else {
+                    $data[$item['date']] = array_merge($data[$item['date']], $item);
+                }
 
                 return $data;
             }
 
-            $data[$item['modality']]['distance'] += $item['distance'];
+            $data[$item['date']] = $item;
+
+            return $data;
+
+            $data[$item['date']][$item['modality']]['distance'] += $item['distance'];
+
+            return $data;
+
+            if (!isset($data[$item['date']][$item['modality']])) {
+                $data[$item['date']][$item['modality']] = $item;
+
+                return $data;
+            }
+
+            $data[$item['date']][$item['modality']]['distance'] += $item['distance'];
 
             return $data;
         }, []);
 
-        return collect($items)->values()->toArray();
+        return collect($items)->values();
     }
 
     public function activitiesTested()
