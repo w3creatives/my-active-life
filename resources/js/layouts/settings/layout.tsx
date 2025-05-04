@@ -13,6 +13,11 @@ const sidebarNavItems: NavItem[] = [
         icon: null,
     },
     {
+        title: 'Device Syncing',
+        href: '/settings/device-sync',
+        icon: null,
+    },
+    {
         title: 'Password',
         href: '/settings/password',
         icon: null,
@@ -59,8 +64,8 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
                 <Separator className="my-6 md:hidden" />
 
-                <div className="flex-1 md:max-w-2xl">
-                    <section className="max-w-xl space-y-12">{children}</section>
+                <div className="flex-1 w-full">
+                    <section className="w-full space-y-12">{children}</section>
                 </div>
             </div>
         </div>
