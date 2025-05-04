@@ -2,11 +2,11 @@
 <tr>
 <td class="header">
 <a href="{{ $url }}" style="display: inline-block;">
-@if (trim($slot) === 'Laravel')
-<img src="https://staging-tracker.runtheedge.com/assets/logo/rte-logo-01-long-small-a3b7d8e00daa22d7cd4fdfbbfdb637ad3b7661304bc69d45ecb27b59d2504a2b.png" class="logo" alt="Laravel Logo">
+@if (trim($slot) === config('app.name'))
+<img src="{{ asset('storage/mail/mail-logo.png') }}" alt="{{ config('app.name') }}" width="260">
 @else
 {{ $slot }}
-@endif 
+@endif
 </a>
 </td>
 </tr>

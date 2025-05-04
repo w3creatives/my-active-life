@@ -21,7 +21,8 @@
 {{-- Footer --}}
 <x-slot:footer>
 <x-mail::footer>
-© {{ date('Y') }} @lang('All rights reserved.')
+<p>@lang('Copyright') © {{ date('Y') }} @lang('Run The Edge. All rights reserved. We appreciate you!')</p>
+<p><a href="mailto:support@runtheedge.com?subject=A%20Little%20Help%20Please?">support@runtheedge.com</a></p>
 </x-mail::footer>
 </x-slot:footer>
 </x-mail::layout>
