@@ -384,7 +384,9 @@ class GarminService  implements DataSource
         return collect($items)->values()->toArray();
     }
 
-    public function verifyWebhook() {}
+    public function verifyWebhook($code) {
+        return http_response_code(204);
+    }
 
     private function getTimestamp()
     {

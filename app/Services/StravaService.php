@@ -196,8 +196,8 @@ class StravaService implements DataSource
         return collect($items)->values()->toArray();
     }
 
-    public function verifyWebhook()
+    public function verifyWebhook($code)
     {
-        return true;
+        return http_response_code(204);
     }
 }

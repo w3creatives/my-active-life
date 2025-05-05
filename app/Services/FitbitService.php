@@ -26,6 +26,7 @@ class FitbitService implements DataSource
     private $authTokenUrl = "https://api.fitbit.com/oauth2/token";
 
     private $activityBaseUrl = 'https://api.fitbit.com/1/';
+    private $fitbitWebhookVerificationCode;
     private $authResponse;
 
     private $startDate;
@@ -40,6 +41,7 @@ class FitbitService implements DataSource
         $this->clientId = config('services.fitbit.client_id');
         $this->redirectUrl = config('services.fitbit.redirect_url');
         $this->clientSecret = config('services.fitbit.client_secret');
+        $this->fitbitWebhookVerificationCode = config('services.fitbit.webhook_verification_code');
     }
 
     public function setAccessToken($accessToken)
@@ -85,7 +87,13 @@ class FitbitService implements DataSource
         return $this;
     }
 
-    public function verifyWebhook() {}
+    public function verifyWebhook($code)
+    {
+        if ($code === $this->fitbitWebhookVerificationCode) {
+            return http_response_code(204);
+        }
+        return http_response_code(404);
+    }
 
     public function refreshToken($refreshtoken = null)
     {

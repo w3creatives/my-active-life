@@ -20,13 +20,4 @@ class CreateUserPoint
     {
         $this->userPointService->createOrUpdate($user, $data);
     }
-
-    public function rules(): array
-    {
-        return [
-            'title' => ['required', 'min:8'],
-            'body' => ['required'],
-            'published' => ['required', 'boolean'],
-        ];
-    }
 }

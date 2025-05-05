@@ -15,7 +15,8 @@ use App\Http\Controllers\Webhook\{
     HubspotsController,
     UserActivitiesController,
     WebhooksController,
-    OrdersController
+    OrdersController,
+    TrackerWebhooksController
 };
 
 Route::group(['prefix' => 'tracker'], function(){
@@ -60,6 +61,12 @@ Route::group(['prefix' => 'webhook'], function(){
     #Route::get('test/tracker/fitbit/user/distances', [TestTrackersController::class,'fitBitUserDistanceTracker']); 
     Route::get('test/tracker/fitbit/user/manual/distances', [TestTrackersController::class,'fitBiUserManualDistanceTracker']); 
     Route::get('test/v1/tracker/fitbit/test', [TestTrackersController::class,'testfitbit']); 
+
+    /**
+    * New webhook URLs
+    */
+    Route::post('v1/tracker/fitbit', [TrackerWebhooksController::class,'fitbitTracker']); 
+    Route::get('v1/tracker/fitbit', [TrackerWebhooksController::class,'verifyToken']); 
   
 });
 

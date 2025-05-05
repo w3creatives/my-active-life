@@ -13,7 +13,7 @@ interface DataSource
 
     public function activities();
 
-    public function verifyWebhook();
+    public function verifyWebhook($code);
 
     public function setAccessToken($accessToken);
     

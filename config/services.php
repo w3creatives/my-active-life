@@ -47,6 +47,7 @@ return [
         'client_id' => env('FITBIT_CLIENT_ID'),
         'redirect_url' => env('FITBIT_REDIRECT_URI'),
         'client_secret' => env('FITBIT_CLIENT_SECRET'),
+        'webhook_verification_code' => env('FITBIT_WEBHOOK_VERIFICATION_CODE')
     ],
     'garmin' => [
         'consumer_key' => env('GARMIN_CONSUMER_KEY'),
