@@ -6,7 +6,7 @@ import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Smartphone, Watch } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -16,17 +16,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 interface DeviceSyncProps {
-    appleConnected: boolean;
-    fitbitConnected: boolean;
-    garminConnected: boolean;
-    stravaConnected: boolean;
-    fitbitUrl: string;
-    garminUrl: string;
-    stravaUrl: string;
+    connectedSources: Array<string>
 }
 
-export default function DeviceSync({ appleConnected, fitbitConnected, garminConnected, stravaConnected, fitbitUrl, garminUrl, stravaUrl }: DeviceSyncProps) {
-    fitbitConnected = appleConnected = garminConnected = stravaConnected = false;
+export default function DeviceSync({ connectedSources }: DeviceSyncProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Device Syncing" />
@@ -48,13 +41,17 @@ export default function DeviceSync({ appleConnected, fitbitConnected, garminConn
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                {appleConnected ? (
+                                {connectedSources.includes('apple') ? (
                                     <div className="flex justify-between items-center">
-                                        <Link method="post" href="#" as="button">
-                                            <Button variant="outline" className="courser-pointer text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700">
+                                        <Button
+                                            variant="outline"
+                                            className="courser-pointer text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                                            asChild
+                                        >
+                                            <Link method="post" href="#">
                                                 Disconnect
-                                            </Button>
-                                        </Link>
+                                            </Link>
+                                        </Button>
                                         <div className="flex items-center text-sm text-green-600 gap-1">
                                             <CheckCircle2 className="h-4 w-4" />
                                             <span>Connected</span>
@@ -77,20 +74,28 @@ export default function DeviceSync({ appleConnected, fitbitConnected, garminConn
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                {garminConnected ? (
+                                {connectedSources.includes('fitbit') ? (
                                     <div className="flex justify-between items-center">
-                                        <Link method="post" href="#" as="button">
-                                            <Button variant="outline" className="courser-pointer text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700">
+                                        <Button
+                                            variant="outline"
+                                            className="courser-pointer text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                                            asChild
+                                        >
+                                            <Link
+                                                method="post"
+                                                href={route('profile.device-sync.disconnect', 'fitbit')}
+                                                className="courser-pointer"
+                                            >
                                                 Disconnect
-                                            </Button>
-                                        </Link>
+                                            </Link>
+                                        </Button>
                                         <div className="flex items-center text-sm text-green-600 gap-1">
                                             <CheckCircle2 className="h-4 w-4" />
                                             <span>Connected</span>
                                         </div>
                                     </div>
                                 ) : (
-                                    <a href={fitbitUrl} className="inline-block">
+                                    <a href={route('profile.device-sync.connect', 'fitbit')} className="inline-block">
                                         <Button className="cursor-pointer dark:text-white">Connect</Button>
                                     </a>
                                 )}
@@ -106,20 +111,24 @@ export default function DeviceSync({ appleConnected, fitbitConnected, garminConn
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                {fitbitConnected ? (
+                                {connectedSources.includes('garmin') ? (
                                     <div className="flex justify-between items-center">
-                                        <Link method="post" href="#" as="button">
-                                            <Button variant="outline" className="courser-pointer text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700">
+                                        <Button
+                                            variant="outline"
+                                            className="courser-pointer text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                                            asChild
+                                        >
+                                            <Link method="post" href="#">
                                                 Disconnect
-                                            </Button>
-                                        </Link>
+                                            </Link>
+                                        </Button>
                                         <div className="flex items-center text-sm text-green-600 gap-1">
                                             <CheckCircle2 className="h-4 w-4" />
                                             <span>Connected</span>
                                         </div>
                                     </div>
                                 ) : (
-                                    <a href={garminUrl} className="inline-block">
+                                    <a href={route('profile.device-sync.connect', 'garmin')} className="inline-block">
                                         <Button className="cursor-pointer dark:text-white">Connect</Button>
                                     </a>
                                 )}
@@ -133,20 +142,24 @@ export default function DeviceSync({ appleConnected, fitbitConnected, garminConn
                                 </div>
                             </CardHeader>
                             <CardContent>
-                                {stravaConnected ? (
+                                {connectedSources.includes('strava') ? (
                                     <div className="flex justify-between items-center">
-                                        <Link method="post" href="#" as="button">
-                                            <Button variant="outline" className="courser-pointer text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700">
+                                        <Button
+                                            variant="outline"
+                                            className="courser-pointer text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                                            asChild
+                                        >
+                                            <Link method="post" href={route('profile.device-sync.disconnect', 'strava')}>
                                                 Disconnect
-                                            </Button>
-                                        </Link>
+                                            </Link>
+                                        </Button>
                                         <div className="flex items-center text-sm text-green-600 gap-1">
                                             <CheckCircle2 className="h-4 w-4" />
                                             <span>Connected</span>
                                         </div>
                                     </div>
                                 ) : (
-                                    <a href={stravaUrl} className="inline-block">
+                                    <a href={route('profile.device-sync.connect', 'strava')} className="inline-block">
                                         <Button className="cursor-pointer dark:text-white">Connect</Button>
                                     </a>
                                 )}

@@ -36,23 +36,24 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+
     'strava' => [
         'api_url' => env('STRAVA_API_BASE_URL'),
         'client_id' => env('STRAVA_CLIENT_ID'),
         'redirect_url' => env('STRAVA_REDIRECT_URI'),
         'client_secret' => env('STRAVA_CLIENT_SECRET'),
     ],
+
     'fitbit' => [
-        'api_url' => env('FITBIT_API_BASE_URL'),
         'client_id' => env('FITBIT_CLIENT_ID'),
         'redirect_url' => env('FITBIT_REDIRECT_URI'),
         'client_secret' => env('FITBIT_CLIENT_SECRET'),
-        'webhook_verification_code' => env('FITBIT_WEBHOOK_VERIFICATION_CODE')
+        'webhook_verification_code' => env('FITBIT_WEBHOOK_VERIFICATION_CODE'),
     ],
+
     'garmin' => [
         'consumer_key' => env('GARMIN_CONSUMER_KEY'),
         'consumer_secret' => env('GARMIN_CONSUMER_SECRET'),
-        'callback_url' => env('GARMIN_CALLBACK_URL')
-    ]
-
+        'callback_url' => env('GARMIN_CALLBACK_URL'),
+    ],
 ];
