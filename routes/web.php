@@ -44,6 +44,8 @@ Route::get('test', function () {
     //return ($tracker->get('fitbit')->setAccessToken($accesToken)->setDate('2025-01-12','2025-01-18')->activities());
 
     $accesToken = "a34e18a6-2473-42a4-b8e6-bb8df5061fd8";
+
+    dd($tracker->get('garmin')->authUrl());
     return ($tracker->get('garmin')->setAccessToken($accesToken)
     ->setAccessTokenSecret("1N0baQBO247cGPk8iKd0w4KvEVnPA4HZm96")
     ->setRequestType('upload')

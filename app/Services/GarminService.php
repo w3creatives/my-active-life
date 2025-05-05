@@ -83,7 +83,6 @@ class GarminService  implements DataSource
 
         try {
             $response = Http::withHeaders(['Authorization' => $authHeaders])->post($this->baseUrl . 'request_token');
-
             parse_str($response->body(), $result);
 
             if (isset($result['oauth_token']) && isset($result['oauth_token_secret'])) {
@@ -408,8 +407,10 @@ class GarminService  implements DataSource
             rawurlencode($url) . '&' .
             rawurlencode($paramString);
 
-        $signingKey = rawurlencode($this->consumerSecret) . '&' . rawurlencode($this->accessTokenSecret);
-
+        $signingKey = rawurlencode($this->consumerSecret) . '&';
+        if ($this->accessTokenSecret) {
+            $signingKey .= rawurlencode($this->accessTokenSecret);
+        }
         $this->signature = rawurlencode(
             base64_encode(
                 hash_hmac('sha1', $baseString, $signingKey, true)
@@ -476,23 +477,17 @@ class GarminService  implements DataSource
 
         list($oauthTimestamp, $oauthNonce) = $this->getAuthTimestampNonce();
 
-        $authHeaders = 'OAuth ' . 'oauth_consumer_key="' . urlencode($this->consumerKey) . '", ';
+        $params = [
+            'oauth_consumer_key' => urlencode($this->consumerKey),
+            'oauth_nonce' => urlencode($oauthNonce),
+            'oauth_signature' => $this->signature,
+            'oauth_signature_method' => 'HMAC-SHA1',
+            'oauth_timestamp' => $oauthTimestamp,
+            'oauth_version' => '1.0'
+        ];
 
-        if ($this->oauthToken) {
-            $authHeaders .= 'oauth_token="' . urlencode($this->oauthToken) . '", ';
-        }
 
-        $authHeaders .= 'oauth_nonce="' . urlencode($oauthNonce) . '", ' .
-            'oauth_signature="' . urlencode($this->signature) . '", ' .
-            'oauth_signature_method="HMAC-SHA1", ' .
-            'oauth_timestamp="' . $oauthTimestamp . '", ';
-
-        if ($this->oauthVerifier) {
-            $authHeaders .= 'oauth_verifier="' . urlencode($this->oauthVerifier) . '", ';
-        }
-        $authHeaders .= 'oauth_version="1.0"';
-
-        return $authHeaders;
+        return $this->buildAuthorizationHeader($params);
     }
 
     private function modality(string $modality): string
