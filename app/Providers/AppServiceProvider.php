@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Interfaces\DataSource;
+use App\Interfaces\DataSourceInterface;
 use App\Services\FitbitService;
 use App\Services\GarminService;
 use App\Services\StravaService;
@@ -18,7 +18,7 @@ final class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         app()->bind(
-            DataSource::class,
+            DataSourceInterface::class,
             function ($app) {
                 return collect([
                     'fitbit' => app(FitbitService::class),

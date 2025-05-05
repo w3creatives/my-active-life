@@ -2,18 +2,18 @@
 
 namespace App\Services;
 
-use App\Interfaces\DataSource;
+use App\Interfaces\DataSourceInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Exception;
 use Carbon\Carbon;
-use App\Traits\CalculateDays;
+use App\Traits\CalculateDaysTrait;
 
-class GarminService  implements DataSource
+class GarminService  implements DataSourceInterface
 {
-    use CalculateDays;
+    use CalculateDaysTrait;
 
     private $accessToken;
 
@@ -72,7 +72,6 @@ class GarminService  implements DataSource
 
     public function authUrl()
     {
-
         $params = $this->getAuthParams();
 
         ksort($params);
@@ -128,9 +127,9 @@ class GarminService  implements DataSource
 
         if ($response->successful()) {
             $this->authResponse = $response->object();
+        } else {
+            $this->authResponse = null;
         }
-
-        $this->authResponse = null;
 
         return $this;
     }

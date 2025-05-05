@@ -2,9 +2,8 @@
 
 namespace App\Interfaces;
 
-interface DataSource
+interface DataSourceInterface
 {
-
     public function authUrl();
 
     public function authorize($code);
@@ -16,6 +15,6 @@ interface DataSource
     public function verifyWebhook($code);
 
     public function setAccessToken($accessToken);
-    
+
     public function setAccessTokenSecret($accessTokenSecret);
 }

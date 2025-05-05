@@ -5,13 +5,13 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 
-use App\Interfaces\DataSource;
+use App\Interfaces\DataSourceInterface;
 
-use App\Traits\CalculateDays;
+use App\Traits\CalculateDaysTrait;
 
-class StravaService implements DataSource
+class StravaService implements DataSourceInterface
 {
-    use CalculateDays;
+    use CalculateDaysTrait;
 
     private $apiUrl;
 
@@ -95,7 +95,6 @@ class StravaService implements DataSource
 
     public function authorize($code)
     {
-
         $response = Http::post($this->authTokenUrl, [
             'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
@@ -105,9 +104,9 @@ class StravaService implements DataSource
 
         if ($response->successful()) {
             $this->authResponse = $response->object();
+        } else {
+            $this->authResponse = null;
         }
-
-        $this->authResponse = null;
 
         return $this;
     }
@@ -162,7 +161,7 @@ class StravaService implements DataSource
 
             if ($activities->count()) {
                 $page++;
-            
+
                 $data = array_merge($data, $activities->toArray());
                 return $this->findActivities($startOfDay, $endOfDay, $data, $page);
             }

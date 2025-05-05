@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
+use App\Interfaces\DataSourceInterface;
 use Illuminate\Http\Request;
-use App\Interfaces\DataSource as DataSourceInterface;
 
 class TrackerWebhooksController extends Controller
 {
@@ -14,6 +14,7 @@ class TrackerWebhooksController extends Controller
     {
         $this->tracker = app(DataSourceInterface::class);
     }
+
     public function verifyWebhook(Request $request, $sourceSlug = 'fitbit')
     {
         return $this->tracker->get($sourceSlug)->verifyWebhook($request->get('verify'));

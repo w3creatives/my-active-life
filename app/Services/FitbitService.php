@@ -2,16 +2,16 @@
 
 namespace App\Services;
 
-use App\Interfaces\DataSource;
+use App\Interfaces\DataSourceInterface;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 
-use App\Traits\CalculateDays;
+use App\Traits\CalculateDaysTrait;
 
-class FitbitService implements DataSource
+class FitbitService implements DataSourceInterface
 {
 
-    use CalculateDays;
+    use CalculateDaysTrait;
 
     private $apiUrl;
     private $accessToken;
@@ -58,8 +58,6 @@ class FitbitService implements DataSource
 
     public function authUrl()
     {
-
-
         return $this->authUrl . "?" . http_build_query([
             'client_id' => $this->clientId,
             'response_type' => 'code',
@@ -70,19 +68,20 @@ class FitbitService implements DataSource
 
     public function authorize($code)
     {
-
-        $response = Http::post($this->authTokenUrl, [
+        $response = Http::asForm()->withHeaders([
+            'Authorization' => 'Basic ' . base64_encode("{$this->clientId}:{$this->clientSecret}"),
+        ])->post($this->authTokenUrl, [
             'client_id' => $this->clientId,
-            'client_secret' => $this->clientSecret,
-            'code' => $code,
             'grant_type' => 'authorization_code',
+            'redirect_uri' => route('profile.device-sync.callback', 'fitbit'),
+            'code' => $code,
         ]);
 
         if ($response->successful()) {
             $this->authResponse = $response->object();
+        } else {
+            $this->authResponse = null;
         }
-
-        $this->authResponse = null;
 
         return $this;
     }
