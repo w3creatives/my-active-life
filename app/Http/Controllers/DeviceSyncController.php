@@ -44,11 +44,27 @@ final class DeviceSyncController extends Controller
 
     public function trackerCallback(Request $request, string $sourceSlug)
     {
+
+        if ($sourceSlug === 'garmin') {
+            $authCode =  [$request->get('oauth_token'), $request->get('oauth_verifier')];
+        } else {
+            $authCode =  $request->get('code');
+        }
+
+        $deviceConnectionResponse = $this->tracker->get($sourceSlug)->authorize($authCode)->response();
+
+        if(!$deviceConnectionResponse) {
+            //Add logic to redirect back with error message
+            dd("ERROR");
+        }
+
+
+        /*
         if ($sourceSlug === 'garmin') {
             $deviceConnectionResponse = $this->tracker->get($sourceSlug)->authorize([$request->get('oauth_token'), $request->get('oauth_verifier')])->response();
         } else {
             $deviceConnectionResponse = $this->tracker->get($sourceSlug)->authorize($request->get('code'))->response();
-        }
+        }*/
 
         // Store connection in DataSourceProfile table
         $user = auth()->user();
@@ -72,7 +88,7 @@ final class DeviceSyncController extends Controller
                         : null),
                 'access_token_secret' => $deviceConnectionResponse->access_token_secret ?? null,
             ];
-
+           
             if ($profile) {
                 $profile->update($profileData);
             } else {
@@ -134,9 +150,9 @@ final class DeviceSyncController extends Controller
             // Delete the profile
             $profile->delete();
 
-            return redirect()->back()->with('success', ucfirst($sourceSlug).' disconnected successfully');
+            return redirect()->back()->with('success', ucfirst($sourceSlug) . ' disconnected successfully');
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to disconnect: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Failed to disconnect: ' . $e->getMessage());
         }
     }
 }

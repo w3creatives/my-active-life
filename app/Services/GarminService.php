@@ -118,15 +118,19 @@ class GarminService  implements DataSourceInterface
         // Generate signature
         $this->createSignature('POST', $this->baseUrl . 'access_token', $params);
 
-        $oauthParams['oauth_signature'] = $this->signature;
+        $params['oauth_signature'] = $this->signature;
 
-        $authHeaders = $this->authHeaders();
+        $authHeaders = $this->buildAuthorizationHeader($params);
 
         $response = Http::withHeaders(['Authorization' => $authHeaders])
             ->post($this->baseUrl . 'access_token');
 
         if ($response->successful()) {
-            $this->authResponse = $response->object();
+            parse_str($response->body(), $data); 
+            $this->authResponse = [
+                'access_token' => $data['oauth_token'],
+                'access_token_secret' => $data['oauth_token_secret']
+            ];
         } else {
             $this->authResponse = null;
         }
