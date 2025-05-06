@@ -16,6 +16,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('settings/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('settings/device-sync', [DeviceSyncController::class, 'index'])->name('profile.device-sync.edit');
+    Route::get('settings/device-sync/{sourceSlug}', [DeviceSyncController::class, 'connect'])->name('profile.device-sync.connect');
+    Route::post('settings/device-sync/disconnect/{source}', [DeviceSyncController::class, 'disconnect'])->name('profile.device-sync.disconnect');
+    Route::get('settings/device-sync/callback/{sourceSlug}', [DeviceSyncController::class, 'trackerCallback'])->name('profile.device-sync.callback');
 
     Route::get('settings/password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('settings/password', [PasswordController::class, 'update'])->name('password.update');

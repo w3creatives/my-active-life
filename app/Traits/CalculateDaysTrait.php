@@ -1,13 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Traits;
 
 use Carbon\CarbonImmutable;
 
-trait CalculateDays
+trait CalculateDaysTrait
 {
-
-    public function daysFromStartEndDate($startDate, $endDate)
+    public function daysFromStartEndDate($startDate, $endDate): array
     {
         $startDate = CarbonImmutable::parse($startDate);
         $endDate = $endDate ? CarbonImmutable::parse($endDate) : $startDate;
@@ -15,7 +16,7 @@ trait CalculateDays
         return [
             $startDate,
             $endDate,
-            $startDate->diffInDays($endDate, true)
+            $startDate->diffInDays($endDate, true),
         ];
     }
 }
