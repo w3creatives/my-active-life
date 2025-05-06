@@ -78,7 +78,20 @@ class FitbitService implements DataSourceInterface
         ]);
 
         if ($response->successful()) {
-            $this->authResponse = $response->object();
+
+            $data = $response->object();
+
+            $tokenExpiresAt = isset($data->expires_at)
+                ? now()->addSeconds($data->expires_at)
+                : (isset($data->expires_in)
+                    ? now()->addSeconds($data->expires_in)
+                    : null);
+
+            $this->authResponse = [
+                'access_token' => $data->access_token,
+                'refresh_token' => $data->refresh_token ?? null,
+                'token_expires_at' => $tokenExpiresAt
+            ];
         } else {
             $this->authResponse = null;
         }

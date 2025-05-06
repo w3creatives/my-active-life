@@ -103,7 +103,15 @@ class StravaService implements DataSourceInterface
         ]);
 
         if ($response->successful()) {
-            $this->authResponse = $response->object();
+            $data = $response->object();
+
+            $tokenExpiresAt = Carbon::parse($data->expires_at)->format('Y-m-d H:i:s');
+
+            $this->authResponse = [
+                'access_token' => $data->access_token,
+                'refresh_token' => $data->refresh_token ?? null,
+                'token_expires_at' => $tokenExpiresAt
+            ];
         } else {
             $this->authResponse = null;
         }
@@ -140,7 +148,7 @@ class StravaService implements DataSourceInterface
             $data = $items;
         }
 
-        return collect($data)->reject(function($item){
+        return collect($data)->reject(function ($item) {
             return $item['modality'] == 'none';
         })->values();
     }
@@ -154,7 +162,7 @@ class StravaService implements DataSourceInterface
             'page' => $page
         ];
 
-        $response = Http::withToken($this->accessToken)->get($this->apiUrl . 'athlete/activities?'.http_build_query($params));
+        $response = Http::withToken($this->accessToken)->get($this->apiUrl . 'athlete/activities?' . http_build_query($params));
 
         if ($response->successful()) {
             $activities = collect($response->json());

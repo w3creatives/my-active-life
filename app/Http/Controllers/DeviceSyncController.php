@@ -44,6 +44,9 @@ final class DeviceSyncController extends Controller
 
     public function trackerCallback(Request $request, string $sourceSlug)
     {
+        if(!in_array($sourceSlug, ['garmin','strava','fitbit'])) {
+            throw new Exception('Invalid request');
+        }
 
         if ($sourceSlug === 'garmin') {
             $authCode =  [$request->get('oauth_token'), $request->get('oauth_verifier')];
@@ -51,51 +54,26 @@ final class DeviceSyncController extends Controller
             $authCode =  $request->get('code');
         }
 
-        $deviceConnectionResponse = $this->tracker->get($sourceSlug)->authorize($authCode)->response();
+        $response = $this->tracker->get($sourceSlug)->authorize($authCode)->response();
 
-        if(!$deviceConnectionResponse) {
-            //Add logic to redirect back with error message
-            dd("ERROR");
+        if(!$response) {
+            return redirect()->route('profile.device-sync.edit');
         }
 
-
-        /*
-        if ($sourceSlug === 'garmin') {
-            $deviceConnectionResponse = $this->tracker->get($sourceSlug)->authorize([$request->get('oauth_token'), $request->get('oauth_verifier')])->response();
-        } else {
-            $deviceConnectionResponse = $this->tracker->get($sourceSlug)->authorize($request->get('code'))->response();
-        }*/
-
-        // Store connection in DataSourceProfile table
-        $user = auth()->user();
+        $user = $request->user();
         $dataSource = DataSource::where('short_name', $sourceSlug)->first();
 
-        if ($dataSource) {
-            // Check if the profile already exists
-            $profile = DataSourceProfile::where('user_id', $user->id)
-                ->where('data_source_id', $dataSource->id)
-                ->first();
+        $userSourceProfile = $user->profiles()->where('data_source_id', $dataSource->id)->first();
 
-            $profileData = [
-                'user_id' => $user->id,
-                'data_source_id' => $dataSource->id,
-                'access_token' => $deviceConnectionResponse->access_token ?? null,
-                'refresh_token' => $deviceConnectionResponse->refresh_token ?? null,
-                'token_expires_at' => isset($deviceConnectionResponse->expires_at)
-                    ? now()->addSeconds($deviceConnectionResponse->expires_at)
-                    : (isset($deviceConnectionResponse->expires_in)
-                        ? now()->addSeconds($deviceConnectionResponse->expires_in)
-                        : null),
-                'access_token_secret' => $deviceConnectionResponse->access_token_secret ?? null,
-            ];
-           
-            if ($profile) {
-                $profile->update($profileData);
-            } else {
-                DataSourceProfile::create($profileData);
-            }
-        }
+        $response['data_source_id'] = $dataSource->id;
 
+       
+        if(!is_null($userSourceProfile)){
+            $userSourceProfile->fill($response)->save();
+            return redirect()->route('profile.device-sync.edit');
+        } 
+
+        $user->profiles()->create($response);
         return redirect()->route('profile.device-sync.edit');
     }
 
@@ -106,7 +84,7 @@ final class DeviceSyncController extends Controller
      */
     public function disconnect(Request $request, string $sourceSlug)
     {
-        $user = auth()->user();
+        $user = $request->user();
         $dataSource = DataSource::where('short_name', $sourceSlug)->first();
 
         if (! $dataSource) {
