@@ -159,10 +159,10 @@ export function Calendar({ date, setDate }: CalendarProps) {
                       {getPointsForDay(day).map((point) => (
                         <div
                           key={point.id}
-                          className="truncate rounded bg-blue-100 text-blue-700 px-1 py-0.5 text-xs"
+                          className="truncate text-center text-sm md:text-2xl font-semibold"
                           title={point.note || `${point.miles} miles (Total: ${point.cumulative_miles})`}
                         >
-                          {point.miles} miles
+                          {Number(point.miles).toFixed(2)}±
                         </div>
                       ))}
                     </div>
