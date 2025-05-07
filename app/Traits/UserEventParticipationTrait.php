@@ -7,7 +7,7 @@ use Carbon\Carbon;
 trait UserEventParticipationTrait
 {
 
-    public function userParticipations($user, $eventId, $date = null)
+    public function userParticipations($user, $date = null, $eventId = null)
     {
 
         $date = $date ?? Carbon::now()->format('Y-m-d');
@@ -25,10 +25,6 @@ trait UserEventParticipationTrait
             ->whereHas('event', function ($query) use ($date) {
                 return $query->where('start_date', '<=', $date);
             })->get();
-
-        if (!$participations->count()) {
-            return false;
-        }
 
         return $participations;
     }

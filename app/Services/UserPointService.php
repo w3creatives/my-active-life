@@ -5,9 +5,11 @@ namespace App\Services;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Repositories\UserPointRepository;
+use App\Traits\UserEventParticipationTrait;
 
 class UserPointService
 {
+    use UserEventParticipationTrait;
 
     private $userPointRepository;
 

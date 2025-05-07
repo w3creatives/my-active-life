@@ -65,8 +65,8 @@ Route::group(['prefix' => 'webhook'], function(){
     /**
     * New webhook URLs
     */
-    Route::post('v1/tracker/fitbit', [TrackerWebhooksController::class,'fitbitTracker']); 
-    Route::get('v1/tracker/fitbit', [TrackerWebhooksController::class,'verifyToken']); 
+    Route::post('tracker/fitbit', [TrackerWebhooksController::class,'webhookAction']); 
+    Route::get('tracker/fitbit', [TrackerWebhooksController::class,'verifyToken']); 
   
 });
 

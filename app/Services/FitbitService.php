@@ -181,7 +181,8 @@ class FitbitService implements DataSourceInterface
             $modality = $this->modality($item['name']);
             $date = $item['startDate'];
             $distance = $item['distance'] * 0.621371;
-            return compact('date', 'distance', 'modality');
+            $raw_distance = $item['distance'];
+            return compact('date', 'distance', 'modality','raw_distance');
         });
 
         $items = $activities->reduce(function ($data, $item) {
@@ -193,6 +194,7 @@ class FitbitService implements DataSourceInterface
             }
 
             $data[$item['modality']]['distance'] += $item['distance'];
+            $data[$item['modality']]['raw_distance'] += $item['raw_distance'];
 
             return $data;
         }, []);
@@ -210,5 +212,22 @@ class FitbitService implements DataSourceInterface
             'Hike' => 'other',
             default => 'daily_steps',
         };
+    }
+
+    public function formatWebhookRequest($request)
+    {
+        $notifications = collect($request->_json ? collect($request->_json) : $request->all());
+
+        return $notifications->map(function ($notification) {
+            list($userId) = explode("-", $notification['subscriptionId']);
+            $notification['subscriptionId'];
+            $notification['date'];
+
+            return [
+                'userId' => $userId,
+                'date' => $notification['date'],
+                'subscriptionId' => $notification['subscriptionId']
+            ];
+        });
     }
 }
