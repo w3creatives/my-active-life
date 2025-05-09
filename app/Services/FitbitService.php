@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Interfaces\DataSourceInterface;
+use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 
@@ -42,6 +43,19 @@ class FitbitService implements DataSourceInterface
         $this->redirectUrl = config('services.fitbit.redirect_url');
         $this->clientSecret = config('services.fitbit.client_secret');
         $this->fitbitWebhookVerificationCode = config('services.fitbit.webhook_verification_code');
+    }
+
+    public function setSecrets($secrets)
+    {
+        if (is_array($secrets)) {
+            list($accessToken) = $secrets;
+        } else {
+            $accessToken = $secrets;
+        }
+
+        $this->setAccessToken($accessToken);
+
+        return $this;
     }
 
     public function setAccessToken($accessToken)
@@ -137,13 +151,15 @@ class FitbitService implements DataSourceInterface
 
     public function setDate($startDate, $endDate = null)
     {
-        list($startDate, $endDate, $dateDays) = $this->daysFromStartEndDate($startDate, $endDate);
+        if (!is_null($startDate)) {
+            list($startDate, $endDate, $dateDays) = $this->daysFromStartEndDate($startDate, $endDate);
 
-        $this->startDate = $startDate;
+            $this->startDate = $startDate;
 
-        $this->endDate = $endDate;
+            $this->endDate = $endDate;
 
-        $this->dateDays = $dateDays;
+            $this->dateDays = $dateDays;
+        }
 
         return $this;
     }
@@ -182,7 +198,7 @@ class FitbitService implements DataSourceInterface
             $date = $item['startDate'];
             $distance = $item['distance'] * 0.621371;
             $raw_distance = $item['distance'];
-            return compact('date', 'distance', 'modality','raw_distance');
+            return compact('date', 'distance', 'modality', 'raw_distance');
         });
 
         $items = $activities->reduce(function ($data, $item) {
@@ -214,20 +230,43 @@ class FitbitService implements DataSourceInterface
         };
     }
 
+    public function processWebhook($url = null)
+    {
+        return $this;
+    }
+
     public function formatWebhookRequest($request)
     {
         $notifications = collect($request->_json ? collect($request->_json) : $request->all());
 
-        return $notifications->map(function ($notification) {
+        $items = $notifications->map(function ($notification) {
             list($userId) = explode("-", $notification['subscriptionId']);
             $notification['subscriptionId'];
             $notification['date'];
 
-            return [
-                'userId' => $userId,
+            $user = User::find($userId);
+
+            $sourceProfile = null;
+
+            if ($user) {
+                $sourceProfile = $user->profiles()->whereHas('source', function ($query) {
+                    return $query->where('short_name', 'fitbit');
+                })->first();
+            }
+
+            return (object)[
+                'user' => $user,
                 'date' => $notification['date'],
-                'subscriptionId' => $notification['subscriptionId']
+                'sourceProfile' => $sourceProfile,
+                'dataSourceId' => $sourceProfile ? $sourceProfile->data_source_id : null,
+                'sourceToken' => $sourceProfile ? $sourceProfile->access_token : null,
+                'webhookUrl' => null,
+                'extra' => array_merge($notification, ['userId' => $userId, 'source' => 'gitbit'])
             ];
+        });
+
+        return $items->filter(function ($item) {
+            return $item->user && $item->sourceProfile && $item->sourceToken;
         });
     }
 }

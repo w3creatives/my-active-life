@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\Log;
 
 use App\Repositories\SopifyRepository;
 use App\Services\EventService;
-use App\Models\User;
-use App\Services\UserPointService;
 
 class TrackerWebhooksController extends Controller
 {
@@ -27,7 +25,7 @@ class TrackerWebhooksController extends Controller
         return $this->tracker->get($sourceSlug)->verifyWebhook($request->get('verify'));
     }
 
-    public function webhookAction(Request $request, SopifyRepository $sopifyRepository, EventService $eventService, UserPointService $userPointService, $sourceSlug = 'fitbit')
+    public function webhookAction(Request $request, SopifyRepository $sopifyRepository, EventService $eventService, $sourceSlug = 'fitbit')
     {
 
         $tracker = $this->tracker->get($sourceSlug);
@@ -36,32 +34,31 @@ class TrackerWebhooksController extends Controller
 
         foreach ($notifications as $notification) {
 
-            $user = User::find($notification['userId']);
+            $user = $notification->user;
 
             if (is_null($user)) {
-                Log::stack(['single'])->debug("{$sourceSlug} : webhook  - {$notification['subscriptionId']} - User Not Found", $notification);
+                Log::stack(['single'])->debug("{$sourceSlug} : User Not Found", $notification);
                 continue;
             }
 
-            $sourceProfile = $user->profiles()->whereHas('source', function ($query) use ($sourceSlug) {
-                return $query->where('short_name', $sourceSlug);
-            })->first();
 
-            if (is_null($sourceProfile)) {
-                Log::stack(['single'])->debug("{$sourceSlug} : webhook  - {$notification['subscriptionId']} - access token not found", []);
+            if (is_null($notification->sourceToken)) {
+                Log::stack(['single'])->debug("{$sourceSlug} : access token not found", $notification);
                 continue;
             }
 
-            $activities = $tracker->setAccessToken($sourceProfile->access_token)->setDate($notification['date'])->activities();
+            $activities = $tracker->setSecrets($notification->sourceToken)
+                ->processWebhook($notification->webhookUrl)
+                ->setDate($notification['date'])->activities();
 
             if ($activities->count()) {
                 foreach ($activities as $activity) {
 
-                    $activity['dataSourceId'] = $sourceProfile->data_source_id;
+                    $activity['dataSourceId'] = $notification->dataSourceId;
                     $eventService->createUserParticipationPoints($user, $activity);
 
                     if ($sourceSlug == 'fitbit') {
-                        $this->createOrUpdateUserProfilePoint($user, $activity['raw_distance'], $activity['date'], $sourceProfile);
+                        $this->createOrUpdateUserProfilePoint($user, $activity['raw_distance'], $activity['date'], $notification->sourceProfile);
                         $sopifyRepository->updateStatus($user->email, true);
                     }
                 }

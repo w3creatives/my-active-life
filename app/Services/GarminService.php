@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use Exception;
 use Carbon\Carbon;
 use App\Traits\CalculateDaysTrait;
+use App\Models\DataSourceProfile;
 
 class GarminService  implements DataSourceInterface
 {
@@ -54,6 +55,16 @@ class GarminService  implements DataSourceInterface
         $this->consumerKey = config('services.garmin.consumer_key');
         $this->consumerSecret = config('services.garmin.consumer_secret');
         $this->oathCallbackUrl = config('services.garmin.callback_url');
+    }
+
+    public function setSecrets($secrets)
+    {
+        list($accessToken, $accessTokenSecret) = $secrets;
+
+        $this->setAccessToken($accessToken);
+        $this->setAccessTokenSecret($accessTokenSecret);
+
+        return $this;
     }
 
     public function setAccessToken($accessToken)
@@ -126,7 +137,7 @@ class GarminService  implements DataSourceInterface
             ->post($this->baseUrl . 'access_token');
 
         if ($response->successful()) {
-            parse_str($response->body(), $data); 
+            parse_str($response->body(), $data);
             $this->authResponse = [
                 'access_token' => $data['oauth_token'],
                 'access_token_secret' => $data['oauth_token_secret']
@@ -147,13 +158,15 @@ class GarminService  implements DataSourceInterface
 
     public function setDate($startDate, $endDate = null)
     {
-        list($startDate, $endDate, $dateDays) = $this->daysFromStartEndDate($startDate, $endDate);
+        if (!is_null($startDate)) {
+            list($startDate, $endDate, $dateDays) = $this->daysFromStartEndDate($startDate, $endDate);
 
-        $this->startDate = $startDate;
+            $this->startDate = $startDate;
 
-        $this->endDate = $endDate;
+            $this->endDate = $endDate;
 
-        $this->dateDays = $dateDays;
+            $this->dateDays = $dateDays;
+        }
 
         return $this;
     }
@@ -173,6 +186,53 @@ class GarminService  implements DataSourceInterface
         $this->queryParams = $queryParams;
 
         return $this;
+    }
+
+    public function formatWebhookRequest($request)
+    {
+        $items = collect([]);
+
+        if ($request->has('dailies') || $request->has('activities')) {
+            $items = collect(!empty($request->activities) ? $request->activities : $request->dailies);
+        }
+
+        if (!$items->count()) {
+            return $items;
+        }
+
+        $items = $items->map(function ($item) {
+
+            $userAccessToken = $item['userAccessToken'] ?? null;
+
+            $sourceProfile = DataSourceProfile::where(['access_token' => $userAccessToken])
+                ->whereHas('source', function ($query) {
+                    return $query->where('short_name', 'garmin');
+                })
+                ->first();
+
+
+            $user = $sourceProfile->user ?? null;
+
+            $sourceToken = $sourceProfile ? [$sourceProfile->access_token, $sourceProfile->access_token_secret] : null;
+
+            return (object)[
+                'user' => $user,
+                'date' => null,
+                'sourceProfile' => $sourceProfile,
+                'dataSourceId' => $sourceProfile ? $sourceProfile->data_source_id : null,
+                'sourceToken' => $sourceToken,
+                'webhookUrl' => $item['callbackURL'] ?? null,
+                'extra' => [
+                    'subscriptionId' => null,
+                    'source' => 'garmin',
+                    'userId' => $user ? $user->id : null
+                ]
+            ];
+        });
+
+        return $items->filter(function ($item) {
+            return $item->user && $item->sourceProfile && $item->webhookUrl;
+        });
     }
 
     public function setRequestType(string $requestType)
@@ -387,7 +447,8 @@ class GarminService  implements DataSourceInterface
         return collect($items)->values()->toArray();
     }
 
-    public function verifyWebhook($code) {
+    public function verifyWebhook($code)
+    {
         return http_response_code(204);
     }
 
