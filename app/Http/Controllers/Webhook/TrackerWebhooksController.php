@@ -49,7 +49,7 @@ class TrackerWebhooksController extends Controller
 
             $activities = $tracker->setSecrets($notification->sourceToken)
                 ->processWebhook($notification->webhookUrl)
-                ->setDate($notification['date'])->activities();
+                ->setDate($notification->date)->activities();
 
             if ($activities->count()) {
                 foreach ($activities as $activity) {
