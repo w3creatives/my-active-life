@@ -1,39 +1,45 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Interfaces\DataSourceInterface;
 use App\Models\User;
-use Illuminate\Support\Facades\Http;
-use Carbon\Carbon;
-
 use App\Traits\CalculateDaysTrait;
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Http;
 
-class FitbitService implements DataSourceInterface
+final class FitbitService implements DataSourceInterface
 {
-
     use CalculateDaysTrait;
 
-    private $apiUrl;
-    private $accessToken;
+    private string $apiUrl;
 
-    private $clientId;
+    private string $accessToken;
 
-    private $redirectUrl;
+    private string $clientId;
 
-    private $clientSecret;
+    private string $redirectUrl;
 
-    private $authUrl = "https://www.fitbit.com/oauth2/authorize";
-    private $authTokenUrl = "https://api.fitbit.com/oauth2/token";
+    private string $clientSecret;
 
-    private $activityBaseUrl = 'https://api.fitbit.com/1/';
-    private $fitbitWebhookVerificationCode;
-    private $authResponse;
+    private string $authUrl = 'https://www.fitbit.com/oauth2/authorize';
 
-    private $startDate;
-    private $endDate;
+    private string $authTokenUrl = 'https://api.fitbit.com/oauth2/token';
 
-    private $dateDays;
+    private string $activityBaseUrl = 'https://api.fitbit.com/1/';
+
+    private string $fitbitWebhookVerificationCode;
+
+    private array $authResponse;
+
+    private string $startDate;
+
+    private string $endDate;
+
+    private string $dateDays;
 
     public function __construct($accessToken = null)
     {
@@ -45,10 +51,10 @@ class FitbitService implements DataSourceInterface
         $this->fitbitWebhookVerificationCode = config('services.fitbit.webhook_verification_code');
     }
 
-    public function setSecrets($secrets)
+    public function setSecrets($secrets): self
     {
         if (is_array($secrets)) {
-            list($accessToken) = $secrets;
+            [$accessToken] = $secrets;
         } else {
             $accessToken = $secrets;
         }
@@ -58,32 +64,32 @@ class FitbitService implements DataSourceInterface
         return $this;
     }
 
-    public function setAccessToken($accessToken)
+    public function setAccessToken($accessToken): self
     {
         $this->accessToken = $accessToken;
 
         return $this;
     }
 
-    public function setAccessTokenSecret($accessTokenSecret)
+    public function setAccessTokenSecret($accessTokenSecret): self
     {
         return $this;
     }
 
-    public function authUrl()
+    public function authUrl(): string
     {
-        return $this->authUrl . "?" . http_build_query([
+        return $this->authUrl.'?'.http_build_query([
             'client_id' => $this->clientId,
             'response_type' => 'code',
             'redirect_uri' => $this->redirectUrl,
-            'scope' => 'activity heartrate profile nutrition settings sleep weight'
+            'scope' => 'activity heartrate profile nutrition settings sleep weight',
         ]);
     }
 
-    public function authorize($code)
+    public function authorize($code): self
     {
         $response = Http::asForm()->withHeaders([
-            'Authorization' => 'Basic ' . base64_encode("{$this->clientId}:{$this->clientSecret}"),
+            'Authorization' => 'Basic '.base64_encode("{$this->clientId}:{$this->clientSecret}"),
         ])->post($this->authTokenUrl, [
             'client_id' => $this->clientId,
             'grant_type' => 'authorization_code',
@@ -92,7 +98,6 @@ class FitbitService implements DataSourceInterface
         ]);
 
         if ($response->successful()) {
-
             $data = $response->object();
 
             $tokenExpiresAt = isset($data->expires_at)
@@ -104,32 +109,33 @@ class FitbitService implements DataSourceInterface
             $this->authResponse = [
                 'access_token' => $data->access_token,
                 'refresh_token' => $data->refresh_token ?? null,
-                'token_expires_at' => $tokenExpiresAt
+                'token_expires_at' => $tokenExpiresAt,
             ];
         } else {
-            $this->authResponse = null;
+            $this->authResponse = [];
         }
 
         return $this;
     }
 
-    public function verifyWebhook($code)
+    public function verifyWebhook($code): bool|int
     {
         if ($code === $this->fitbitWebhookVerificationCode) {
             return http_response_code(204);
         }
+
         return http_response_code(404);
     }
 
-    public function refreshToken($refreshtoken = null)
+    public function refreshToken($refreshtoken = null): array
     {
         $response = Http::asForm()
             ->withHeaders([
-                'Authorization' => 'Basic ' . base64_encode($this->clientId . ':' . $this->clientSecret)
+                'Authorization' => 'Basic '.base64_encode($this->clientId.':'.$this->clientSecret),
             ])
             ->post($this->authTokenUrl, [
                 'grant_type' => 'refresh_token',
-                'refresh_token' => $refreshtoken
+                'refresh_token' => $refreshtoken,
             ]);
 
         $data = json_decode($response->body(), true);
@@ -141,18 +147,18 @@ class FitbitService implements DataSourceInterface
             return $profileData;
         }
 
-        return null;
+        return [];
     }
 
-    public function response()
+    public function response(): array
     {
         return $this->authResponse;
     }
 
-    public function setDate($startDate, $endDate = null)
+    public function setDate($startDate, $endDate = null): self
     {
-        if (!is_null($startDate)) {
-            list($startDate, $endDate, $dateDays) = $this->daysFromStartEndDate($startDate, $endDate);
+        if (! is_null($startDate)) {
+            [$startDate, $endDate, $dateDays] = $this->daysFromStartEndDate($startDate, $endDate);
 
             $this->startDate = $startDate;
 
@@ -164,7 +170,7 @@ class FitbitService implements DataSourceInterface
         return $this;
     }
 
-    function activities()
+    public function activities(): Collection
     {
         $data = [];
 
@@ -181,7 +187,43 @@ class FitbitService implements DataSourceInterface
         return collect($data);
     }
 
-    private function findActivities($date)
+    public function processWebhook($url = null): self
+    {
+        return $this;
+    }
+
+    public function formatWebhookRequest($request): Collection
+    {
+        $notifications = collect($request->_json ? collect($request->_json) : $request->all());
+
+        $items = $notifications->map(function ($notification) {
+            [$userId] = explode('-', $notification['subscriptionId']);
+
+            $user = User::find($userId);
+
+            $sourceProfile = null;
+
+            $sourceProfile = $user?->profiles()->whereHas('source', function ($query) {
+                return $query->where('short_name', 'fitbit');
+            })->first();
+
+            return (object) [
+                'user' => $user,
+                'date' => $notification['date'],
+                'sourceProfile' => $sourceProfile,
+                'dataSourceId' => $sourceProfile ? $sourceProfile->data_source_id : null,
+                'sourceToken' => $sourceProfile ? $sourceProfile->access_token : null,
+                'webhookUrl' => null,
+                'extra' => array_merge($notification, ['userId' => $userId, 'source' => 'gitbit']),
+            ];
+        });
+
+        return $items->filter(function ($item) {
+            return $item->user && $item->sourceProfile && $item->sourceToken;
+        });
+    }
+
+    private function findActivities($date): array
     {
         $response = Http::baseUrl($this->activityBaseUrl)
             ->withToken($this->accessToken)
@@ -198,12 +240,12 @@ class FitbitService implements DataSourceInterface
             $date = $item['startDate'];
             $distance = $item['distance'] * 0.621371;
             $raw_distance = $item['distance'];
+
             return compact('date', 'distance', 'modality', 'raw_distance');
         });
 
         $items = $activities->reduce(function ($data, $item) {
-
-            if (!isset($data[$item['modality']])) {
+            if (! isset($data[$item['modality']])) {
                 $data[$item['modality']] = $item;
 
                 return $data;
@@ -228,45 +270,5 @@ class FitbitService implements DataSourceInterface
             'Hike' => 'other',
             default => 'daily_steps',
         };
-    }
-
-    public function processWebhook($url = null)
-    {
-        return $this;
-    }
-
-    public function formatWebhookRequest($request)
-    {
-        $notifications = collect($request->_json ? collect($request->_json) : $request->all());
-
-        $items = $notifications->map(function ($notification) {
-            list($userId) = explode("-", $notification['subscriptionId']);
-            $notification['subscriptionId'];
-            $notification['date'];
-
-            $user = User::find($userId);
-
-            $sourceProfile = null;
-
-            if ($user) {
-                $sourceProfile = $user->profiles()->whereHas('source', function ($query) {
-                    return $query->where('short_name', 'fitbit');
-                })->first();
-            }
-
-            return (object)[
-                'user' => $user,
-                'date' => $notification['date'],
-                'sourceProfile' => $sourceProfile,
-                'dataSourceId' => $sourceProfile ? $sourceProfile->data_source_id : null,
-                'sourceToken' => $sourceProfile ? $sourceProfile->access_token : null,
-                'webhookUrl' => null,
-                'extra' => array_merge($notification, ['userId' => $userId, 'source' => 'gitbit'])
-            ];
-        });
-
-        return $items->filter(function ($item) {
-            return $item->user && $item->sourceProfile && $item->sourceToken;
-        });
     }
 }

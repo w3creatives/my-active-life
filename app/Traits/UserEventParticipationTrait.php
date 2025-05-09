@@ -6,13 +6,11 @@ use Carbon\Carbon;
 
 trait UserEventParticipationTrait
 {
-
     public function userParticipations($user, $date = null, $eventId = null)
     {
-
         $date = $date ?? Carbon::now()->format('Y-m-d');
 
-        $participations = $user->participations()
+        return $user->participations()
             ->where('subscription_end_date', '>=', $date)
             ->where(function ($query) use ($eventId) {
 
@@ -25,7 +23,5 @@ trait UserEventParticipationTrait
             ->whereHas('event', function ($query) use ($date) {
                 return $query->where('start_date', '<=', $date);
             })->get();
-
-        return $participations;
     }
 }
