@@ -214,7 +214,7 @@ final class FitbitService implements DataSourceInterface
                 'dataSourceId' => $sourceProfile ? $sourceProfile->data_source_id : null,
                 'sourceToken' => $sourceProfile ? $sourceProfile->access_token : null,
                 'webhookUrl' => null,
-                'extra' => array_merge($notification, ['userId' => $userId, 'source' => 'gitbit']),
+                'extra' => array_merge($notification, ['userId' => $userId, 'source' => 'fitbit']),
             ];
         });
 
