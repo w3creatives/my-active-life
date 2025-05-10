@@ -411,7 +411,7 @@ class EventService
         }
 
         foreach ($participations as $participation) {
-            if(!$participations->include_daily_steps && $point->modality == 'daily_steps'){
+            if(!$participation->include_daily_steps && $point->modality == 'daily_steps'){
                 continue;
             }
 
