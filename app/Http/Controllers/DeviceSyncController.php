@@ -61,17 +61,19 @@ final class DeviceSyncController extends Controller
         }
 
         $user = $request->user();
+
+        //TODO: Get source profile from App\Models\User.php
         $dataSource = DataSource::where('short_name', $sourceSlug)->first();
 
         $userSourceProfile = $user->profiles()->where('data_source_id', $dataSource->id)->first();
 
         $response['data_source_id'] = $dataSource->id;
 
-       
+
         if(!is_null($userSourceProfile)){
             $userSourceProfile->fill($response)->save();
             return redirect()->route('profile.device-sync.edit');
-        } 
+        }
 
         $user->profiles()->create($response);
         return redirect()->route('profile.device-sync.edit');

@@ -129,7 +129,7 @@ class EventService
         //->format('Y-m-d')
 
         $startDate = $eventStartDate->format('Y-m-d');
-       
+
         if($currentDateTime->lt($eventStartDate) || $currentDateTime->gt($eventEndDate)) {
             $endDate = $eventEndDate->endOfWeek()->format('Y-m-d');
             $startDate = $eventEndDate->startOfWeek()->format('Y-m-d');
@@ -168,7 +168,7 @@ class EventService
 
         /*
         $startDate = $eventStartDate->format('Y-m-d');
-       
+
         if($currentDateTime->lt($eventStartDate) || $currentDateTime->gt($eventEndDate)) {
             $endDate = $eventEndDate->endOfMonth()->format('Y-m-d');
             $startDate = $eventEndDate->startOfMonth()->format('Y-m-d');
@@ -300,17 +300,17 @@ class EventService
             $monthEndDate = $eventEndDate->endOfMonth()->format('m-d-Y');
         */
         /*
-       
+
         if($currentDateTime->lt($eventStartDate) || $currentDateTime->gt($eventEndDate)) {
             $weekEndDate = $eventEndDate->endOfWeek()->format('m-d-Y');
             $monthEndDate = $eventEndDate->endOfMonth()->format('m-d-Y');
-            
+
             $weekStartDate = $eventEndDate->startOfWeek()->format('m-d-Y');
             $monthStartDate = $eventEndDate->startOfMonth()->format('m-d-Y');
         } else {
             $weekEndDate = $currentDateTime->endOfWeek()->format('m-d-Y');
             $monthEndDate = $currentDateTime->endOfMonth()->format('m-d-Y');
-            
+
             $weekStartDate = $currentDateTime->startOfWeek()->format('m-d-Y');
             $monthStartDate = $currentDateTime->startOfMonth()->format('m-d-Y');
         }*/
@@ -411,6 +411,10 @@ class EventService
         }
 
         foreach ($participations as $participation) {
+            if(!$participations->include_daily_steps && $point->modality == 'daily_steps'){
+                continue;
+            }
+
             $point['eventId'] = $participation['event_id'];
             $this->createOrUpdate($user, $point);
             $this->createOrUpdateUserPoint($user, $participation->event_id, $point['date']);
@@ -420,7 +424,7 @@ class EventService
     public function createOrUpdate(object $user, array $point, bool $skipUpdate = false)
     {
         $point['date'] = Carbon::parse($point['date'])
-            ->setTimezone($user->time_zone ?? 'UTC');
+            ->setTimezone($user->time_zone_name ?? 'UTC')->format('Y-m-d');
 
         $condition = $skipUpdate ? [] : [
             'date' => $point['date'],

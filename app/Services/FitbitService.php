@@ -203,6 +203,7 @@ final class FitbitService implements DataSourceInterface
 
             $sourceProfile = null;
 
+            //TODO: Get source profile from App\Models\User.php
             $sourceProfile = $user?->profiles()->whereHas('source', function ($query) {
                 return $query->where('short_name', 'fitbit');
             })->first();
