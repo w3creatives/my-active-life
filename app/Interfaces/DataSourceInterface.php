@@ -2,19 +2,21 @@
 
 namespace App\Interfaces;
 
+use Illuminate\Support\Collection;
+
 interface DataSourceInterface
 {
     public function authUrl();
 
-    public function authorize($code);
+    public function authorize(array $config): self;
 
-    public function refreshToken($refreshtoken);
+    public function refreshToken(?string $refreshToken): array;
 
-    public function activities();
+    public function activities(): Collection;
 
-    public function verifyWebhook($code);
+    public function verifyWebhook(string $code): bool|int;
 
-    public function setAccessToken($accessToken);
+    public function setAccessToken(string $accessToken): self;
 
-    public function setAccessTokenSecret($accessTokenSecret);
+    public function setAccessTokenSecret(string $accessTokenSecret): self;
 }

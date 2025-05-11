@@ -1,40 +1,42 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
-use Carbon\Carbon;
-
 use App\Interfaces\DataSourceInterface;
-
 use App\Traits\CalculateDaysTrait;
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Http;
 
-class StravaService implements DataSourceInterface
+final class StravaService implements DataSourceInterface
 {
     use CalculateDaysTrait;
 
-    private $apiUrl;
+    private string $apiUrl;
 
-    private $accessToken;
+    private string $accessToken;
 
-    private $clientId;
+    private string $clientId;
 
-    private $redirectUrl;
+    private string $redirectUrl;
 
-    private $clientSecret;
+    private string $clientSecret;
 
-    private $authUrl = "https://www.strava.com/oauth/authorize";
+    private string $authUrl = 'https://www.strava.com/oauth/authorize';
 
-    private $authTokenUrl = "https://www.strava.com/oauth/token";
+    private string $authTokenUrl = 'https://www.strava.com/oauth/token';
 
-    private $authResponse;
+    private array $authResponse;
 
     private $startDate;
+
     private $endDate;
 
     private $dateDays;
 
-    public function __construct($accessToken = null)
+    public function __construct($accessToken = '')
     {
         $this->accessToken = $accessToken;
 
@@ -44,9 +46,9 @@ class StravaService implements DataSourceInterface
         $this->clientSecret = config('services.strava.client_secret');
     }
 
-    public function setDate($startDate, $endDate = null)
+    public function setDate($startDate, $endDate = null): self
     {
-        list($startDate, $endDate, $dateDays) = $this->daysFromStartEndDate($startDate, $endDate);
+        [$startDate, $endDate, $dateDays] = $this->daysFromStartEndDate($startDate, $endDate);
 
         $this->startDate = $startDate;
 
@@ -57,7 +59,7 @@ class StravaService implements DataSourceInterface
         return $this;
     }
 
-    public function modality($modality)
+    public function modality(string $modality): string
     {
         return match ($modality) {
             'Run', 'VirtualRun' => 'run',
@@ -69,32 +71,34 @@ class StravaService implements DataSourceInterface
         };
     }
 
-    public function setAccessToken($accessToken)
+    public function setAccessToken(string $accessToken): self
     {
         $this->accessToken = $accessToken;
 
         return $this;
     }
 
-    public function setAccessTokenSecret($accessTokenSecret)
+    public function setAccessTokenSecret(string $accessTokenSecret): self
     {
         return $this;
     }
 
-    public function authUrl($state = 'web')
+    public function authUrl($state = 'web'): string
     {
-        return $this->authUrl . "?" . http_build_query([
+        return $this->authUrl.'?'.http_build_query([
             'client_id' => $this->clientId,
             'response_type' => 'code',
             'redirect_uri' => $this->redirectUrl,
             'scope' => 'read,activity:read',
             'approval_prompt' => 'auto',
-            'state' => $state
+            'state' => $state,
         ]);
     }
 
-    public function authorize($code)
+    public function authorize(array $config): self
     {
+        [$code] = $config;
+
         $response = Http::post($this->authTokenUrl, [
             'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
@@ -110,25 +114,27 @@ class StravaService implements DataSourceInterface
             $this->authResponse = [
                 'access_token' => $data->access_token,
                 'refresh_token' => $data->refresh_token ?? null,
-                'token_expires_at' => $tokenExpiresAt
+                'token_expires_at' => $tokenExpiresAt,
             ];
         } else {
-            $this->authResponse = null;
+            $this->authResponse = [];
         }
 
         return $this;
     }
 
-    public function response()
+    public function response(): array
     {
         return $this->authResponse;
     }
 
-    public function refreshToken($refreshToken) {}
-
-    function activities()
+    public function refreshToken(?string $refreshToken): array
     {
+        return [];
+    }
 
+    public function activities(): Collection
+    {
         $data = [];
 
         if ($this->dateDays) {
@@ -149,20 +155,25 @@ class StravaService implements DataSourceInterface
         }
 
         return collect($data)->reject(function ($item) {
-            return $item['modality'] == 'none';
+            return $item['modality'] === 'none';
         })->values();
     }
 
-    private function findActivities($startOfDay, $endOfDay, $data, $page = 1)
+    public function verifyWebhook($code): int
+    {
+        return http_response_code(204);
+    }
+
+    private function findActivities($startOfDay, $endOfDay, array $data, int $page = 1): array
     {
         $params = [
             'after' => $startOfDay,
             'before' => $endOfDay,
             'per_page' => 30,
-            'page' => $page
+            'page' => $page,
         ];
 
-        $response = Http::withToken($this->accessToken)->get($this->apiUrl . 'athlete/activities?' . http_build_query($params));
+        $response = Http::withToken($this->accessToken)->get($this->apiUrl.'athlete/activities?'.http_build_query($params));
 
         if ($response->successful()) {
             $activities = collect($response->json());
@@ -171,12 +182,13 @@ class StravaService implements DataSourceInterface
                 $page++;
 
                 $data = array_merge($data, $activities->toArray());
+
                 return $this->findActivities($startOfDay, $endOfDay, $data, $page);
             }
         }
 
         $activities = collect($data)->map(function ($activity) {
-            if (!isset($activity['start_date'])) {
+            if (! isset($activity['start_date'])) {
                 return $activity;
             }
 
@@ -188,8 +200,7 @@ class StravaService implements DataSourceInterface
         });
 
         $items = $activities->reduce(function ($data, $item) {
-
-            if (!isset($data[$item['modality']])) {
+            if (! isset($data[$item['modality']])) {
                 $data[$item['modality']] = $item;
 
                 return $data;
@@ -201,10 +212,5 @@ class StravaService implements DataSourceInterface
         }, []);
 
         return collect($items)->values()->toArray();
-    }
-
-    public function verifyWebhook($code)
-    {
-        return http_response_code(204);
     }
 }

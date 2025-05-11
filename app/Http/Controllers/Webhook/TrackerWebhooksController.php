@@ -1,18 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
 use App\Interfaces\DataSourceInterface;
+use App\Repositories\SopifyRepository;
+use App\Services\EventService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-use App\Repositories\SopifyRepository;
-use App\Services\EventService;
-
-class TrackerWebhooksController extends Controller
+final class TrackerWebhooksController extends Controller
 {
-
     private $tracker;
 
     public function __construct()
@@ -20,27 +20,31 @@ class TrackerWebhooksController extends Controller
         $this->tracker = app(DataSourceInterface::class);
     }
 
-    public function verifyWebhook(Request $request, $sourceSlug = 'fitbit')
+    public function verifyWebhook(Request $request, string $sourceSlug = 'fitbit')
     {
-        return $this->tracker->get($sourceSlug)->verifyWebhook($request->get('verify'));
+        $response = $this->tracker->get($sourceSlug)->verifyWebhook($request->get('verify'));
+
+        if ($response) {
+            http_response_code(204);
+        } else {
+            http_response_code(404);
+        }
+        exit();
     }
 
     public function webhookAction(Request $request, SopifyRepository $sopifyRepository, EventService $eventService, $sourceSlug = 'fitbit')
     {
-
         $tracker = $this->tracker->get($sourceSlug);
 
         $notifications = $tracker->formatWebhookRequest($request);
 
         foreach ($notifications as $notification) {
-
             $user = $notification->user;
 
             if (is_null($user)) {
                 Log::stack(['single'])->debug("{$sourceSlug} : User Not Found", $notification);
                 continue;
             }
-
 
             if (is_null($notification->sourceToken)) {
                 Log::stack(['single'])->debug("{$sourceSlug} : access token not found", $notification);
@@ -57,7 +61,7 @@ class TrackerWebhooksController extends Controller
                     $activity['dataSourceId'] = $notification->dataSourceId;
                     $eventService->createUserParticipationPoints($user, $activity);
 
-                    if ($sourceSlug == 'fitbit') {
+                    if ($sourceSlug === 'fitbit') {
                         $this->createOrUpdateUserProfilePoint($user, $activity['raw_distance'], $activity['date'], $notification->sourceProfile);
                         $sopifyRepository->updateStatus($user->email, true);
                     }
@@ -68,9 +72,8 @@ class TrackerWebhooksController extends Controller
         http_response_code(204);
     }
 
-    private function createOrUpdateUserProfilePoint($user, $distance, $date, $sourceProfile, $type = 'webhook', $actionType = "auto")
+    private function createOrUpdateUserProfilePoint($user, $distance, $date, $sourceProfile, $type = 'webhook', $actionType = 'auto')
     {
-
         $profilePoint = $user->profilePoints()->where('date', $date)->where('data_source_id', $sourceProfile->data_source_id)->first();
 
         $data = [
@@ -78,7 +81,7 @@ class TrackerWebhooksController extends Controller
             "{$type}_distance_mile" => ($distance * 0.621371),
             'date' => $date,
             'data_source_id' => $sourceProfile->data_source_id,
-            'action_type' => $actionType
+            'action_type' => $actionType,
         ];
 
         if ($profilePoint) {

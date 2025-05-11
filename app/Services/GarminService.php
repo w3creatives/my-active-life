@@ -1,54 +1,62 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Interfaces\DataSourceInterface;
+use App\Models\DataSourceProfile;
+use App\Traits\CalculateDaysTrait;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
-use Exception;
-use Carbon\Carbon;
-use App\Traits\CalculateDaysTrait;
-use App\Models\DataSourceProfile;
 
-class GarminService  implements DataSourceInterface
+final class GarminService implements DataSourceInterface
 {
     use CalculateDaysTrait;
 
-    private $accessToken;
+    private string $accessToken;
 
-    private $accessTokenSecret;
+    private string $accessTokenSecret = '';
 
-    private $oauthTimestamp = null;
+    private ?int $oauthTimestamp = null;
 
-    private $oauthNonce = null;
+    private ?string $oauthNonce = null;
 
-    private $signature = null;
+    private ?string $signature = null;
 
-    private $oauthToken = null;
+    private ?string $oauthToken = null;
 
-    private $oauthVerifier = null;
+    private ?string $oauthVerifier = null;
 
-    private $authResponse = null;
+    private array $authResponse;
 
-    private $consumerKey;
-    private $consumerSecret;
+    private string $consumerKey;
 
-    private $healthApiUrl = 'https://apis.garmin.com/wellness-api/rest';
-    private $baseUrl = "https://connectapi.garmin.com/oauth-service/oauth/";
-    private $oauthConfirmUrl = 'https://connect.garmin.com/oauthConfirm';
-    private $oathCallbackUrl;
+    private string $consumerSecret;
 
-    private $queryParams = [];
-    private $garminRequestUrl;
+    private string $healthApiUrl = 'https://apis.garmin.com/wellness-api/rest';
 
-    private $requestType = 'summary';
+    private string $baseUrl = 'https://connectapi.garmin.com/oauth-service/oauth/';
 
-    private $startDate;
-    private $endDate;
+    private string $oauthConfirmUrl = 'https://connect.garmin.com/oauthConfirm';
 
-    private $dateDays;
+    private ?string $oathCallbackUrl;
+
+    private array $queryParams = [];
+
+    private string $garminRequestUrl;
+
+    private string $requestType = 'summary';
+
+    private string $startDate;
+
+    private string $endDate;
+
+    private string $dateDays;
 
     public function __construct()
     {
@@ -57,9 +65,9 @@ class GarminService  implements DataSourceInterface
         $this->oathCallbackUrl = config('services.garmin.callback_url');
     }
 
-    public function setSecrets($secrets)
+    public function setSecrets($secrets): self
     {
-        list($accessToken, $accessTokenSecret) = $secrets;
+        [$accessToken, $accessTokenSecret] = $secrets;
 
         $this->setAccessToken($accessToken);
         $this->setAccessTokenSecret($accessTokenSecret);
@@ -67,32 +75,32 @@ class GarminService  implements DataSourceInterface
         return $this;
     }
 
-    public function setAccessToken($accessToken)
+    public function setAccessToken($accessToken): self
     {
         $this->accessToken = $accessToken;
 
         return $this;
     }
 
-    public function setAccessTokenSecret($accessTokenSecret)
+    public function setAccessTokenSecret(string $accessTokenSecret): self
     {
         $this->accessTokenSecret = $accessTokenSecret;
 
         return $this;
     }
 
-    public function authUrl()
+    public function authUrl(): string
     {
         $params = $this->getAuthParams();
 
         ksort($params);
 
-        $this->createSignature('POST', $this->baseUrl . 'request_token', $params);
+        $this->createSignature('POST', $this->baseUrl.'request_token', $params);
 
         $authHeaders = $this->authHeaders();
 
         try {
-            $response = Http::withHeaders(['Authorization' => $authHeaders])->post($this->baseUrl . 'request_token');
+            $response = Http::withHeaders(['Authorization' => $authHeaders])->post($this->baseUrl.'request_token');
             parse_str($response->body(), $result);
 
             if (isset($result['oauth_token']) && isset($result['oauth_token_secret'])) {
@@ -100,7 +108,7 @@ class GarminService  implements DataSourceInterface
                 Session::put('garmin_token_secret', $result['oauth_token_secret']);
 
                 // Redirect to Garmin authorization page
-                return $this->oauthConfirmUrl . '?' .
+                return $this->oauthConfirmUrl.'?'.
                     http_build_query([
                         'oauth_token' => $result['oauth_token'],
                         'oauth_callback' => $this->oathCallbackUrl,
@@ -113,9 +121,9 @@ class GarminService  implements DataSourceInterface
         }
     }
 
-    public function authorize($config)
+    public function authorize(array $config): self
     {
-        list($oauthToken, $oauthVerifier) = $config;
+        [$oauthToken, $oauthVerifier] = $config;
 
         $this->oauthToken = $oauthToken;
         $this->oauthVerifier = $oauthVerifier;
@@ -127,39 +135,42 @@ class GarminService  implements DataSourceInterface
         $this->accessTokenSecret = Session::get('garmin_token_secret');
 
         // Generate signature
-        $this->createSignature('POST', $this->baseUrl . 'access_token', $params);
+        $this->createSignature('POST', $this->baseUrl.'access_token', $params);
 
         $params['oauth_signature'] = $this->signature;
 
         $authHeaders = $this->buildAuthorizationHeader($params);
 
         $response = Http::withHeaders(['Authorization' => $authHeaders])
-            ->post($this->baseUrl . 'access_token');
+            ->post($this->baseUrl.'access_token');
 
         if ($response->successful()) {
             parse_str($response->body(), $data);
             $this->authResponse = [
                 'access_token' => $data['oauth_token'],
-                'access_token_secret' => $data['oauth_token_secret']
+                'access_token_secret' => $data['oauth_token_secret'],
             ];
         } else {
-            $this->authResponse = null;
+            $this->authResponse = [];
         }
 
         return $this;
     }
 
-    public function response()
+    public function response(): array
     {
         return $this->authResponse;
     }
 
-    public function refreshToken($refreshToken) {}
-
-    public function setDate($startDate, $endDate = null)
+    public function refreshToken($refreshToken): array
     {
-        if (!is_null($startDate)) {
-            list($startDate, $endDate, $dateDays) = $this->daysFromStartEndDate($startDate, $endDate);
+        return [];
+    }
+
+    public function setDate($startDate, $endDate = null): self
+    {
+        if (! is_null($startDate)) {
+            [$startDate, $endDate, $dateDays] = $this->daysFromStartEndDate($startDate, $endDate);
 
             $this->startDate = $startDate;
 
@@ -171,13 +182,13 @@ class GarminService  implements DataSourceInterface
         return $this;
     }
 
-    public function processWebhook($url)
+    public function processWebhook(string $url): self
     {
         $scheme = parse_url($url, PHP_URL_SCHEME);
         $host = parse_url($url, PHP_URL_HOST);
         $path = parse_url($url, PHP_URL_PATH);
 
-        $this->garminRequestUrl = $scheme . '://' . $host . $path;
+        $this->garminRequestUrl = $scheme.'://'.$host.$path;
 
         $queryParamsString = parse_url($url, PHP_URL_QUERY);
         $queryParams = [];
@@ -193,10 +204,10 @@ class GarminService  implements DataSourceInterface
         $items = collect([]);
 
         if ($request->has('dailies') || $request->has('activities')) {
-            $items = collect(!empty($request->activities) ? $request->activities : $request->dailies);
+            $items = collect(! empty($request->activities) ? $request->activities : $request->dailies);
         }
 
-        if (!$items->count()) {
+        if (! $items->count()) {
             return $items;
         }
 
@@ -210,12 +221,11 @@ class GarminService  implements DataSourceInterface
                 })
                 ->first();
 
-
             $user = $sourceProfile->user ?? null;
 
             $sourceToken = $sourceProfile ? [$sourceProfile->access_token, $sourceProfile->access_token_secret] : null;
 
-            return (object)[
+            return (object) [
                 'user' => $user,
                 'date' => null,
                 'sourceProfile' => $sourceProfile,
@@ -225,8 +235,8 @@ class GarminService  implements DataSourceInterface
                 'extra' => [
                     'subscriptionId' => null,
                     'source' => 'garmin',
-                    'userId' => $user ? $user->id : null
-                ]
+                    'userId' => $user ? $user->id : null,
+                ],
             ];
         });
 
@@ -235,39 +245,29 @@ class GarminService  implements DataSourceInterface
         });
     }
 
-    public function setRequestType(string $requestType)
+    public function setRequestType(string $requestType): self
     {
-
-        if (!in_array($requestType, ['upload', 'summary'])) {
+        if (! in_array($requestType, ['upload', 'summary'])) {
             throw new Exception('request type does not match');
         }
 
-        $endpoint = $requestType == 'summary' ? '/backfill/dailies' : "/activities";
+        $endpoint = $requestType === 'summary' ? '/backfill/dailies' : '/activities';
 
         $this->requestType = $requestType;
 
-        $this->garminRequestUrl = $this->healthApiUrl . $endpoint;
+        $this->garminRequestUrl = $this->healthApiUrl.$endpoint;
 
         return $this;
     }
 
-    private function buildParams($startTimeInSeconds, $endTimeInSeconds)
+    public function activities(): Collection
     {
-
-        return [
-            $this->requestType . 'StartTimeInSeconds' => $startTimeInSeconds,
-            $this->requestType . 'EndTimeInSeconds' => $endTimeInSeconds,
-        ];
-    }
-
-    function activities()
-    {
-
         $data = [];
 
         if ($this->queryParams && $this->garminRequestUrl) {
             $items = $this->findActivities();
             $data = array_merge($data, $items);
+
             return $this->formatActivities($data);
         }
 
@@ -291,16 +291,15 @@ class GarminService  implements DataSourceInterface
         return $this->formatActivities($data);
     }
 
-    public function findActivities($startTimeInSeconds = null, $endTimeInSeconds = null)
+    public function findActivities(?int $startTimeInSeconds = null, ?int $endTimeInSeconds = null): array
     {
-
         if ($this->queryParams) {
             $queryParams = $this->queryParams;
         } else {
             $queryParams = $this->buildParams($startTimeInSeconds, $endTimeInSeconds);
         }
 
-        $backfillUrl = $this->garminRequestUrl ? $this->garminRequestUrl : $this->healthApiUrl . '/backfill/dailies';
+        $backfillUrl = $this->garminRequestUrl ? $this->garminRequestUrl : $this->healthApiUrl.'/backfill/dailies';
 
         $oauthParams = $this->getAuthParams();
 
@@ -327,11 +326,11 @@ class GarminService  implements DataSourceInterface
         }
 
         return $activities->map(function ($activity) use ($startTimeInSeconds, $endTimeInSeconds) {
-
             $date = Carbon::createFromTimestamp($activity['startTimeInSeconds'])->format('Y-m-d');
             $distance = round(($activity['distanceInMeters'] / 1609.344), 3);
             $modality = $this->modality($activity['activityType']);
             $time = $activity['startTimeInSeconds'];
+
             return compact('date', 'distance', 'modality');
         })->toArray();
 
@@ -340,13 +339,11 @@ class GarminService  implements DataSourceInterface
         ->toArray();*/
     }
 
-    public function formatActivities($activities)
+    public function formatActivities($activities): Collection
     {
         $items = collect($activities)->reduce(function ($data, $item) {
-
             if (isset($data[$item['date']])) {
-
-                if ($data[$item['date']]['modality'] == $item['modality']) {
+                if ($data[$item['date']]['modality'] === $item['modality']) {
                     $data[$item['date']]['distance'] += $item['distance'];
                 } else {
                     $data[$item['date']] = array_merge($data[$item['date']], $item);
@@ -363,9 +360,8 @@ class GarminService  implements DataSourceInterface
 
             return $data;
 
-            if (!isset($data[$item['date']][$item['modality']])) {
+            if (! isset($data[$item['date']][$item['modality']])) {
                 $data[$item['date']][$item['modality']] = $item;
-
                 return $data;
             }
 
@@ -379,27 +375,26 @@ class GarminService  implements DataSourceInterface
 
     public function activitiesTested()
     {
-
         $startTimeInSeconds = Carbon::parse($this->startDate)->timestamp - 1;
         $endTimeInSeconds = Carbon::parse($this->startDate)->timestamp;
 
         $queryParams = [
-            //'summaryStartTimeInSeconds' => $startTimeInSeconds,
-            //'summaryEndTimeInSeconds' => $endTimeInSeconds,
+            // 'summaryStartTimeInSeconds' => $startTimeInSeconds,
+            // 'summaryEndTimeInSeconds' => $endTimeInSeconds,
             'uploadStartTimeInSeconds' => $startTimeInSeconds,
-            'uploadEndTimeInSeconds' => $endTimeInSeconds
+            'uploadEndTimeInSeconds' => $endTimeInSeconds,
         ];
 
         $oauthParams = $this->getAuthParams();
 
-        //$oauthParams = array_merge($oauthParams, $queryParams);
+        // $oauthParams = array_merge($oauthParams, $queryParams);
 
         $oauthParams['oauth_token'] = $this->accessToken;
 
         // Merge all parameters for signature generation
         $params = array_merge($queryParams, $oauthParams);
 
-        $backfillUrl = $this->healthApiUrl . '/activities';
+        $backfillUrl = $this->healthApiUrl.'/activities';
 
         // Generate signature
         $this->createSignature('GET', $backfillUrl, $params);
@@ -412,14 +407,13 @@ class GarminService  implements DataSourceInterface
         $response = Http::withHeaders(['Authorization' => $authHeader])
             ->get($backfillUrl, $queryParams);
 
-
         if ($response->successful()) {
             $activities = collect($response->object());
         } else {
             $activities = collect([]);
         }
 
-        if (!$activities->count()) {
+        if (! $activities->count()) {
             return $activities;
         }
 
@@ -433,7 +427,7 @@ class GarminService  implements DataSourceInterface
 
         $items = $activities->reduce(function ($data, $item) {
 
-            if (!isset($data[$item['modality']])) {
+            if (! isset($data[$item['modality']])) {
                 $data[$item['modality']] = $item;
 
                 return $data;
@@ -447,33 +441,43 @@ class GarminService  implements DataSourceInterface
         return collect($items)->values()->toArray();
     }
 
-    public function verifyWebhook($code)
+    public function verifyWebhook($code): int
     {
         return http_response_code(204);
     }
 
-    private function getTimestamp()
+    private function buildParams(int $startTimeInSeconds, int $endTimeInSeconds): array
+    {
+        return [
+            $this->requestType.'StartTimeInSeconds' => $startTimeInSeconds,
+            $this->requestType.'EndTimeInSeconds' => $endTimeInSeconds,
+        ];
+    }
+
+    private function getTimestamp(): self
     {
         $this->oauthTimestamp = time();
+
         return $this;
     }
 
-    private function generateNonce()
+    private function generateNonce(): self
     {
         $this->oauthNonce = Str::random(32);
+
         return $this;
     }
 
-    private function createSignature($method, $url, $params)
+    private function createSignature(string $method, string $url, array $params): self
     {
         ksort($params);
         $paramString = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
 
-        $baseString = strtoupper($method) . '&' .
-            rawurlencode($url) . '&' .
+        $baseString = mb_strtoupper($method).'&'.
+            rawurlencode($url).'&'.
             rawurlencode($paramString);
 
-        $signingKey = rawurlencode($this->consumerSecret) . '&';
+        $signingKey = rawurlencode($this->consumerSecret).'&';
         if ($this->accessTokenSecret) {
             $signingKey .= rawurlencode($this->accessTokenSecret);
         }
@@ -486,25 +490,25 @@ class GarminService  implements DataSourceInterface
         return $this;
     }
 
-    private function buildAuthorizationHeader($params)
+    private function buildAuthorizationHeader(array $params): string
     {
         $headerParams = [];
         foreach ($params as $key => $value) {
-            if (strpos($key, 'oauth_') === 0) {
-                $headerParams[] = $key . '="' . $value . '"';
+            if (mb_strpos($key, 'oauth_') === 0) {
+                $headerParams[] = $key.'="'.$value.'"';
             }
         }
-        return 'OAuth ' . implode(', ', $headerParams);
+
+        return 'OAuth '.implode(', ', $headerParams);
     }
 
-    private function getAuthTimestampNonce()
+    private function getAuthTimestampNonce(): array
     {
-
-        if (!$this->oauthTimestamp) {
+        if (! $this->oauthTimestamp) {
             $this->getTimestamp();
         }
 
-        if (!$this->oauthNonce) {
+        if (! $this->oauthNonce) {
             $this->generateNonce();
         }
 
@@ -514,9 +518,9 @@ class GarminService  implements DataSourceInterface
         return [$oauthTimestamp, $oauthNonce];
     }
 
-    private function getAuthParams()
+    private function getAuthParams(): array
     {
-        list($oauthTimestamp, $oauthNonce) = $this->getAuthTimestampNonce();
+        [$oauthTimestamp, $oauthNonce] = $this->getAuthTimestampNonce();
 
         $params = [
             'oauth_consumer_key' => $this->consumerKey,
@@ -538,10 +542,9 @@ class GarminService  implements DataSourceInterface
         return $params;
     }
 
-    private function authHeaders()
+    private function authHeaders(): string
     {
-
-        list($oauthTimestamp, $oauthNonce) = $this->getAuthTimestampNonce();
+        [$oauthTimestamp, $oauthNonce] = $this->getAuthTimestampNonce();
 
         $params = [
             'oauth_consumer_key' => urlencode($this->consumerKey),
@@ -549,9 +552,8 @@ class GarminService  implements DataSourceInterface
             'oauth_signature' => $this->signature,
             'oauth_signature_method' => 'HMAC-SHA1',
             'oauth_timestamp' => $oauthTimestamp,
-            'oauth_version' => '1.0'
+            'oauth_version' => '1.0',
         ];
-
 
         return $this->buildAuthorizationHeader($params);
     }

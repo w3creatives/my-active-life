@@ -86,8 +86,10 @@ final class FitbitService implements DataSourceInterface
         ]);
     }
 
-    public function authorize($code): self
+    public function authorize(array $config): self
     {
+        [$code] = $config;
+
         $response = Http::asForm()->withHeaders([
             'Authorization' => 'Basic '.base64_encode("{$this->clientId}:{$this->clientSecret}"),
         ])->post($this->authTokenUrl, [
@@ -123,7 +125,7 @@ final class FitbitService implements DataSourceInterface
         return $code === $this->fitbitWebhookVerificationCode;
     }
 
-    public function refreshToken($refreshtoken = null): array
+    public function refreshToken($refreshToken = null): array
     {
         $response = Http::asForm()
             ->withHeaders([
@@ -131,7 +133,7 @@ final class FitbitService implements DataSourceInterface
             ])
             ->post($this->authTokenUrl, [
                 'grant_type' => 'refresh_token',
-                'refresh_token' => $refreshtoken,
+                'refresh_token' => $refreshToken,
             ]);
 
         $data = json_decode($response->body(), true);
