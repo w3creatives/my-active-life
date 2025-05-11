@@ -41,7 +41,7 @@ final class FitbitService implements DataSourceInterface
 
     private string $dateDays;
 
-    public function __construct($accessToken = null)
+    public function __construct($accessToken = '')
     {
         $this->accessToken = $accessToken;
 
@@ -118,13 +118,9 @@ final class FitbitService implements DataSourceInterface
         return $this;
     }
 
-    public function verifyWebhook($code): bool|int
+    public function verifyWebhook($code): bool
     {
-        if ($code === $this->fitbitWebhookVerificationCode) {
-            return http_response_code(204);
-        }
-
-        return http_response_code(404);
+        return $code === $this->fitbitWebhookVerificationCode;
     }
 
     public function refreshToken($refreshtoken = null): array
