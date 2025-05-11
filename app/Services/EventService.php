@@ -1,22 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
+use App\Models\Event;
+use App\Models\Team;
+use App\Models\UserPoint;
 use App\Repositories\EventRepository;
-use Carbon\CarbonImmutable;
-use Carbon\Carbon;
-use \Illuminate\Support\Str;
-use App\Models\{
-    Event,
-    UserPoint,
-    Team
-};
 use App\Repositories\UserPointRepository;
 use App\Traits\UserEventParticipationTrait;
+use Carbon\Carbon;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Str;
 
-class EventService
+final class EventService
 {
-
     use UserEventParticipationTrait;
 
     public function __construct(
@@ -31,7 +30,7 @@ class EventService
 
         $miles = $manualEntry['miles'];
 
-        $monthMile = (float)($miles ? ($miles / 12) : 0);
+        $monthMile = (float) ($miles ? ($miles / 12) : 0);
 
         $date = CarbonImmutable::createFromFormat('Y', $year);
 
@@ -77,10 +76,10 @@ class EventService
 
         $distance = $rtyGoal;
 
-        if (!$rtyGoal) {
+        if (! $rtyGoal) {
             $distance = $event->total_points;
         }
-        $userPoint = $user->points()->selectRaw("SUM(amount) AS total_mile")->where('event_id', $event->id)->where('date', '>=', Carbon::parse($event->start_date)->format('Y-m-d'))->where('date', '<=', Carbon::now()->format('Y-m-d'))->first();
+        $userPoint = $user->points()->selectRaw('SUM(amount) AS total_mile')->where('event_id', $event->id)->where('date', '>=', Carbon::parse($event->start_date)->format('Y-m-d'))->where('date', '<=', Carbon::now()->format('Y-m-d'))->first();
 
         $userTotalPoints = $userPoint->total_mile ? $userPoint->total_mile : 0;
 
@@ -92,14 +91,8 @@ class EventService
             'total_miles' => number_format($distance, 2, '.', ''),
             'completed_miles' => number_format($userTotalPoints, 2, '.', ''),
             'remaining_miles' => number_format($remainingDistance, 2, '.', ''),
-            'completed_percentage' => number_format($completedPercentage, 2, '.', '')
+            'completed_percentage' => number_format($completedPercentage, 2, '.', ''),
         ];
-    }
-
-    private function calculateUserTotal($user, $event, $startDate, $endDate)
-    {
-
-        return $user->points()->where(['event_id' => $event->id])->where('date', '>=', $startDate)->where('date', '<=', $endDate)->sum('amount');
     }
 
     public function calculateUserWeeklyPoints($user, $event, $date = null)
@@ -109,7 +102,6 @@ class EventService
         $eventEndDate = CarbonImmutable::parse($event->end_date);
 
         $currentDateTime = $date ? CarbonImmutable::parse($date) : CarbonImmutable::now();
-
 
         $endDate = $currentDateTime->endOfWeek();
         $startDate = $currentDateTime->startOfWeek();
@@ -150,7 +142,6 @@ class EventService
         $eventEndDate = CarbonImmutable::parse($event->end_date);
 
         $currentDateTime = $date ? CarbonImmutable::parse($date) : CarbonImmutable::now();
-
 
         $endDate = $currentDateTime->endOfMonth();
         $startDate = $currentDateTime->startOfMonth();
@@ -200,15 +191,15 @@ class EventService
             $event = Event::find($event);
         }
 
-        list($weeklyPoints, $weekDay) = $this->calculateUserWeeklyPoints($user, $event, $date);
-        list($monthlyPoints, $monthDay) = $this->calculateUserMonthlyPoints($user, $event, $date);
-        list($totalPoints, $day) = $this->calculateUserTotalPoints($user, $event);
+        [$weeklyPoints, $weekDay] = $this->calculateUserWeeklyPoints($user, $event, $date);
+        [$monthlyPoints, $monthDay] = $this->calculateUserMonthlyPoints($user, $event, $date);
+        [$totalPoints, $day] = $this->calculateUserTotalPoints($user, $event);
 
         $monthlyPoint = $user->monthlyPoints()->where(['date' => $monthDay, 'event_id' => $event->id])->first();
 
         $weeklyPoint = $user->weeklyPoints()->where(['date' => $weekDay, 'event_id' => $event->id])->first();
 
-        //$totalPoint = $user->totalPoints()->where(['date' => $day,'event_id' => $event->id])->first();
+        // $totalPoint = $user->totalPoints()->where(['date' => $day,'event_id' => $event->id])->first();
         $totalPoint = $user->totalPoints()->where(['event_id' => $event->id])->first();
 
         if ($monthlyPoint) {
@@ -234,7 +225,7 @@ class EventService
         $bestWeek = $user->weeklyPoints()->where(['event_id' => $event->id])->latest('amount')->first();
         $bestDay = $user->points()->where(['event_id' => $event->id])->latest('amount')->first();
 
-        if ($bestMonth) { //'accomplishment','date','achievement'
+        if ($bestMonth) { // 'accomplishment','date','achievement'
             $user->achievements()->where('achievement', 'best_month')->where('event_id', $event->id)->delete();
             $user->achievements()->create(['achievement' => 'best_month', 'event_id' => $event->id, 'accomplishment' => $bestMonth->amount, 'date' => $bestMonth->date]);
         }
@@ -267,7 +258,7 @@ class EventService
             return false;
         }
 
-        $points = UserPoint::selectRaw("SUM(amount) AS total_amount, date")->where(function ($query) use ($date) {
+        $points = UserPoint::selectRaw('SUM(amount) AS total_amount, date')->where(function ($query) use ($date) {
 
             if ($date) {
                 return $query->where('date', $date);
@@ -375,8 +366,7 @@ class EventService
         $bestWeek = $team->weeklyPoints()->where(['event_id' => $event->id])->latest('amount')->first();
         $bestDay = $team->points()->where(['event_id' => $event->id])->latest('amount')->first();
 
-
-        if ($bestMonth) { //'accomplishment','date','achievement'
+        if ($bestMonth) { // 'accomplishment','date','achievement'
             $team->achievements()->where('achievement', 'best_month')->where('event_id', $event->id)->delete();
             $team->achievements()->create(['achievement' => 'best_month', 'event_id' => $event->id, 'accomplishment' => $bestMonth->amount, 'date' => $bestMonth->date]);
         }
@@ -406,16 +396,16 @@ class EventService
     {
         $participations = $this->userParticipations($user, $point['date']);
 
-        if (!$participations) {
+        if (! $participations) {
             return false;
         }
 
         foreach ($participations as $participation) {
-            if(!$participation->include_daily_steps && $point->modality == 'daily_steps'){
+            if (! $participation->include_daily_steps && $point['modality'] === 'daily_steps') {
                 continue;
             }
 
-            $point['eventId'] = $participation['event_id'];
+            $point['eventId'] = $participation->event_id;
             $this->createOrUpdate($user, $point);
             $this->createOrUpdateUserPoint($user, $participation->event_id, $point['date']);
         }
@@ -430,9 +420,22 @@ class EventService
             'date' => $point['date'],
             'modality' => $point['modality'],
             'event_id' => $point['eventId'],
-            'data_source_id' => $point['dataSourceId']
+            'data_source_id' => $point['dataSourceId'],
         ];
 
-        $this->userPointRepository->create($user, $point, $condition);
+        $data = [
+            'date' => $point['date'],
+            'amount' => $point['distance'],
+            'modality' => $point['modality'],
+            'event_id' => $point['eventId'],
+            'data_source_id' => $point['dataSourceId'],
+        ];
+
+        $this->userPointRepository->create($user, $data, $condition);
+    }
+
+    private function calculateUserTotal($user, $event, $startDate, $endDate)
+    {
+        return $user->points()->where(['event_id' => $event->id])->where('date', '>=', $startDate)->where('date', '<=', $endDate)->sum('amount');
     }
 }

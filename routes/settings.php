@@ -6,6 +6,7 @@ use App\Http\Controllers\DeviceSyncController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Webhook\TrackerWebhooksController;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -38,4 +39,6 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('settings/device-sync/webhook/{sourceSlug}/verify', [TrackerWebhooksController::class, 'verifyWebhook'])->name('profile.device-sync.webhook.verify');
-Route::get('settings/device-sync/webhook/{sourceSlug}', [TrackerWebhooksController::class, 'webhookAction'])->name('profile.device-sync.webhook');
+Route::post('settings/device-sync/webhook/{sourceSlug}', [TrackerWebhooksController::class, 'webhookAction'])
+    ->name('profile.device-sync.webhook')
+    ->withoutMiddleware([VerifyCsrfToken::class]);

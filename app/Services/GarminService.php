@@ -13,6 +13,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
+use Log;
 
 final class GarminService implements DataSourceInterface
 {
@@ -326,12 +327,14 @@ final class GarminService implements DataSourceInterface
         }
 
         return $activities->map(function ($activity) use ($startTimeInSeconds, $endTimeInSeconds) {
-            $date = Carbon::createFromTimestamp($activity['startTimeInSeconds'])->format('Y-m-d');
-            $distance = round(($activity['distanceInMeters'] / 1609.344), 3);
-            $modality = $this->modality($activity['activityType']);
-            $time = $activity['startTimeInSeconds'];
+            if (isset($activity['distanceInMeters'])) {
+                $date = Carbon::createFromTimestamp($activity['startTimeInSeconds'])->format('Y-m-d');
+                $distance = round(($activity['distanceInMeters'] / 1609.344), 3);
+                $modality = $this->modality($activity['activityType']);
+                $time = $activity['startTimeInSeconds'];
 
-            return compact('date', 'distance', 'modality');
+                return compact('date', 'distance', 'modality');
+            }
         })->toArray();
 
         /*return collect($items)
@@ -342,6 +345,10 @@ final class GarminService implements DataSourceInterface
     public function formatActivities($activities): Collection
     {
         $items = collect($activities)->reduce(function ($data, $item) {
+            if (! $item) {
+                return $data;
+            }
+
             if (isset($data[$item['date']])) {
                 if ($data[$item['date']]['modality'] === $item['modality']) {
                     $data[$item['date']]['distance'] += $item['distance'];
@@ -362,6 +369,7 @@ final class GarminService implements DataSourceInterface
 
             if (! isset($data[$item['date']][$item['modality']])) {
                 $data[$item['date']][$item['modality']] = $item;
+
                 return $data;
             }
 

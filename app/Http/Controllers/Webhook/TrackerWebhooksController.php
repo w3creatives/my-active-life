@@ -32,13 +32,17 @@ final class TrackerWebhooksController extends Controller
         exit();
     }
 
+    // TODO: Check is ShopifyService is needed or not
     public function webhookAction(Request $request, SopifyRepository $sopifyRepository, EventService $eventService, $sourceSlug = 'fitbit')
     {
+        \Log::info("Webhook called for {$sourceSlug}");
+        \Log::info("for {$sourceSlug} : ".json_encode($request->all()));
         $tracker = $this->tracker->get($sourceSlug);
 
         $notifications = $tracker->formatWebhookRequest($request);
 
         foreach ($notifications as $notification) {
+            \Log::info("for {$sourceSlug} : ".json_encode($notification));
             $user = $notification->user;
 
             if (is_null($user)) {
@@ -57,7 +61,6 @@ final class TrackerWebhooksController extends Controller
 
             if ($activities->count()) {
                 foreach ($activities as $activity) {
-
                     $activity['dataSourceId'] = $notification->dataSourceId;
                     $eventService->createUserParticipationPoints($user, $activity);
 
