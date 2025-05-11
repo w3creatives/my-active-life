@@ -47,6 +47,18 @@ final class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
+                'participations' => function () use ($request) {
+                    if (! $request->user()) {
+                        return [];
+                    }
+
+                    $user = $request->user();
+                    $currentDate = now()->format('Y-m-d');
+
+                    return $user->participations()
+                        ->with('event')
+                        ->get();
+                },
             ],
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),

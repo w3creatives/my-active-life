@@ -97,7 +97,10 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                 </div>
 
                 <div className="text-muted-foreground text-center text-sm">
-                    <p>Need help logging in? We have superpowers and can help! Just email us at <TextLink href="mailto:info@runtheedge.com">info@runtheedge.com</TextLink></p>
+                    <p>
+                        Need help logging in? We have superpowers and can help! Just email us at{' '}
+                        <TextLink href="mailto:info@runtheedge.com">info@runtheedge.com</TextLink>
+                    </p>
                 </div>
 
                 <div className="text-muted-foreground text-center text-sm">

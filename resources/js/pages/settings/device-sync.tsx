@@ -1,12 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
 
+import DeviceSyncCard from '@/components/device-sync-card';
 import HeadingSmall from '@/components/heading-small';
-import { type BreadcrumbItem } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { CheckCircle2 } from 'lucide-react';
+import { type BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -16,7 +14,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 interface DeviceSyncProps {
-    connectedSources: Array<string>
+    connectedSources: Array<string>;
 }
 
 export default function DeviceSync({ connectedSources }: DeviceSyncProps) {
@@ -31,141 +29,91 @@ export default function DeviceSync({ connectedSources }: DeviceSyncProps) {
                         description="You have configured data synchronization from 3 applications to your account. You can always use manual entry to update your miles in the RTE tracker, you can also sync miles from Garmin, Fitbit, and Strava. To learn more about manual entry and synching please visit the Tutorials page where we have videos that demonstrate each way to enter or sync miles."
                     />
 
-                    <div className="grid gap-4 md:grid-cols-4">
-                        <Card>
-                            <CardHeader>
-                                <div className="flex items-center gap-2">
-                                    <CardTitle className="text-xl">Apple Health</CardTitle>
-                                </div>
-                                <CardDescription>
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {connectedSources.includes('apple') ? (
-                                    <div className="flex justify-between items-center">
-                                        <Button
-                                            variant="outline"
-                                            className="courser-pointer text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                                            asChild
-                                        >
-                                            <Link method="post" href="#">
-                                                Disconnect
-                                            </Link>
-                                        </Button>
-                                        <div className="flex items-center text-sm text-green-600 gap-1">
-                                            <CheckCircle2 className="h-4 w-4" />
-                                            <span>Connected</span>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <a href="#" className="inline-block">
-                                        <Button className="cursor-pointer dark:text-white">Connect</Button>
-                                    </a>
-                                )}
-                            </CardContent>
-                        </Card>
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {/*
+                            <DeviceSyncCard
+                              name="Device Name"
+                              imageSrc="/path/to/image.png"
+                              isConnected={true}
+                              connectRoute="/connect/device"
+                              disconnectRoute="/disconnect/device"
+                              onDisconnect={() => {
+                                // Update parent component state or perform other actions
+                                // For example, remove this device from a list of connected devices
+                              }}
+                            />
+                        */}
+                        <DeviceSyncCard
+                            name="Apple Health"
+                            imageSrc="/storage/dashboard/datasource/rte-trackery.png"
+                            description="Sync your activities with your Apple Health and earn points in Run The Edge."
+                            isConnected={connectedSources.includes('apple')}
+                            connectRoute={route('profile.device-sync.connect', 'apple')}
+                            disconnectRoute={route('profile.device-sync.disconnect', 'apple')}
+                            modalContent={
+                                <>
+                                    <p>
+                                        To sync your Apple Watch search for <strong>"Trackery"</strong> in the App Store and download the free app.
+                                        Once connected, miles from your Apple Watch will sync to the RTE Tracker.
+                                    </p>
+                                    <p>
+                                        Check out this{' '}
+                                        <Link className="underline" href="">
+                                            tutorial
+                                        </Link>{' '}
+                                        for a step-by-step guide to get set up.
+                                    </p>
+                                    <p>Please select a start date for syncing your activities. We'll import all activities from this date forward.</p>
+                                </>
+                            }
+                        />
 
-                        <Card>
-                            <CardHeader>
-                                <div className="flex items-center gap-2">
-                                    <CardTitle className="text-xl">Fitbit</CardTitle>
-                                </div>
-                                <CardDescription>
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {connectedSources.includes('fitbit') ? (
-                                    <div className="flex justify-between items-center">
-                                        <Button
-                                            variant="outline"
-                                            className="courser-pointer text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                                            asChild
-                                        >
-                                            <Link
-                                                method="post"
-                                                href={route('profile.device-sync.disconnect', 'fitbit')}
-                                                className="courser-pointer"
-                                            >
-                                                Disconnect
-                                            </Link>
-                                        </Button>
-                                        <div className="flex items-center text-sm text-green-600 gap-1">
-                                            <CheckCircle2 className="h-4 w-4" />
-                                            <span>Connected</span>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <a href={route('profile.device-sync.connect', 'fitbit')} className="inline-block">
-                                        <Button className="cursor-pointer dark:text-white">Connect</Button>
-                                    </a>
-                                )}
-                            </CardContent>
-                        </Card>
+                        <DeviceSyncCard
+                            name="Fitbit"
+                            imageSrc="/storage/dashboard/datasource/fitbit.png"
+                            description="Sync your activities with your Fitbit device and earn points in Run The Edge."
+                            isConnected={connectedSources.includes('fitbit')}
+                            connectRoute={route('profile.device-sync.connect', 'fitbit')}
+                            disconnectRoute={route('profile.device-sync.disconnect', 'fitbit')}
+                        />
 
-                        <Card>
-                            <CardHeader>
-                                <div className="flex items-center gap-2">
-                                    <CardTitle className="text-xl">Garmin Connect</CardTitle>
-                                </div>
-                                <CardDescription>
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                {connectedSources.includes('garmin') ? (
-                                    <div className="flex justify-between items-center">
-                                        <Button
-                                            variant="outline"
-                                            className="courser-pointer text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                                            asChild
-                                        >
-                                            <Link method="post" href="#">
-                                                Disconnect
-                                            </Link>
-                                        </Button>
-                                        <div className="flex items-center text-sm text-green-600 gap-1">
-                                            <CheckCircle2 className="h-4 w-4" />
-                                            <span>Connected</span>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <a href={route('profile.device-sync.connect', 'garmin')} className="inline-block">
-                                        <Button className="cursor-pointer dark:text-white">Connect</Button>
-                                    </a>
-                                )}
-                            </CardContent>
-                        </Card>
+                        <DeviceSyncCard
+                            name="Garmin Connect"
+                            imageSrc="/storage/dashboard/datasource/garmin.png"
+                            description="Sync your activities with your Garmin device and earn points in Run The Edge."
+                            isConnected={connectedSources.includes('garmin')}
+                            connectRoute={route('profile.device-sync.connect', 'garmin')}
+                            disconnectRoute={route('profile.device-sync.disconnect', 'garmin')}
+                            modalContent={
+                                <>
+                                    <p>
+                                        <strong>Know Before You Sync:</strong>
+                                    </p>
+                                    <p>
+                                        If your Garmin is NOT GPS-enabled and you would like miles from your daily steps to be added to the tracker,
+                                        slide the switch for daily steps ON.
+                                    </p>
+                                    <p>
+                                        If your Garmin IS GPS-enabled all activities will be auto-synced to the tracker. Sliding the switch for daily
+                                        steps ON will double your miles.
+                                    </p>
+                                    <p>You can always slide the switch for daily steps OFF without having to resync your device.</p>
+                                    <p>
+                                        <code>event_list</code>
+                                    </p>
+                                    <p>Select the date you would like to synchronize miles from. Please allow 30 minutes for data to sync.</p>
+                                </>
+                            }
+                        />
 
-                        <Card>
-                            <CardHeader>
-                                <div className="flex items-center gap-2">
-                                    <CardTitle className="text-xl">Strava</CardTitle>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                {connectedSources.includes('strava') ? (
-                                    <div className="flex justify-between items-center">
-                                        <Button
-                                            variant="outline"
-                                            className="courser-pointer text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
-                                            asChild
-                                        >
-                                            <Link method="post" href={route('profile.device-sync.disconnect', 'strava')}>
-                                                Disconnect
-                                            </Link>
-                                        </Button>
-                                        <div className="flex items-center text-sm text-green-600 gap-1">
-                                            <CheckCircle2 className="h-4 w-4" />
-                                            <span>Connected</span>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <a href={route('profile.device-sync.connect', 'strava')} className="inline-block">
-                                        <Button className="cursor-pointer dark:text-white">Connect</Button>
-                                    </a>
-                                )}
-                            </CardContent>
-                        </Card>
-
+                        <DeviceSyncCard
+                            name="Strava"
+                            imageSrc="/storage/dashboard/datasource/strava.png"
+                            description="Sync your activities with your Strava device and earn points in Run The Edge."
+                            isConnected={connectedSources.includes('strava')}
+                            connectRoute={route('profile.device-sync.connect', 'strava')}
+                            disconnectRoute={route('profile.device-sync.disconnect', 'strava')}
+                        />
                     </div>
                 </div>
             </SettingsLayout>

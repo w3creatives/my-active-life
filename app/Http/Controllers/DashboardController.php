@@ -1,19 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
-class DashboardController extends Controller
+final class DashboardController extends Controller
 {
     /**
      * Display the dashboard page.
      *
-     * @return \Inertia\Response
+     * @return Response
      */
-    public function index()
+    public function index(): Response
     {
         return Inertia::render('dashboard');
     }
@@ -21,10 +25,10 @@ class DashboardController extends Controller
     /**
      * Get user points data for the calendar.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function getUserPoints(Request $request)
+    public function getUserPoints(Request $request): JsonResponse
     {
         $user = $request->user();
         $date = $request->input('date', now()->format('Y-m'));
@@ -83,10 +87,10 @@ class DashboardController extends Controller
     /**
      * Get user statistics for the dashboard.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function getUserStats(Request $request)
+    public function getUserStats(Request $request): JsonResponse
     {
         $user = $request->user();
 
@@ -154,10 +158,10 @@ class DashboardController extends Controller
     /**
      * Add new points for the user.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function addPoints(Request $request)
+    public function addPoints(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'date' => 'required|date',

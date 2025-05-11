@@ -11,6 +11,9 @@ use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 final class DeviceSyncController extends Controller
 {
@@ -21,7 +24,7 @@ final class DeviceSyncController extends Controller
         $this->tracker = app(DataSourceInterface::class);
     }
 
-    public function index()
+    public function index(): Response
     {
         $user = auth()->user();
 
@@ -37,54 +40,53 @@ final class DeviceSyncController extends Controller
         ]);
     }
 
-    public function connect(Request $request, string $sourceSlug)
+    public function connect(Request $request, string $sourceSlug): RedirectResponse
     {
         return redirect($this->tracker->get($sourceSlug)->authUrl());
     }
 
-    public function trackerCallback(Request $request, string $sourceSlug)
+    public function trackerCallback(Request $request, string $sourceSlug): RedirectResponse
     {
-        if(!in_array($sourceSlug, ['garmin','strava','fitbit'])) {
+        if (! in_array($sourceSlug, ['garmin', 'strava', 'fitbit'])) {
             throw new Exception('Invalid request');
         }
 
         if ($sourceSlug === 'garmin') {
-            $authCode =  [$request->get('oauth_token'), $request->get('oauth_verifier')];
+            $authCode = [$request->get('oauth_token'), $request->get('oauth_verifier')];
         } else {
-            $authCode =  $request->get('code');
+            $authCode = [$request->get('code')];
         }
 
         $response = $this->tracker->get($sourceSlug)->authorize($authCode)->response();
 
-        if(!$response) {
+        if (! $response) {
             return redirect()->route('profile.device-sync.edit');
         }
 
         $user = $request->user();
 
-        //TODO: Get source profile from App\Models\User.php
+        // TODO: Get source profile from App\Models\User.php
         $dataSource = DataSource::where('short_name', $sourceSlug)->first();
 
         $userSourceProfile = $user->profiles()->where('data_source_id', $dataSource->id)->first();
 
         $response['data_source_id'] = $dataSource->id;
 
-
-        if(!is_null($userSourceProfile)){
+        if (! is_null($userSourceProfile)) {
             $userSourceProfile->fill($response)->save();
+
             return redirect()->route('profile.device-sync.edit');
         }
 
         $user->profiles()->create($response);
+
         return redirect()->route('profile.device-sync.edit');
     }
 
     /**
      * Disconnect a data source from the user's account
-     *
-     * @return RedirectResponse
      */
-    public function disconnect(Request $request, string $sourceSlug)
+    public function disconnect(Request $request, string $sourceSlug): RedirectResponse
     {
         $user = $request->user();
         $dataSource = DataSource::where('short_name', $sourceSlug)->first();
@@ -130,9 +132,9 @@ final class DeviceSyncController extends Controller
             // Delete the profile
             $profile->delete();
 
-            return redirect()->back()->with('success', ucfirst($sourceSlug) . ' disconnected successfully');
+            return redirect()->back()->with('success', ucfirst($sourceSlug).' disconnected successfully');
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to disconnect: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to disconnect: '.$e->getMessage());
         }
     }
 }

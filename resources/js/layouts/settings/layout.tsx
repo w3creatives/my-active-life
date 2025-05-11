@@ -13,13 +13,23 @@ const sidebarNavItems: NavItem[] = [
         icon: null,
     },
     {
+        title: 'Password',
+        href: '/settings/password',
+        icon: null,
+    },
+    {
         title: 'Device Syncing',
         href: '/settings/device-sync',
         icon: null,
     },
     {
-        title: 'Password',
-        href: '/settings/password',
+        title: 'Manual Entry',
+        href: '/settings/manual-entry',
+        icon: null,
+    },
+    {
+        title: 'Privacy',
+        href: '/settings/privacy',
         icon: null,
     },
     {
@@ -48,10 +58,10 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                             <Button
                                 key={item.href}
                                 size="sm"
-                                variant="ghost"
+                                variant="link"
                                 asChild
-                                className={cn('w-full justify-start', {
-                                    'bg-muted': currentPath === item.href,
+                                className={cn('w-full justify-start text-black dark:text-white', {
+                                    'bg-primary text-white': currentPath === item.href,
                                 })}
                             >
                                 <Link href={item.href} prefetch>
@@ -64,7 +74,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
                 <Separator className="my-6 md:hidden" />
 
-                <div className="flex-1 w-full">
+                <div className="w-full flex-1">
                     <section className="w-full space-y-12">{children}</section>
                 </div>
             </div>
