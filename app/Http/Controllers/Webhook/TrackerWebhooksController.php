@@ -35,14 +35,15 @@ final class TrackerWebhooksController extends Controller
     // TODO: Check is ShopifyService is needed or not
     public function webhookAction(Request $request, SopifyRepository $sopifyRepository, EventService $eventService, $sourceSlug = 'fitbit')
     {
-        \Log::info("Webhook called for {$sourceSlug}");
-        \Log::info("for {$sourceSlug} : ".json_encode($request->all()));
+        if ($sourceSlug === 'fitbit' && isset($request->all()['verify'])) {
+            return $this->verifyWebhook($request, $sourceSlug);
+        }
+
         $tracker = $this->tracker->get($sourceSlug);
 
         $notifications = $tracker->formatWebhookRequest($request);
 
         foreach ($notifications as $notification) {
-            \Log::info("for {$sourceSlug} : ".json_encode($notification));
             $user = $notification->user;
 
             if (is_null($user)) {
@@ -72,7 +73,7 @@ final class TrackerWebhooksController extends Controller
             }
         }
 
-        http_response_code(204);
+        return http_response_code(204);
     }
 
     private function createOrUpdateUserProfilePoint($user, $distance, $date, $sourceProfile, $type = 'webhook', $actionType = 'auto')

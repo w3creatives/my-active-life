@@ -39,6 +39,6 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('settings/device-sync/webhook/{sourceSlug}/verify', [TrackerWebhooksController::class, 'verifyWebhook'])->name('profile.device-sync.webhook.verify');
-Route::post('settings/device-sync/webhook/{sourceSlug}', [TrackerWebhooksController::class, 'webhookAction'])
+Route::any('settings/device-sync/webhook/{sourceSlug}', [TrackerWebhooksController::class, 'webhookAction'])
     ->name('profile.device-sync.webhook')
     ->withoutMiddleware([VerifyCsrfToken::class]);

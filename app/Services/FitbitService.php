@@ -8,6 +8,7 @@ use App\Interfaces\DataSourceInterface;
 use App\Models\User;
 use App\Traits\CalculateDaysTrait;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 
@@ -35,11 +36,11 @@ final class FitbitService implements DataSourceInterface
 
     private array $authResponse;
 
-    private string $startDate;
+    private CarbonImmutable $startDate;
 
-    private string $endDate;
+    private CarbonImmutable $endDate;
 
-    private string $dateDays;
+    private float $dateDays;
 
     public function __construct($accessToken = '')
     {
@@ -112,6 +113,7 @@ final class FitbitService implements DataSourceInterface
                 'access_token' => $data->access_token,
                 'refresh_token' => $data->refresh_token ?? null,
                 'token_expires_at' => $tokenExpiresAt,
+                'user_id' => $data->user_id,
             ];
         } else {
             $this->authResponse = [];
@@ -201,7 +203,7 @@ final class FitbitService implements DataSourceInterface
 
             $sourceProfile = null;
 
-            //TODO: Get source profile from App\Models\User.php
+            // TODO: Get source profile from App\Models\User.php
             $sourceProfile = $user?->profiles()->whereHas('source', function ($query) {
                 return $query->where('short_name', 'fitbit');
             })->first();
@@ -220,6 +222,21 @@ final class FitbitService implements DataSourceInterface
         return $items->filter(function ($item) {
             return $item->user && $item->sourceProfile && $item->sourceToken;
         });
+    }
+
+    public function subscribe(int $userId, string $subscriptionId): array
+    {
+        $subscriptionId = "{$userId}-{$subscriptionId}";
+
+        $response = Http::baseUrl($this->activityBaseUrl)
+            ->withToken($this->accessToken)
+            ->post("user/-/apiSubscriptions/{$subscriptionId}.json");
+
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        return [];
     }
 
     private function findActivities($date): array
@@ -242,6 +259,8 @@ final class FitbitService implements DataSourceInterface
 
             return compact('date', 'distance', 'modality', 'raw_distance');
         });
+
+        // TODO: Figure out how daily steps distance will be calculated.
 
         $items = $activities->reduce(function ($data, $item) {
             if (! isset($data[$item['modality']])) {

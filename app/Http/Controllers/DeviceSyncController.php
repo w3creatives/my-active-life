@@ -12,8 +12,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 
 final class DeviceSyncController extends Controller
 {
@@ -64,6 +62,7 @@ final class DeviceSyncController extends Controller
         }
 
         $user = $request->user();
+        $this->tracker->get($sourceSlug)->setAccessToken($response['access_token'])->subscribe($user->id, $response['user_id']);
 
         // TODO: Get source profile from App\Models\User.php
         $dataSource = DataSource::where('short_name', $sourceSlug)->first();
