@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import axios from 'axios';
+import { PointsDetailModal } from '@/components/points-detail-modal';
 
 export interface UserPoint {
   id: string;
@@ -23,6 +24,7 @@ export function Calendar({ date, setDate }: CalendarProps) {
   const [totalPoints, setTotalPoints] = useState<number>(0);
   const [eventInfo, setEventInfo] = useState<{ id: number; name: string } | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   // Get days in month
   const getDaysInMonth = (year: number, month: number) => {
@@ -148,7 +150,12 @@ export function Calendar({ date, setDate }: CalendarProps) {
                   day && selectedDate && day.getDate() === selectedDate.getDate() &&
                   day.getMonth() === selectedDate.getMonth() ? "bg-accent" : ""
                 )}
-                onClick={() => day && setSelectedDate(day)}
+                onClick={() => {
+                  if (day) {
+                    setSelectedDate(day);
+                    setIsModalOpen(true);
+                  }
+                }}
               >
                 {day && (
                   <div className="h-full w-full">
@@ -173,6 +180,14 @@ export function Calendar({ date, setDate }: CalendarProps) {
           </div>
         )}
       </div>
+
+      {/* Points Detail Modal */}
+      <PointsDetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        date={selectedDate}
+        eventId={eventInfo?.id || null}
+      />
     </div>
   );
 }
