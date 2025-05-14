@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { router } from '@inertiajs/react';
@@ -41,6 +41,8 @@ export default function DeviceSyncCard({
     const initialDate = new Date(today) >= new Date(minDate) ? today : minDate;
     const [dateString, setDateString] = useState<string>(initialDate);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState(false);
+    const [deleteData, setDeleteData] = useState<'no' | 'yes'>('no');
     const [isConnecting, setIsConnecting] = useState(false);
     const [isDisconnecting, setIsDisconnecting] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
@@ -139,7 +141,13 @@ export default function DeviceSyncCard({
 
     const handleDisconnect = (e: React.MouseEvent) => {
         e.preventDefault();
+        // Open the disconnect confirmation dialog
+        setIsDisconnectDialogOpen(true);
+    };
+
+    const confirmDisconnect = () => {
         setIsDisconnecting(true);
+        setIsDisconnectDialogOpen(false);
 
         // Show loading toast
         const toastId = toast.loading(`Disconnecting from ${name}...`);
@@ -147,7 +155,7 @@ export default function DeviceSyncCard({
         // Use Inertia router to handle the POST request
         router.post(
             disconnectRoute,
-            {},
+            { delete_data: deleteData },
             {
                 preserveState: true,
                 onSuccess: () => {
@@ -218,6 +226,63 @@ export default function DeviceSyncCard({
                             <CheckCircle2 className="h-4 w-4" />
                             <span>Connected</span>
                         </div>
+
+                        {/* Disconnect Confirmation Dialog */}
+                        <Dialog open={isDisconnectDialogOpen} onOpenChange={setIsDisconnectDialogOpen}>
+                            <DialogContent className="sm:max-w-md">
+                                <DialogHeader>
+                                    <DialogTitle className="text-2xl">Disconnect {name}</DialogTitle>
+                                </DialogHeader>
+                                <DialogDescription className="space-y-6 py-4 text-base">
+                                    <p className="text-center">You can choose whether you want to keep previously synced miles, or delete all synced entries.</p>
+
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                        <Button
+                                            type="button"
+                                            variant={deleteData === 'no' ? 'default' : 'outline'}
+                                            className={`h-auto px-4 py-2 text-wrap flex flex-col items-center justify-center gap-1 ${deleteData === 'no' ? 'ring-2 ring-primary' : ''}`}
+                                            onClick={() => setDeleteData('no')}
+                                        >
+                                            <div className="text-lg text-wrap font-semibold">Preserve Miles</div>
+                                            <div className="text-sm text-wrap text-center">Keep all your previously synced miles</div>
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant={deleteData === 'yes' ? 'default' : 'outline'}
+                                            className={`h-auto px-4 py-2 text-wrap flex flex-col items-center justify-center gap-1 ${deleteData === 'yes' ? 'ring-2 ring-primary' : ''}`}
+                                            onClick={() => setDeleteData('yes')}
+                                        >
+                                            <div className="text-lg text-wrap font-semibold">Delete Miles</div>
+                                            <div className="text-sm text-wrap text-center">Remove all miles synced from this device</div>
+                                        </Button>
+                                    </div>
+                                </DialogDescription>
+                                <DialogFooter className="mt-6 flex flex-col sm:flex-row gap-3">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setIsDisconnectDialogOpen(false)}
+                                        className="w-full sm:w-auto"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        variant="destructive"
+                                        onClick={confirmDisconnect}
+                                        disabled={isDisconnecting}
+                                        className="w-full sm:w-auto cursor-pointer"
+                                    >
+                                        {isDisconnecting ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                Disconnecting...
+                                            </>
+                                        ) : (
+                                            'Disconnect'
+                                        )}
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 ) : (
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

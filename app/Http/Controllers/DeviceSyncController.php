@@ -103,6 +103,9 @@ final class DeviceSyncController extends Controller
             return redirect()->back()->with('error', 'You are not connected to this data source');
         }
 
+        // Check if user wants to delete synced miles
+        $deleteData = $request->input('delete_data', 'no');
+
         // Revoke access with the provider if needed
         try {
             /**
@@ -130,6 +133,13 @@ final class DeviceSyncController extends Controller
 
             // Delete the profile
             $profile->delete();
+
+            // If user chose to delete synced miles, delete them
+            if ($deleteData === 'yes') {
+                // Get the EventService to handle deleting synced miles
+                $eventService = app(\App\Services\EventService::class);
+                $eventService->deleteSourceSyncedMile($user, $dataSource->id);
+            }
 
             return redirect()->back()->with('success', ucfirst($sourceSlug).' disconnected successfully');
         } catch (Exception $e) {
