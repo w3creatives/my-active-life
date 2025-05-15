@@ -57,6 +57,19 @@ final class StravaService implements DataSourceInterface
         $this->clientSecret = config('services.strava.client_secret');
     }
 
+    public function setSecrets($secrets): self
+    {
+        if (is_array($secrets)) {
+            [$accessToken] = $secrets;
+        } else {
+            $accessToken = $secrets;
+        }
+
+        $this->setAccessToken($accessToken);
+
+        return $this;
+    }
+
     /**
      * Set the date range for activity retrieval
      * Uses the CalculateDaysTrait to handle date calculations
@@ -289,6 +302,7 @@ final class StravaService implements DataSourceInterface
 
             /**
              * Strava webhook reference documentation
+             *
              * @link https://developers.strava.com/docs/webhooks/
              */
             $verifyToken = config('services.strava.webhook_verification_code');
@@ -394,7 +408,7 @@ final class StravaService implements DataSourceInterface
                 'status' => 'success',
                 'activity' => $processedActivity,
                 'user' => $user,
-                'sourceProfile' => $sourceProfile
+                'sourceProfile' => $sourceProfile,
             ];
         } catch (Exception $e) {
             Log::error('StravaService: Failed to fetch activity', [
