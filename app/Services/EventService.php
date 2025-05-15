@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Http;
 use App\Models\Event;
 use App\Models\Team;
 use App\Models\UserPoint;
@@ -389,6 +390,7 @@ final class EventService
         foreach ($participations as $participation) {
             $user->points()->where('event_id', $participation->event->id)->where('data_source_id', $dataSourceId)->delete();
             $this->createOrUpdateUserPoint($user, $participation->event);
+            $this->userPointWorkflow($user->id, $participation->event_id);
         }
     }
 
@@ -437,5 +439,18 @@ final class EventService
     private function calculateUserTotal($user, $event, $startDate, $endDate)
     {
         return $user->points()->where(['event_id' => $event->id])->where('date', '>=', $startDate)->where('date', '<=', $endDate)->sum('amount');
+    }
+
+    public function userPointWorkflow($userId, $eventId): void
+    {
+
+        //https://tracker.runtheedge.com/user_points/user_point_workflow?user_id=279&event_id=64
+
+        Http::withQueryParameters([
+            'user_id' => $userId,
+            'event_id' => $eventId,
+        ])
+            ->post('https://tracker.runtheedge.com/user_points/user_point_workflow');
+
     }
 }

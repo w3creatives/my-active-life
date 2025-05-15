@@ -727,7 +727,7 @@ class UserPointsController extends BaseController
             $userPoint->update($request->only(['amount', 'date', 'modality', 'note']));
 
             $eventService->createOrUpdateUserPoint($user, $request->event_id, $request->date);
-
+            $eventService->userPointWorkflow($user->id, $request->event_id);
             return $this->sendResponse([], 'User Points updated');
         }
 
@@ -775,6 +775,8 @@ class UserPointsController extends BaseController
             $this->questMilestoneAcheivement($user, $request->date, $participation->event_id);
 
             $eventService->createOrUpdateUserPoint($user, $participation->event_id, $request->date);
+
+            $eventService->userPointWorkflow($user->id, $participation->event_id);
         }
 
         // $userParticipation = $user->participations()->where('event_id', $request->event_id)->first();
@@ -846,7 +848,7 @@ class UserPointsController extends BaseController
             $eventService->createOrUpdateUserPoint($user, $request->event_id, $request->date);
 
         }
-
+        $eventService->userPointWorkflow($user->id, $request->event_id);
         return $this->sendResponse([], 'User Points updated');
     }
 
@@ -1222,6 +1224,7 @@ class UserPointsController extends BaseController
             }
 
             $eventService->createOrUpdateUserPoint($user, $participation->event_id, $date);
+            $eventService->userPointWorkflow($user->id, $participation->event_id);
         }
 
         return true;
