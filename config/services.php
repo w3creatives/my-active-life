@@ -42,6 +42,7 @@ return [
         'client_id' => env('STRAVA_CLIENT_ID'),
         'redirect_url' => env('STRAVA_REDIRECT_URI'),
         'client_secret' => env('STRAVA_CLIENT_SECRET'),
+        'webhook_verification_code' => env('STRAVA_WEBHOOK_VERIFICATION_CODE'),
     ],
 
     'fitbit' => [

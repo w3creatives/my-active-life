@@ -10,6 +10,7 @@ use App\Traits\CalculateDaysTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Service for interacting with the Strava API
@@ -163,6 +164,7 @@ final class StravaService implements DataSourceInterface
                 'access_token' => $data->access_token,
                 'refresh_token' => $data->refresh_token ?? null,
                 'token_expires_at' => $tokenExpiresAt,
+                'user_id' => (string) $data->athlete->id,
             ];
         } else {
             $this->authResponse = [];
@@ -270,13 +272,38 @@ final class StravaService implements DataSourceInterface
     public function createSubscription(): array
     {
         try {
+            // Use the correct webhook route from settings.php
+            $callbackUrl = route('profile.device-sync.webhook', ['sourceSlug' => 'strava'], true); // true forces HTTPS
+
+            // Log the URL we're using
+            Log::debug('StravaService: Creating subscription', [
+                'callback_url' => $callbackUrl,
+                'client_id' => $this->clientId,
+            ]);
+
+            if (empty($callbackUrl)) {
+                Log::error('StravaService: No callback URL available');
+
+                return ['error' => 'Callback URL is not configured. Please set Strava Subscription URL first.'];
+            }
+
+            /**
+             * Strava webhook reference documentation
+             * @link https://developers.strava.com/docs/webhooks/
+             */
+            $verifyToken = config('services.strava.webhook_verification_code');
+
+            Log::debug('StravaService: Creating subscription with parameters', [
+                'client_id' => $this->clientId,
+                'callback_url' => $callbackUrl,
+                'verify_token' => $verifyToken,
+            ]);
+
             $response = Http::post('https://www.strava.com/api/v3/push_subscriptions', [
                 'client_id' => $this->clientId,
                 'client_secret' => $this->clientSecret,
-                'callback_url' => env('STRAVA_SUBSCRIPTION_URL'),
-                'verify_token' => 'StravaForLaravel',
-                'object_type' => 'activity',
-                'aspect_type' => 'create',
+                'callback_url' => $callbackUrl,
+                'verify_token' => $verifyToken,
             ]);
 
             if ($response->successful()) {
@@ -286,9 +313,11 @@ final class StravaService implements DataSourceInterface
 
                 return $response->json();
             }
+
             Log::error('StravaService: Failed to create subscription', [
                 'status' => $response->status(),
                 'body' => $response->body(),
+                'callback_url' => $callbackUrl,
             ]);
 
             return ['error' => $response->body()];
@@ -364,6 +393,62 @@ final class StravaService implements DataSourceInterface
 
             return ['status' => 'error', 'reason' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Deauthorize the application with Strava
+     * Revokes all tokens and access for the current user
+     *
+     * @return array Response from the deauthorization request
+     */
+    public function deauthorize(): array
+    {
+        try {
+            $response = Http::withToken($this->accessToken)
+                ->post('https://www.strava.com/oauth/deauthorize', [
+                    'access_token' => $this->accessToken,
+                ]);
+
+            if ($response->successful()) {
+                Log::info('Successfully deauthorized Strava application');
+
+                return $response->json();
+            }
+            Log::error('Failed to deauthorize Strava application', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return ['error' => $response->body()];
+
+        } catch (Exception $e) {
+            Log::error('Exception deauthorizing Strava application', [
+                'message' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Subscribe a user to Strava webhook notifications
+     * Required by the DataSourceInterface
+     *
+     * @param  int  $userId  The user ID
+     * @param  string  $sourceUserId  The Strava user ID
+     */
+    public function subscribe(int $userId, string $sourceUserId): self
+    {
+        // Create a subscription for this user if needed
+        try {
+            $this->createSubscription();
+        } catch (Exception $e) {
+            Log::error('Failed to create Strava subscription during user subscribe', [
+                'error' => $e->getMessage(),
+                'user_id' => $userId,
+            ]);
+        }
+
+        return $this;
     }
 
     /**
@@ -473,60 +558,5 @@ final class StravaService implements DataSourceInterface
             'transaction_id' => $activity['id'],
             'source' => 'strava',
         ];
-    }
-
-    /**
-     * Deauthorize the application with Strava
-     * Revokes all tokens and access for the current user
-     *
-     * @return array Response from the deauthorization request
-     */
-    public function deauthorize(): array
-    {
-        try {
-            $response = Http::withToken($this->accessToken)
-                ->post('https://www.strava.com/oauth/deauthorize', [
-                    'access_token' => $this->accessToken
-                ]);
-
-            if ($response->successful()) {
-                Log::info('Successfully deauthorized Strava application');
-                return $response->json();
-            } else {
-                Log::error('Failed to deauthorize Strava application', [
-                    'status' => $response->status(),
-                    'body' => $response->body()
-                ]);
-                return ['error' => $response->body()];
-            }
-        } catch (Exception $e) {
-            Log::error('Exception deauthorizing Strava application', [
-                'message' => $e->getMessage()
-            ]);
-            throw $e;
-        }
-    }
-
-    /**
-     * Subscribe a user to Strava webhook notifications
-     * Required by the DataSourceInterface
-     *
-     * @param int $userId The user ID
-     * @param string $sourceUserId The Strava user ID
-     * @return self
-     */
-    public function subscribe(int $userId, string $sourceUserId): self
-    {
-        // Create a subscription for this user if needed
-        try {
-            $this->createSubscription();
-        } catch (Exception $e) {
-            Log::error('Failed to create Strava subscription during user subscribe', [
-                'error' => $e->getMessage(),
-                'user_id' => $userId
-            ]);
-        }
-
-        return $this;
     }
 }

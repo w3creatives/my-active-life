@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Interfaces\DataSourceInterface;
 use App\Repositories\SopifyRepository;
 use App\Services\EventService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -22,58 +23,142 @@ final class TrackerWebhooksController extends Controller
 
     public function verifyWebhook(Request $request, string $sourceSlug = 'fitbit')
     {
+        Log::debug('TrackerWebhooksController: Verifying webhook', [
+            'sourceSlug' => $sourceSlug,
+            'params' => $request->all(),
+        ]);
+
+        if ($sourceSlug === 'strava') {
+            // Handle Strava webhook verification
+            $response = $this->tracker->get($sourceSlug)->verifyWebhook($request->all());
+
+            if ($response) {
+                return response()->json($response);
+            }
+
+            return response()->json(['error' => 'Invalid verification request'], 400);
+        }
+        // Handle Fitbit and other services
         $response = $this->tracker->get($sourceSlug)->verifyWebhook($request->get('verify'));
 
         if ($response) {
-            http_response_code(204);
-        } else {
-            http_response_code(404);
+            return response()->noContent(204);
         }
-        exit();
+
+        return response()->json(['error' => 'Verification failed'], 404);
+
     }
 
     // TODO: Check is ShopifyService is needed or not
     public function webhookAction(Request $request, SopifyRepository $sopifyRepository, EventService $eventService, $sourceSlug = 'fitbit')
     {
+        Log::debug('TrackerWebhooksController: Webhook action', [
+            'sourceSlug' => $sourceSlug,
+            'method' => $request->method(),
+            'params' => $request->all(),
+        ]);
+
+        // Handle Strava GET verification requests directly
+        if ($sourceSlug === 'strava' && $request->method() === 'GET' && $request->has('hub_challenge')) {
+            // Check if this is a valid Strava webhook verification request
+            if ($request->input('hub_mode') === 'subscribe') {
+                // Verify token is optional in the verification process
+                if ($request->has('hub_verify_token') && $request->input('hub_verify_token') !== 'StravaForRTETracker') {
+                    Log::warning('TrackerWebhooksController: Invalid verify token', [
+                        'received' => $request->input('hub_verify_token'),
+                        'expected' => 'StravaForRTETracker',
+                    ]);
+                }
+
+                // Return the challenge value as required by Strava
+                return response()->json(['hub.challenge' => $request->input('hub_challenge')]);
+            }
+
+            Log::warning('TrackerWebhooksController: Invalid hub_mode', [
+                'received' => $request->input('hub_mode'),
+                'expected' => 'subscribe',
+            ]);
+
+            return response()->json(['error' => 'Invalid verification request'], 400);
+        }
+
+        // Handle Fitbit verification
         if ($sourceSlug === 'fitbit' && isset($request->all()['verify'])) {
             return $this->verifyWebhook($request, $sourceSlug);
         }
 
-        $tracker = $this->tracker->get($sourceSlug);
+        try {
+            $tracker = $this->tracker->get($sourceSlug);
 
-        $notifications = $tracker->formatWebhookRequest($request);
+            // Special handling for Strava webhook events
+            if ($sourceSlug === 'strava' && $request->method() === 'POST') {
+                Log::debug('TrackerWebhooksController: Processing Strava webhook event', [
+                    'payload' => $request->all(),
+                ]);
 
-        foreach ($notifications as $notification) {
-            $user = $notification->user;
+                try {
+                    // Process the Strava webhook event
+                    $result = $tracker->processWebhook($request->all());
+                    Log::debug('TrackerWebhooksController: Strava webhook processed', ['result' => $result]);
 
-            if (is_null($user)) {
-                Log::stack(['single'])->debug("{$sourceSlug} : User Not Found", $notification);
-                continue;
+                    // Always return 200 OK to Strava, even if we couldn't process the event
+                    // This prevents Strava from retrying the webhook
+                    return response()->json(['status' => 'success'], 200);
+                } catch (Exception $e) {
+                    Log::error('TrackerWebhooksController: Error processing Strava webhook', [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+
+                    // Still return 200 OK to Strava to prevent retries
+                    return response()->json(['status' => 'error_handled'], 200);
+                }
             }
 
-            if (is_null($notification->sourceToken)) {
-                Log::stack(['single'])->debug("{$sourceSlug} : access token not found", $notification);
-                continue;
-            }
+            $notifications = $tracker->formatWebhookRequest($request);
 
-            $activities = $tracker->setSecrets($notification->sourceToken)
-                ->processWebhook($notification->webhookUrl)
-                ->setDate($notification->date)->activities();
+            foreach ($notifications as $notification) {
+                $user = $notification->user;
 
-            if ($activities->count()) {
-                foreach ($activities as $activity) {
-                    $activity['dataSourceId'] = $notification->dataSourceId;
-                    $eventService->createUserParticipationPoints($user, $activity);
+                if (is_null($user)) {
+                    Log::debug("{$sourceSlug} : User Not Found", (array) $notification);
 
-                    if ($sourceSlug === 'fitbit') {
-                        $this->createOrUpdateUserProfilePoint($user, $activity['raw_distance'], $activity['date'], $notification->sourceProfile);
-                        $sopifyRepository->updateStatus($user->email, true);
+                    continue;
+                }
+
+                if (is_null($notification->sourceToken)) {
+                    Log::debug("{$sourceSlug} : access token not found", (array) $notification);
+
+                    continue;
+                }
+
+                $activities = $tracker->setSecrets($notification->sourceToken)
+                    ->processWebhook($notification->webhookUrl)
+                    ->setDate($notification->date)->activities();
+
+                if ($activities->count()) {
+                    foreach ($activities as $activity) {
+                        $activity['dataSourceId'] = $notification->dataSourceId;
+                        $eventService->createUserParticipationPoints($user, $activity);
+
+                        if ($sourceSlug === 'fitbit') {
+                            $this->createOrUpdateUserProfilePoint($user, $activity['raw_distance'], $activity['date'], $notification->sourceProfile);
+                            $sopifyRepository->updateStatus($user->email, true);
+                        }
                     }
                 }
             }
-        }
 
-        return http_response_code(204);
+            return response()->noContent(204);
+        } catch (Exception $e) {
+            Log::error('Error processing webhook', [
+                'sourceSlug' => $sourceSlug,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json(['error' => 'Internal server error'], 500);
+        }
     }
 
     private function createOrUpdateUserProfilePoint($user, $distance, $date, $sourceProfile, $type = 'webhook', $actionType = 'auto')
