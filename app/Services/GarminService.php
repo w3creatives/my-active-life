@@ -8,6 +8,7 @@ use App\Interfaces\DataSourceInterface;
 use App\Models\DataSourceProfile;
 use App\Traits\CalculateDaysTrait;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
@@ -49,15 +50,15 @@ final class GarminService implements DataSourceInterface
 
     private array $queryParams = [];
 
-    private string $garminRequestUrl;
+    private string $garminRequestUrl = '';
 
     private string $requestType = 'summary';
 
-    private string $startDate;
+    private CarbonImmutable $startDate;
 
-    private string $endDate;
+    private CarbonImmutable $endDate;
 
-    private string $dateDays;
+    private float $dateDays;
 
     public function __construct()
     {

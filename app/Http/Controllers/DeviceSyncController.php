@@ -10,6 +10,7 @@ use App\Models\DataSourceProfile;
 use App\Services\DataSourceService\FitbitUnsubscriber;
 use App\Services\DataSourceService\GarminUnsubscriber;
 use App\Services\DataSourceService\StravaUnsubscriber;
+use App\Services\EventService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,10 +45,15 @@ final class DeviceSyncController extends Controller
 
     public function connect(Request $request, string $sourceSlug): RedirectResponse
     {
+        // Store sync start date in session if provided
+        if ($request->has('sync_start_date')) {
+            session(['sync_start_date' => $request->get('sync_start_date')]);
+        }
+
         return redirect($this->tracker->get($sourceSlug)->authUrl());
     }
 
-    public function trackerCallback(Request $request, string $sourceSlug): RedirectResponse
+    public function trackerCallback(Request $request, EventService $eventService, string $sourceSlug): RedirectResponse
     {
         if (! in_array($sourceSlug, ['garmin', 'strava', 'fitbit'])) {
             throw new Exception('Invalid request');
@@ -72,10 +78,6 @@ final class DeviceSyncController extends Controller
             $this->tracker->get($sourceSlug)
                 ->setAccessToken($response['access_token'])
                 ->setAccessTokenSecret($response['user_id'])
-                ->subscribe($user->id, $response['user_id']);
-        } else {
-            $this->tracker->get($sourceSlug)
-                ->setAccessToken($response['access_token'])
                 ->subscribe($user->id, $response['user_id']);
         }
 
@@ -109,9 +111,7 @@ final class DeviceSyncController extends Controller
             return redirect()->route('profile.device-sync.edit');
         }
 
-        $user->profiles()->create($response);
-
-        // For Strava, create webhook subscription if needed
+        // For Strava, create a webhook subscription if needed
         if ($sourceSlug === 'strava') {
             try {
                 $this->tracker->get($sourceSlug)->createSubscription();
@@ -120,6 +120,24 @@ final class DeviceSyncController extends Controller
                     'error' => $e->getMessage(),
                     'user_id' => $user->id,
                 ]);
+            }
+        }
+
+        if (session()->has('sync_start_date')) {
+            $startDate = session()->get('sync_start_date');
+            session()->forget('sync_start_date');
+
+            $userSourceProfile = $user->profiles()->create($response);
+            $activities = $this->tracker->get($sourceSlug)
+                ->setSecrets([$userSourceProfile->access_token, $userSourceProfile->access_token_secret])
+                ->setDate($startDate)
+                ->activities();
+
+            if ($activities->count() && $sourceSlug !== 'garmin') {
+                foreach ($activities as $activity) {
+                    $activity['dataSourceId'] = $userSourceProfile->data_source_id;
+                    $eventService->createUserParticipationPoints($user, $activity);
+                }
             }
         }
 
@@ -155,13 +173,13 @@ final class DeviceSyncController extends Controller
             switch ($sourceSlug) {
                 case 'fitbit':
                     // Call the Fitbit unsubscriber service
-                    $unsubscriber = new FitbitUnsubscriber($user, $dataSource);
-                    $unsubscriber->unsubscribe();
+                    // $unsubscriber = new FitbitUnsubscriber($user, $dataSource);
+                    // $unsubscriber->unsubscribe();
                     break;
                 case 'garmin':
                     // Call the Garmin unsubscriber service
-                    $unsubscriber = new GarminUnsubscriber($user, $dataSource);
-                    $unsubscriber->unsubscribe();
+                    // $unsubscriber = new GarminUnsubscriber($user, $dataSource);
+                    // $unsubscriber->unsubscribe();
                     break;
                 case 'strava':
                     // Call the Strava unsubscriber service
