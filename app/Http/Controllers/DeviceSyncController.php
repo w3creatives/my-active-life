@@ -133,7 +133,7 @@ final class DeviceSyncController extends Controller
                 ->setDate($startDate)
                 ->activities();
 
-            if ($activities->count()) {
+            if ($activities->count() && $sourceSlug !== 'garmin') {
                 foreach ($activities as $activity) {
                     $activity['dataSourceId'] = $userSourceProfile->data_source_id;
                     $eventService->createUserParticipationPoints($user, $activity);
