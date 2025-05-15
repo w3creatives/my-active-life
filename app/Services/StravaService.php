@@ -384,7 +384,18 @@ final class StravaService implements DataSourceInterface
             $activity = $this->fetchActivity($data['object_id']);
 
             // Process and store the activity data
-            return $this->processActivity($activity, $sourceProfile);
+            $processedActivity = $this->processActivity($activity, $sourceProfile);
+
+            // Get the user from the source profile
+            $user = $sourceProfile->user;
+
+            // Return all the data needed for creating profile points
+            return [
+                'status' => 'success',
+                'activity' => $processedActivity,
+                'user' => $user,
+                'sourceProfile' => $sourceProfile
+            ];
         } catch (Exception $e) {
             Log::error('StravaService: Failed to fetch activity', [
                 'message' => $e->getMessage(),
@@ -555,8 +566,10 @@ final class StravaService implements DataSourceInterface
             'date' => $date,
             'modality' => $modality,
             'distance' => $distanceInMiles,
+            'raw_distance' => $distanceInMiles, // Add raw_distance for profile points
             'transaction_id' => $activity['id'],
             'source' => 'strava',
+            'data_source_id' => $sourceProfile->data_source_id,
         ];
     }
 }

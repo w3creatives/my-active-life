@@ -101,6 +101,33 @@ final class TrackerWebhooksController extends Controller
                     $result = $tracker->processWebhook($request->all());
                     Log::debug('TrackerWebhooksController: Strava webhook processed', ['result' => $result]);
 
+                    // If we have activity data and a user, create/update profile points
+                    if (isset($result['activity']) && isset($result['user']) && isset($result['sourceProfile'])) {
+                        $activity = $result['activity'];
+                        $user = $result['user'];
+                        $sourceProfile = $result['sourceProfile'];
+
+                        // Create user participation points
+                        $activity['dataSourceId'] = $sourceProfile->data_source_id;
+                        $eventService->createUserParticipationPoints($user, $activity);
+
+                        // Create or update user profile point
+                        if (isset($activity['raw_distance']) && isset($activity['date'])) {
+                            $this->createOrUpdateUserProfilePoint(
+                                $user,
+                                $activity['raw_distance'],
+                                $activity['date'],
+                                $sourceProfile,
+                            );
+
+                            Log::debug('TrackerWebhooksController: Updated user profile points for Strava activity', [
+                                'user_id' => $user->id,
+                                'distance' => $activity['raw_distance'],
+                                'date' => $activity['date'],
+                            ]);
+                        }
+                    }
+
                     // Always return 200 OK to Strava, even if we couldn't process the event
                     // This prevents Strava from retrying the webhook
                     return response()->json(['status' => 'success'], 200);
