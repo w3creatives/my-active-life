@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Http\Middleware\CheckSuperAdmin;
+use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -28,7 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Register the super admin middleware
         $middleware->alias([
-            'super-admin' => CheckSuperAdmin::class,
+            'admin' => AdminMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
