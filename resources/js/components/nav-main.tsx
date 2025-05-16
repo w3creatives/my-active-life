@@ -4,9 +4,11 @@ import { Link, usePage } from '@inertiajs/react';
 
 export function NavMain({ items = [] }: { items: NavItem[] }) {
     const page = usePage();
+    const { auth } = page.props as any;
+
     return (
         <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
+            <SidebarGroupLabel>{auth.is_admin ? 'Admin Panel' : 'Platform'}</SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) => (
                     <SidebarMenuItem key={item.title}>

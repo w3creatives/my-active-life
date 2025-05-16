@@ -157,4 +157,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserFollowRequest::class, 'prospective_follower_id', 'id');
     }
+
+    /**
+     * Check if the user is a super admin
+     *
+     * @return bool
+     */
+    public function isSuperAdmin(): bool
+    {
+        return (bool) $this->super_admin;
+    }
 }
