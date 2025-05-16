@@ -13,10 +13,22 @@ class UsersController extends Controller
     public function index(Request $request){
 
         if($request->ajax()){
-            $user = $request->user();
+
+            $searchTerm = $request->input('search.value');
 
             $users = User::select(['first_name','last_name','email','display_name','id'])
-            ->where('super_admin',false);
+            ->where('super_admin',false)
+            ->where(function($query) use ($searchTerm) {
+
+                if($searchTerm){
+                    $query->where('first_name','ILIKE',"%{$searchTerm}%")
+                    ->orWhere('last_name','ILIKE',"%{$searchTerm}%")
+                    ->orWhere('display_name','ILIKE',"%{$searchTerm}%")
+                    ->orWhere('email','ILIKE',"%{$searchTerm}%");
+                }
+
+                return $query;
+            });
 
             $userCount = $users->count();
 

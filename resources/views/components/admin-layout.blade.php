@@ -22,7 +22,7 @@
                     <a class="nav-link active" aria-current="page" href="{{ route('admin.users') }}">Users</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Features</a>
+                    <a class="nav-link" href="{{ route('admin.events') }}">Events</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#">Pricing</a>
