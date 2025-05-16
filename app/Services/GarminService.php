@@ -264,6 +264,13 @@ final class GarminService implements DataSourceInterface
 
     public function activities(): Collection
     {
+        $items = $this->findActivities($this->startDate->copy()->startOfDay()->timestamp, Carbon::now()->timestamp);
+        return $this->formatActivities($items);
+
+        /**
+         * No need to loop through days. We are using Garmin Backfill API here.
+         */
+        /**
         $data = [];
 
         if ($this->queryParams && $this->garminRequestUrl) {
@@ -291,6 +298,7 @@ final class GarminService implements DataSourceInterface
         }
 
         return $this->formatActivities($data);
+         */
     }
 
     public function findActivities(?int $startTimeInSeconds = null, ?int $endTimeInSeconds = null): array
@@ -320,6 +328,8 @@ final class GarminService implements DataSourceInterface
 
         $response = Http::withHeaders(['Authorization' => $authHeader])
             ->get($backfillUrl, $queryParams);
+
+        Log::info('Garmin Response: '.$response->body());
 
         if ($response->successful()) {
             $activities = collect($response->json());
