@@ -11,6 +11,7 @@ use App\Services\DataSourceService\FitbitUnsubscriber;
 use App\Services\DataSourceService\GarminUnsubscriber;
 use App\Services\DataSourceService\StravaUnsubscriber;
 use App\Services\EventService;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,6 +56,13 @@ final class DeviceSyncController extends Controller
 
     public function trackerCallback(Request $request, EventService $eventService, string $sourceSlug): RedirectResponse
     {
+        $syncStartDate = null;
+
+        if (session()->has('sync_start_date')) {
+            $syncStartDate = session()->get('sync_start_date');
+            session()->forget('sync_start_date');
+        }
+
         if (! in_array($sourceSlug, ['garmin', 'strava', 'fitbit'])) {
             throw new Exception('Invalid request');
         }
@@ -123,14 +131,11 @@ final class DeviceSyncController extends Controller
             }
         }
 
-        if (session()->has('sync_start_date')) {
-            $startDate = session()->get('sync_start_date');
-            session()->forget('sync_start_date');
-
+        if ($syncStartDate) {
             $userSourceProfile = $user->profiles()->create($response);
             $activities = $this->tracker->get($sourceSlug)
                 ->setSecrets([$userSourceProfile->access_token, $userSourceProfile->access_token_secret])
-                ->setDate($startDate)
+                ->setDate($syncStartDate, Carbon::now()->format('Y-m-d'))
                 ->activities();
 
             if ($activities->count() && $sourceSlug !== 'garmin') {
