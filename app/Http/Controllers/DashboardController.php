@@ -10,6 +10,7 @@ use App\Traits\UserPointFetcher;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,6 +24,11 @@ final class DashboardController extends Controller
      */
     public function index(): Response
     {
+//        $user = Auth::user();
+//        $data = $this->fetchUserDailyPoints($user, "2025-05-16", 64, true);
+//
+//        $month = $this->fetchUserPointsInDateRange($user, "2025-05-01", "2025-05-31", 64, null, true);
+//        dd($data, $month);
         return Inertia::render('dashboard');
     }
 
@@ -48,7 +54,7 @@ final class DashboardController extends Controller
         $eventName = $event->name;
 
         $pointsCacheKey = "user_dashboard_points_{$user->id}_{$startDate}_to_{$endDate}_for_{$eventId}";
-        // Cache::forget($cacheKey);
+        Cache::forget($pointsCacheKey);
 
         $points = Cache::remember($pointsCacheKey, now()->addMinutes(15), function () use ($user, $startDate, $endDate, $eventId) {
             $data = $this->fetchUserPointsInDateRange($user, $startDate, $endDate, $eventId);
@@ -57,7 +63,7 @@ final class DashboardController extends Controller
         });
 
         $totalPointsCacheKey = "user_event_total_points_{$user->id}_{$startDate}_to_{$endDate}_for_{$eventId}";
-        // Cache::forget($cacheKey);
+        Cache::forget($totalPointsCacheKey);
 
         // Get total points for the event
         $totalPoints = Cache::remember($totalPointsCacheKey, now()->addMinutes(15), function () use ($user, $eventId) {
@@ -82,7 +88,7 @@ final class DashboardController extends Controller
         $eventId = 64;
 
         $pointsCacheKey = "user_daily_points_{$user->id}_{$date}_{$eventId}";
-        // Cache::forget($cacheKey);
+        Cache::forget($pointsCacheKey);
 
         $dailyPoints = Cache::remember($pointsCacheKey, now()->addMinutes(15), function () use ($user, $date, $eventId) {
             return $this->fetchUserDailyPoints($user, $date, $eventId, true);

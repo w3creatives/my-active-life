@@ -28,13 +28,21 @@ trait UserPointFetcher
      * @param  string|null  $modality  Optional modality filter
      * @return array Array containing points, participation's and milestones
      */
-    public function fetchUserPointsInDateRange(User $user, string $startDate, string $endDate, int $eventId, ?string $modality = null): array
+    public function fetchUserPointsInDateRange(User $user, string $startDate, string $endDate, int $eventId, ?string $modality = null, bool $toArray = false): array
     {
         $event = Event::find($eventId);
 
         $points = $this->fetchUserPoints($user, $startDate, $endDate, $eventId, $modality);
         $participations = $this->fetchUserParticipations($user);
         $milestones = $event->milestones()->get();
+
+        if ($toArray) {
+            return [
+                'points' => $points->toArray(),
+                'participations' => $participations->toArray(),
+                'milestones' => $milestones->toArray(),
+            ];
+        }
 
         return compact('points', 'participations', 'milestones');
     }
@@ -49,7 +57,18 @@ trait UserPointFetcher
         $points = $user->points()->where('event_id', $eventId)
             ->whereDate('date', $date)
             ->get()
-            ->groupBy('data_source_id');
+            ->groupBy('data_source_id')
+            ->map(function ($group) {
+                // Group by modality and sum amounts
+                return $group->groupBy('modality')
+                    ->map(function ($modalityGroup) {
+                        $first = $modalityGroup->first();
+                        $first->amount = $modalityGroup->sum('amount');
+
+                        return $first;
+                    })
+                    ->values(); // Convert to a numeric array
+            });
 
         if ($toArray) {
             return $points->toArray();
@@ -95,6 +114,11 @@ trait UserPointFetcher
 
                 return $query;
             })
+            ->selectRaw('date, SUM(amount) as amount, MIN(id) as id, MIN(user_id) as user_id,
+                         MIN(event_id) as event_id, MIN(data_source_id) as data_source_id,
+                         MIN(modality) as modality, MIN(created_at) as created_at, MIN(updated_at) as updated_at')
+            ->groupBy('date')
+            ->orderBy('date')
             ->get();
     }
 }
