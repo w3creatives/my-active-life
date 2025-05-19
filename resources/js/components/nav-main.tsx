@@ -2,13 +2,12 @@ import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, Sideba
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 
-export function NavMain({ items = [] }: { items: NavItem[] }) {
+export function NavMain({ items = [], className = '' }: { items: NavItem[], className?: string }) {
     const page = usePage();
-    const { auth } = page.props as any;
 
     return (
-        <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>{auth.is_admin ? 'Admin Panel' : 'Platform'}</SidebarGroupLabel>
+        <SidebarGroup className={`px-2 py-0 ${className}`}>
+            <SidebarGroupLabel>RTE Dashboard</SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) => (
                     <SidebarMenuItem key={item.title}>

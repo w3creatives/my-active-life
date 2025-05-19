@@ -41,6 +41,11 @@ final class DashboardController extends Controller
         ]);
     }
 
+    public function follow(): Response
+    {
+        return Inertia::render('follow');
+    }
+
     /**
      * Get user points data for the calendar.
      */

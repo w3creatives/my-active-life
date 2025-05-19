@@ -10,12 +10,12 @@ import AppLogo from './app-logo';
 const mainNavItems: NavItem[] = [
     {
         title: 'Home',
-        href: route('dashboard'),
+        href: '/dashboard',
         icon: CalendarDays,
     },
     {
         title: 'Stats',
-        href: route('stats'),
+        href: '/stats',
         icon: ChartSpline,
     },
     {
@@ -30,12 +30,12 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Follow',
-        href: '/',
+        href: '/follow',
         icon: Users,
     },
     {
         title: 'Tutorials',
-        href: route('tutorials'),
+        href: '/tutorials',
         icon: Handshake,
     },
 ];

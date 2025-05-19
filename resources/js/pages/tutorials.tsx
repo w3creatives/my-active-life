@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
@@ -32,8 +31,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Tutorials({ tutorials }: TutorialProps) {
   const [tutorialItems, setTutorialItems] = useState<TutorialItem[]>([]);
   const [pageTitle, setPageTitle] = useState('Tutorials');
-
-  console.log(tutorialItems);
 
   useEffect(() => {
     if (tutorials && tutorials.tutorial_text) {
