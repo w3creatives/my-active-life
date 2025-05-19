@@ -7,124 +7,106 @@ import { format } from 'date-fns';
 import { useEffect } from 'react';
 
 interface PointsDetailModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    date: Date | null;
-    eventId: number | null;
+    isOpen: boolean,
+    onClose: () => void,
+    date: Date | null,
+    eventId: number | null,
+    activeModality?: string
 }
 
-export function PointsDetailModal({ isOpen, onClose, date, eventId }: PointsDetailModalProps) {
+export function PointsDetailModal({ isOpen, onClose, date, eventId, activeModality }: PointsDetailModalProps) {
     // Fetch point details when the modal opens
     useEffect(() => {
     }, [isOpen, date, eventId]);
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+            <DialogContent className="sm:max-w-3xl max-h-[95vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle className="text-xl">Points for {date ? format(date, 'MMMM d, yyyy') : ''}</DialogTitle>
+                    <p className="text-sm text-muted-foreground">*All values are in miles.</p>
                 </DialogHeader>
 
                 <ScrollArea className="flex-1 overflow-y-auto">
-                    <div className="space-y-6 py-4 pr-2">
-                        {/* Fitbit Section */}
+                    <div className="space-y-10 py-4 pr-2">
                         <div className="space-y-4">
                             <h2 className="text-xl">Activities Synced From Fitbit</h2>
                             <hr />
-                            <div key="fitbit-1" className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label className="text-base font-medium">Other Miles</Label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                                <div key="fitbit-1" className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium">Other</Label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Input type="number" step="0.01" defaultValue="5.05" className="w-full" />
+                                    </div>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                    <Input type="number" step="0.01" defaultValue="5.05" className="w-full" />
-                                    <span className="text-sm">miles</span>
+                                <div key="fitbit-2" className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium">Running</Label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Input type="number" step="0.01" defaultValue="5.05" className="w-full" />
+                                    </div>
                                 </div>
-                            </div>
-                            <div key="fitbit-2" className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label className="text-base font-medium">Running Miles</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <Input type="number" step="0.01" defaultValue="5.05" className="w-full" />
-                                    <span className="text-sm">miles</span>
-                                </div>
-                            </div>
-                            <div key="fitbit-3" className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label className="text-base font-medium">Walking Miles</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <Input type="number" step="0.01" defaultValue="5.05" className="w-full" />
-                                    <span className="text-sm">miles</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Strava Section */}
-                        <div className="space-y-4">
-                            <h2 className="text-xl">Activities Synced From Strava</h2>
-                            <hr />
-                            <div key="strava-1" className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label className="text-base font-medium">Other Miles</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <Input type="number" step="0.01" defaultValue="3.25" className="w-full" />
-                                    <span className="text-sm">miles</span>
-                                </div>
-                            </div>
-                            <div key="strava-2" className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label className="text-base font-medium">Running Miles</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <Input type="number" step="0.01" defaultValue="7.15" className="w-full" />
-                                    <span className="text-sm">miles</span>
-                                </div>
-                            </div>
-                            <div key="strava-3" className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label className="text-base font-medium">Walking Miles</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <Input type="number" step="0.01" defaultValue="2.30" className="w-full" />
-                                    <span className="text-sm">miles</span>
+                                <div key="fitbit-3" className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium">Walking</Label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Input type="number" step="0.01" defaultValue="5.05" className="w-full" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Garmin Section */}
                         <div className="space-y-4">
-                            <h2 className="text-xl">Activities Synced From Garmin</h2>
+                            <h2 className="text-xl">Manually Entered Distances</h2>
                             <hr />
-                            <div key="garmin-1" className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label className="text-base font-medium">Other Miles</Label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                                <div key="garmin-2" className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium">Running</Label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Input type="number" step="0.01" defaultValue="" className="w-full" />
+                                    </div>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                    <Input type="number" step="0.01" defaultValue="1.75" className="w-full" />
-                                    <span className="text-sm">miles</span>
+                                <div key="garmin-3" className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium">Walking</Label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Input type="number" step="0.01" defaultValue=" " className="w-full" />
+                                    </div>
                                 </div>
-                            </div>
-                            <div key="garmin-2" className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label className="text-base font-medium">Running Miles</Label>
+                                <div key="garmin-3" className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium">Biking</Label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Input type="number" step="0.01" defaultValue=" " className="w-full" />
+                                    </div>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                    <Input type="number" step="0.01" defaultValue="4.50" className="w-full" />
-                                    <span className="text-sm">miles</span>
+                                <div key="garmin-3" className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium">Swimming</Label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Input type="number" step="0.01" defaultValue=" " className="w-full" />
+                                    </div>
                                 </div>
-                            </div>
-                            <div key="garmin-3" className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label className="text-base font-medium">Walking Miles</Label>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <Input type="number" step="0.01" defaultValue="3.20" className="w-full" />
-                                    <span className="text-sm">miles</span>
+                                <div key="garmin-1" className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-sm font-medium">Other</Label>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <Input type="number" step="0.01" defaultValue="" className="w-full" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </ScrollArea>
 

@@ -28,6 +28,7 @@ trait UserEventParticipationTrait
         $date = $date ?? Carbon::now()->format('Y-m-d');
 
         return $user->participations()
+            ->with('event')
             ->where('subscription_end_date', '>=', $date)
             ->where(function ($query) use ($eventId) {
 

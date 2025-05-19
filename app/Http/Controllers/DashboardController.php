@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Traits\RTEHelpers;
+use App\Traits\UserPointFetcher;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,6 +14,8 @@ use Inertia\Response;
 
 final class DashboardController extends Controller
 {
+    use RTEHelpers, UserPointFetcher;
+
     /**
      * Display the dashboard page.
      *
@@ -19,7 +23,18 @@ final class DashboardController extends Controller
      */
     public function index(): Response
     {
-        return Inertia::render('dashboard');
+        $user = auth()->user();
+        $data = $this->fetchUserPointsInDateRange($user, '2025-01-01', Carbon::now()->format('Y-m-d'), 64);
+        $points = $data['points']->toArray();
+
+        return Inertia::render('dashboard', [
+            'points' => $points,
+        ]);
+    }
+
+    public function stats(): Response
+    {
+        return Inertia::render('stats');
     }
 
     /**
@@ -196,5 +211,21 @@ final class DashboardController extends Controller
             'message' => 'Points added successfully.',
             'point' => $point,
         ]);
+    }
+
+    /**
+     * Temporarily set the user's selected event (session-based, not persisted)
+     */
+    public function selectTempEvent(Request $request)
+    {
+        $request->validate([
+            'event_id' => 'required|exists:events,id',
+        ]);
+
+        // Store the selected event ID in the session
+        session(['selected_event_id' => $request->event_id]);
+
+        // Return to the previous page with updated props
+        return redirect()->back();
     }
 }

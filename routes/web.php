@@ -23,11 +23,15 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
     // Dashboard routes
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/stats', [DashboardController::class, 'stats'])->name('stats');
 
     // User points routes
     Route::get('/user-points', [DashboardController::class, 'getUserPoints'])->name('user.points');
     Route::get('/user-stats', [DashboardController::class, 'getUserStats'])->name('user.stats');
     Route::post('/add-points', [DashboardController::class, 'addPoints'])->name('user.add-points');
+
+    // Event selection route (temporary session-based)
+    Route::post('/events/select-temp', [DashboardController::class, 'selectTempEvent'])->name('events.select-temp');
 });
 
 require __DIR__.'/settings.php';

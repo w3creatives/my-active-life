@@ -7,15 +7,15 @@ import { Link, usePage } from '@inertiajs/react';
 import { CalendarDays, ChartSpline, ChevronDown, Handshake, Trophy, Users, Settings, UserCog } from 'lucide-react';
 import AppLogo from './app-logo';
 
-const userNavItems: NavItem[] = [
+const mainNavItems: NavItem[] = [
     {
         title: 'Home',
-        href: '/dashboard',
+        href: route('dashboard'),
         icon: CalendarDays,
     },
     {
         title: 'Stats',
-        href: '/',
+        href: route('stats'),
         icon: ChartSpline,
     },
     {
@@ -40,32 +40,17 @@ const userNavItems: NavItem[] = [
     },
 ];
 
-const adminNavItems: NavItem[] = [
+const footerNavItems: NavItem[] = [
     {
         title: 'Admin Dashboard',
-        href: '/admin/dashboard',
+        href: route('admin.users'),
         icon: Settings,
     },
-    {
-        title: 'Manage Users',
-        href: '/admin/users',
-        icon: UserCog,
-    },
-    {
-        title: 'Manage Events',
-        href: '/admin/events',
-        icon: CalendarDays,
-    },
 ];
-
-const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
     const { auth } = usePage().props as any;
     const { currentEvent } = usePage().props as any;
-
-    // Determine which menu items to show based on user role
-    const mainNavItems = auth.is_admin ? adminNavItems : userNavItems;
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -101,9 +86,11 @@ export function AppSidebar() {
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
-            <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
-            </SidebarFooter>
+            {auth.is_admin && (
+                <SidebarFooter>
+                    <NavFooter items={footerNavItems} className="mt-auto" />
+                </SidebarFooter>
+            )}
         </Sidebar>
     );
 }

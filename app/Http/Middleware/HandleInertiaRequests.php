@@ -59,7 +59,7 @@ final class HandleInertiaRequests extends Middleware
                         ->with('event')
                         ->get();
                 },
-                'is_admin' => $request->user() ? (bool)$request->user()->super_admin : false,
+                'is_admin' => $request->user() ? (bool) $request->user()->super_admin : false,
             ],
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),

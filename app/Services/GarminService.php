@@ -70,6 +70,7 @@ final class GarminService implements DataSourceInterface
     public function setSecrets($secrets): self
     {
         [$accessToken, $accessTokenSecret] = $secrets;
+        Log::info('Garmin Secrets: '.json_encode($secrets));
 
         $this->setAccessToken($accessToken);
         $this->setAccessTokenSecret($accessTokenSecret);
@@ -580,5 +581,113 @@ final class GarminService implements DataSourceInterface
             'HIKING', 'CROSS_COUNTRY_SKIING', 'MOUNTAINEERING', 'ELLIPTICAL', 'STAIR_CLIMBING' => 'other',
             default => 'daily_steps',
         };
+    }
+
+    /**
+     * Disconnect a user from Garmin
+     *
+     * @param string $accessToken User's access token
+     * @param string $accessTokenSecret User's access token secret
+     * @return bool Success status of disconnection
+     */
+    public function disconnectUser(string $accessToken, string $accessTokenSecret): bool
+    {
+        try {
+            $this->accessToken = $accessToken;
+            $this->accessTokenSecret = $accessTokenSecret;
+
+            // Set up OAuth parameters
+            $this->setOAuthParameters();
+
+            // Create OAuth request for deregistration
+            $url = $this->healthApiUrl . '/user/registration';
+            $response = $this->makeOAuthRequest('DELETE', $url);
+
+            // Check if disconnection was successful
+            if ($response && ($response->getStatusCode() == 200 || $response->getStatusCode() == 204)) {
+                return true;
+            }
+
+            return false;
+        } catch (\Exception $e) {
+            \Log::error('GarminService: Failed to disconnect user: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Set OAuth parameters for authentication
+     */
+    private function setOAuthParameters(): void
+    {
+        $this->oauthTimestamp = time();
+        $this->oauthNonce = bin2hex(random_bytes(16));
+    }
+
+    /**
+     * Make an OAuth request to Garmin API
+     *
+     * @param string $method HTTP method (GET, POST, DELETE)
+     * @param string $url API endpoint URL
+     * @param array $params Additional parameters
+     * @return \Illuminate\Http\Response|null Response object or null on failure
+     */
+    private function makeOAuthRequest(string $method, string $url, array $params = []): ?\Illuminate\Http\Response
+    {
+        $oauthParams = [
+            'oauth_consumer_key' => $this->consumerKey,
+            'oauth_nonce' => $this->oauthNonce,
+            'oauth_signature_method' => 'HMAC-SHA1',
+            'oauth_timestamp' => $this->oauthTimestamp,
+            'oauth_token' => $this->accessToken,
+            'oauth_version' => '1.0',
+        ];
+
+        // Generate signature
+        $signatureBaseString = $this->generateSignatureBaseString($method, $url, array_merge($oauthParams, $params));
+        $signingKey = $this->consumerSecret . '&' . $this->accessTokenSecret;
+        $signature = base64_encode(hash_hmac('sha1', $signatureBaseString, $signingKey, true));
+        $oauthParams['oauth_signature'] = $signature;
+
+        // Create authorization header
+        $authHeader = 'OAuth ' . implode(', ', array_map(function ($key, $value) {
+            return $key . '="' . rawurlencode($value) . '"';
+        }, array_keys($oauthParams), $oauthParams));
+
+        // Make the request
+        $client = new \GuzzleHttp\Client();
+        try {
+            $response = $client->request($method, $url, [
+                'headers' => [
+                    'Authorization' => $authHeader,
+                    'Content-Type' => 'application/x-www-form-urlencoded',
+                ],
+                'form_params' => $params,
+            ]);
+
+            return $response;
+        } catch (\Exception $e) {
+            \Log::error('GarminService OAuth request failed: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Generate OAuth signature base string
+     */
+    private function generateSignatureBaseString(string $method, string $url, array $params): string
+    {
+        $encodedParams = [];
+        foreach ($params as $key => $value) {
+            $encodedParams[rawurlencode($key)] = rawurlencode($value);
+        }
+
+        ksort($encodedParams);
+
+        $paramString = implode('&', array_map(function ($key, $value) {
+            return $key . '=' . $value;
+        }, array_keys($encodedParams), $encodedParams));
+
+        return strtoupper($method) . '&' . rawurlencode($url) . '&' . rawurlencode($paramString);
     }
 }

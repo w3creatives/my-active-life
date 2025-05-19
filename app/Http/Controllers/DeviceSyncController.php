@@ -138,6 +138,8 @@ final class DeviceSyncController extends Controller
                 ->setDate($syncStartDate, Carbon::now()->format('Y-m-d'))
                 ->activities();
 
+            Log::info('DeviceSyncController:trackerCallback: Activities: '.json_encode($activities));
+
             if ($activities->count() && $sourceSlug !== 'garmin') {
                 foreach ($activities as $activity) {
                     $activity['dataSourceId'] = $userSourceProfile->data_source_id;
@@ -231,7 +233,7 @@ final class DeviceSyncController extends Controller
             // If user chose to delete synced miles, delete them
             if ($deleteData === 'yes') {
                 // Get the EventService to handle deleting synced miles
-                $eventService = app(\App\Services\EventService::class);
+                $eventService = app(EventService::class);
                 $eventService->deleteSourceSyncedMile($user, $dataSource->id);
             }
 
