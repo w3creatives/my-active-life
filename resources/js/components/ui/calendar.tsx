@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export interface UserPoint {
   id: string;
   date: string;
-  miles: number;
+  amount: number;
   cumulative_miles: number;
   note?: string;
   modality?: string;
@@ -24,7 +24,6 @@ interface CalendarProps {
 export function Calendar({ date, setDate, disableFuture = true }: CalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [userPoints, setUserPoints] = useState<UserPoint[]>([]);
-  const [totalPoints, setTotalPoints] = useState<number>(0);
   const [eventInfo, setEventInfo] = useState<{ id: number; name: string } | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -83,7 +82,7 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
       .filter((day): day is Date => day !== null)
       .reduce((total, day) => {
         const dayPoints = getPointsForDay(day);
-        const dayTotal = dayPoints.reduce((sum, point) => sum + Number(point.miles), 0);
+        const dayTotal = dayPoints.reduce((sum, point) => sum + Number(point.amount), 0);
         return total + dayTotal;
       }, 0);
   };
@@ -192,11 +191,6 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
           <p className="text-base text-muted-foreground">
             Click/touch the ± symbol to add or edit mile entries.
           </p>
-          {eventInfo && (
-            <p className="text-base text-muted-foreground">
-              {eventInfo.name} - Total: {totalPoints} miles
-            </p>
-          )}
         </div>
         {/* Modality Filter Buttons */}
         <div className="flex flex-wrap gap-2 px-4 pb-2">
@@ -283,9 +277,9 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
                             <div
                               key={point.id}
                               className="truncate text-center text-sm md:text-xl"
-                              title={point.note || `${point.miles} miles (Total: ${point.cumulative_miles})`}
+                              title={point.note || `${point.amount} miles (Total: ${point.cumulative_miles})`}
                             >
-                              {Number(point.miles).toFixed(2)}±
+                              {Number(point.amount).toFixed(2)}±
                             </div>
                           ))}
                         </div>

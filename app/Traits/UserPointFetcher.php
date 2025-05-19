@@ -39,6 +39,11 @@ trait UserPointFetcher
         return compact('points', 'participations', 'milestones');
     }
 
+    public function fetchUserEventTotalPoints(User $user, int $eventId): float
+    {
+        return (float) $user->totalPoints()->where('event_id', $eventId)->first()?->amount ?? 0.0;
+    }
+
     /**
      * Fetch user participation's with events
      *
@@ -66,8 +71,7 @@ trait UserPointFetcher
      */
     private function fetchUserPoints(User $user, string $startDate, string $endDate, int $eventId, ?string $modality): Collection
     {
-        return $user->points()->with(['event'])
-            ->where('event_id', $eventId)
+        return $user->points()->where('event_id', $eventId)
             ->whereDate('date', '>=', $startDate)
             ->whereDate('date', '<=', $endDate)
             ->where(function ($query) use ($modality) {

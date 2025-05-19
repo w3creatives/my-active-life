@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Event;
 use App\Traits\RTEHelpers;
 use App\Traits\UserPointFetcher;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,18 +20,10 @@ final class DashboardController extends Controller
 
     /**
      * Display the dashboard page.
-     *
-     * @return Response
      */
     public function index(): Response
     {
-        $user = auth()->user();
-        $data = $this->fetchUserPointsInDateRange($user, '2025-01-01', Carbon::now()->format('Y-m-d'), 64);
-        $points = $data['points']->toArray();
-
-        return Inertia::render('dashboard', [
-            'points' => $points,
-        ]);
+        return Inertia::render('dashboard');
     }
 
     public function stats(): Response
@@ -39,9 +33,6 @@ final class DashboardController extends Controller
 
     /**
      * Get user points data for the calendar.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function getUserPoints(Request $request): JsonResponse
     {
@@ -52,58 +43,39 @@ final class DashboardController extends Controller
         $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
         $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
 
-        // Get the current event (you may need to adjust this based on your application logic)
-        $event = $user->participations()->with('event')->first()?->event;
+        $event = Event::get()->where('id', 64)->first();
+        $eventId = $event->id;
+        $eventName = $event->name;
 
-        if (! $event) {
-            return response()->json([
-                'points' => [],
-                'total' => 0,
-            ]);
-        }
+        $pointsCacheKey = "user_dashboard_points_{$user->id}_{$startDate}_to_{$endDate}_for_{$eventId}";
+        // Cache::forget($cacheKey);
 
-        // Get points for the specified month
-        $points = $user->points()
-            ->selectRaw('SUM(amount) as total_mile, date, note')
-            ->where('event_id', $event->id)
-            ->where('date', '>=', $startDate)
-            ->where('date', '<=', $endDate)
-            ->groupBy(['date', 'note'])
-            ->get()
-            ->map(function ($item) use ($event, $user) {
-                // Calculate cumulative miles
-                $item->cumulative_mile = $user->points()
-                    ->where('event_id', $event->id)
-                    ->where('date', '<=', $item->date)
-                    ->sum('amount');
+        $points = Cache::remember($pointsCacheKey, now()->addMinutes(15), function () use ($user, $startDate, $endDate, $eventId) {
+            $data = $this->fetchUserPointsInDateRange($user, $startDate, $endDate, $eventId);
 
-                return [
-                    'id' => uniqid(),
-                    'date' => $item->date,
-                    'miles' => $item->total_mile,
-                    'cumulative_miles' => $item->cumulative_mile,
-                    'note' => $item->note,
-                ];
-            });
+            return $data['points']->toArray();
+        });
+
+        $totalPointsCacheKey = "user_event_total_points_{$user->id}_{$startDate}_to_{$endDate}_for_{$eventId}";
+        // Cache::forget($cacheKey);
 
         // Get total points for the event
-        $totalPoints = $user->totalPoints()->where('event_id', $event->id)->first()?->amount ?? 0;
+        $totalPoints = Cache::remember($totalPointsCacheKey, now()->addMinutes(15), function () use ($user, $eventId) {
+            return $this->fetchUserEventTotalPoints($user, $eventId);
+        });
 
         return response()->json([
             'points' => $points,
             'total' => $totalPoints,
             'event' => [
-                'id' => $event->id,
-                'name' => $event->name,
+                'id' => $eventId,
+                'name' => $eventName,
             ],
         ]);
     }
 
     /**
      * Get user statistics for the dashboard.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function getUserStats(Request $request): JsonResponse
     {
@@ -172,9 +144,6 @@ final class DashboardController extends Controller
 
     /**
      * Add new points for the user.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function addPoints(Request $request): JsonResponse
     {
