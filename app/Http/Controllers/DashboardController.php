@@ -74,6 +74,25 @@ final class DashboardController extends Controller
         ]);
     }
 
+    public function getUserDailyPoints(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $date = $request->input('date', now()->format('Y-m-d'));
+
+        $eventId = 64;
+
+        $pointsCacheKey = "user_daily_points_{$user->id}_{$date}_{$eventId}";
+        // Cache::forget($cacheKey);
+
+        $dailyPoints = Cache::remember($pointsCacheKey, now()->addMinutes(15), function () use ($user, $date, $eventId) {
+            return $this->fetchUserDailyPoints($user, $date, $eventId, true);
+        });
+
+        return response()->json([
+            'points' => $dailyPoints,
+        ]);
+    }
+
     /**
      * Get user statistics for the dashboard.
      */

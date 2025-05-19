@@ -27,6 +27,7 @@ Route::middleware(['auth'])->group(function () {
 
     // User points routes
     Route::get('/user-points', [DashboardController::class, 'getUserPoints'])->name('user.points');
+    Route::get('/user-daily-points', [DashboardController::class, 'getUserDailyPoints'])->name('user.daily.points');
     Route::get('/user-stats', [DashboardController::class, 'getUserStats'])->name('user.stats');
     Route::post('/add-points', [DashboardController::class, 'addPoints'])->name('user.add-points');
 

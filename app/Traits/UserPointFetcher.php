@@ -44,6 +44,20 @@ trait UserPointFetcher
         return (float) $user->totalPoints()->where('event_id', $eventId)->first()?->amount ?? 0.0;
     }
 
+    public function fetchUserDailyPoints(User $user, string $date, int $eventId, bool $toArray = false): Collection|array
+    {
+        $points = $user->points()->where('event_id', $eventId)
+            ->whereDate('date', $date)
+            ->get()
+            ->groupBy('data_source_id');
+
+        if ($toArray) {
+            return $points->toArray();
+        }
+
+        return $points;
+    }
+
     /**
      * Fetch user participation's with events
      *

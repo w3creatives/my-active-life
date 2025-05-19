@@ -160,7 +160,6 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
         const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
         const response = await axios.get(route('user.points', { date: formattedDate }));
         setUserPoints(response.data.points);
-        setTotalPoints(response.data.total);
         setEventInfo(response.data.event);
       } catch (error) {
         console.error('Error fetching user points:', error);
@@ -302,7 +301,10 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
       {/* Points Detail Modal */}
       <PointsDetailModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedDate(null);
+        }}
         date={selectedDate}
         eventId={eventInfo?.id || null}
         activeModality={activeModality}
