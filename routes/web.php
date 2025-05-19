@@ -24,6 +24,7 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard routes
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/stats', [DashboardController::class, 'stats'])->name('stats');
+    Route::get('/tutorials', [DashboardController::class, 'tutorials'])->name('tutorials');
 
     // User points routes
     Route::get('/user-points', [DashboardController::class, 'getUserPoints'])->name('user.points');

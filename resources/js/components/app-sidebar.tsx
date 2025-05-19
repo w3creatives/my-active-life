@@ -35,7 +35,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Tutorials',
-        href: '/',
+        href: route('tutorials'),
         icon: Handshake,
     },
 ];
@@ -83,7 +83,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={mainNavItems} className="[&_[data-active=true]]:bg-primary [&_[data-active=true]]:text-white" />
             </SidebarContent>
 
             {auth.is_admin && (

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Actions\EventTutorials\GetEventTutorials;
 use App\Models\Event;
 use App\Traits\RTEHelpers;
 use App\Traits\UserPointFetcher;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,17 +24,21 @@ final class DashboardController extends Controller
      */
     public function index(): Response
     {
-//        $user = Auth::user();
-//        $data = $this->fetchUserDailyPoints($user, "2025-05-16", 64, true);
-//
-//        $month = $this->fetchUserPointsInDateRange($user, "2025-05-01", "2025-05-31", 64, null, true);
-//        dd($data, $month);
         return Inertia::render('dashboard');
     }
 
     public function stats(): Response
     {
         return Inertia::render('stats');
+    }
+
+    public function tutorials(): Response
+    {
+        $tutorials = GetEventTutorials::run(['event_id' => 64]);
+
+        return Inertia::render('tutorials', [
+            'tutorials' => $tutorials,
+        ]);
     }
 
     /**
