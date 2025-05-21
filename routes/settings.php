@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\DeviceSyncController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\Webhook\TrackerWebhooksController;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,18 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/privacy', function () {
         return Inertia::render('settings/privacy');
     })->name('privacy');
+
+    Route::get('settings/import-previous-years', function () {
+        return Inertia::render('settings/import-previous-years');
+    })->name('profile.import-previous-years');
+
+    Route::get('settings/rty-goals', function () {
+        return Inertia::render('settings/rty-goals');
+    })->name('profile.rty-goals');
+
+    Route::get('settings/tracker-attitude', function () {
+        return Inertia::render('settings/tracker-attitude');
+    })->name('profile.tracker-attitude');
 
     Route::get('settings/password', [PasswordController::class, 'edit'])->name('password.edit');
     Route::put('settings/password', [PasswordController::class, 'update'])->name('password.update');

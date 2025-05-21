@@ -33,6 +33,21 @@ const sidebarNavItems: NavItem[] = [
         icon: null,
     },
     {
+      title: 'Import Previous Years',
+      href: '/settings/import-previous-years',
+      icon: null,
+    },
+    {
+      title: 'RTY Goals',
+      href: '/settings/rty-goals',
+      icon: null,
+    },
+    {
+      title: 'Tracker Attitude',
+      href: '/settings/tracker-attitude',
+      icon: null,
+    },
+    {
         title: 'Appearance',
         href: '/settings/appearance',
         icon: null,
