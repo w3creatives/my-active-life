@@ -1,9 +1,14 @@
+import { useState } from 'react';
 import { Head } from '@inertiajs/react';
-
 import HeadingSmall from '@/components/heading-small';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { type BreadcrumbItem } from '@/types';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import {Select,SelectContent, SelectItem, SelectTrigger, SelectValue,} from '@/components/ui/select';
+
+
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -13,15 +18,59 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function RtyGoals() {
+  const goals = ['500', '1000', '1500'];
+  const [goal, setGoal] = useState('');
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="RTY Goals" />
 
       <SettingsLayout>
         <div className="space-y-6">
-          <HeadingSmall title="RTY Goals" />
+          <HeadingSmall
+            title="RTY Goals"
+            description="Run The Year your way! Pick a goal that is right for you!"
+          />
         </div>
+
         <div className="space-y-6">
+          <Label htmlFor="rty-goals">
+            My mileage goal for 2025 Miles in 2025 is:
+          </Label>
+          <Select value={goal} onValueChange={setGoal}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="2025" />
+            </SelectTrigger>
+            <SelectContent>
+              {goals.map((goal) => (
+                <SelectItem key={goal} value={goal}>
+                  {goal}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-sm text-gray-500 mt-1">
+            The default settings of RTY only include miles accumulated on your feet,
+            such as running, walking, stepping, etc. You can add extra miles here by
+            flipping each switch.
+          </p>
+            <div className="flex items-center space-x-2">
+                <Label htmlFor="enable-walking-miles">I want my biking miles to be included in my totals:</Label>
+                <Switch id="enable-walking-miles" />
+            </div>
+            
+             <div className="flex items-center space-x-2">
+                <Label htmlFor="enable-swimming-miles">I want my swimming miles to be included in my totals:</Label>
+                <Switch id="enable-swimming-miles" />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+                <Label htmlFor="enable-others-miles">I want my other miles to be included in my totals:</Label>
+                <Switch id="enable-others-miles" />
+            </div>
+             <p className="text-sm text-gray-500 mt-1">
+                Note: Miles qualifying as other miles vary by platform. Garmin, Fitbit, Strava, Apple are all different in that regard.
+             </p>
         </div>
       </SettingsLayout>
     </AppLayout>
