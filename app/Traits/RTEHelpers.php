@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Traits;
 
+use App\Models\Modality;
+
 trait RTEHelpers
 {
     /**
@@ -15,14 +17,7 @@ trait RTEHelpers
     public function encodeModalities(array $modalities): int
     {
         $encoded = 0;
-        $valid_modalities = [
-            'daily_steps' => 1,
-            'run' => 2,
-            'walk' => 4,
-            'bike' => 8,
-            'swim' => 16,
-            'other' => 32,
-        ];
+        $valid_modalities = $this->validModalities();
 
         foreach ($modalities as $modality) {
             if (array_key_exists($modality, $valid_modalities)) {
@@ -55,13 +50,8 @@ trait RTEHelpers
 
     private function validModalities(): array
     {
-        return [
-            'daily_steps' => 1,
-            'run' => 2,
-            'walk' => 4,
-            'bike' => 8,
-            'swim' => 16,
-            'other' => 32,
-        ];
+        return Modality::get()->keyBy('name')->map(function ($modality) {
+            return (int) $modality->value;
+        })->toArray();
     }
 }
