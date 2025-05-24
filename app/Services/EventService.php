@@ -40,6 +40,13 @@ final class EventService
         return $eventTypes;
     }
 
+    public  function findEventType($key)
+    {
+        $eventTypes = $this->eventTypes();
+
+        return $eventTypes[$key] ?? null;
+    }
+
     public function importManual($event, $manualEntry, $user)
     {
 

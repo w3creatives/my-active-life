@@ -4,37 +4,21 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Utilities\DataTable;
 use Illuminate\Http\Request;
 
 use App\Models\User;
 
 class UsersController extends Controller
 {
-    public function index(Request $request){
+    public function index(Request $request, DataTable $dataTable)
+    {
 
-        if($request->ajax()){
+        if ($request->ajax()) {
 
-            $searchTerm = $request->input('search.value');
+            $query = User::select(['first_name', 'last_name', 'email', 'display_name', 'id'])->where('super_admin', false);
 
-            $users = User::select(['first_name','last_name','email','display_name','id'])
-            ->where('super_admin',false)
-            ->where(function($query) use ($searchTerm) {
-
-                if($searchTerm){
-                    $query->where('first_name','ILIKE',"%{$searchTerm}%")
-                    ->orWhere('last_name','ILIKE',"%{$searchTerm}%")
-                    ->orWhere('display_name','ILIKE',"%{$searchTerm}%")
-                    ->orWhere('email','ILIKE',"%{$searchTerm}%");
-                }
-
-                return $query;
-            });
-
-            $userCount = $users->count();
-
-            $users = $users->limit($request->get('limit', 10))
-                ->skip($request->get('offset', 0))
-                ->get();
+            list($userCount, $users) = $dataTable->setSearchableColumns(['first_name', 'last_name', 'email', 'display_name'])->query($request, $query)->response();
 
             return response()->json([
                 'draw' => $request->get('draw'),

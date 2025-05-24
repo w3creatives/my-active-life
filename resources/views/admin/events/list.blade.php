@@ -28,10 +28,9 @@
                 <tr>
                     <th>ID</th>
                     <th>Name</th>
-                    <th>Start Date
-                    </th>
-                    <th>End Date
-                    </th>
+                    <th>Event Type</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
                     <th width="50">
                         Action
                     </th>
@@ -57,6 +56,7 @@
                 customDatatable.initDatatable('#eventlist-table', [
                     { data: 'id', name: 'id' },
                     { data: 'name', name: 'name' },
+                    { data: 'event_type', name: 'event_type' },
                     { data: 'start_date', name: 'start_date' },
                     { data: 'end_date', name: 'end_date' },
                     { data: 'action', name: 'action', sortable: false }

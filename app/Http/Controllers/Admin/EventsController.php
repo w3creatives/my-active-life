@@ -4,37 +4,27 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\EventService;
+use App\Utilities\DataTable;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\{
     Event,
     Modality
 };
+
 class EventsController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, DataTable $dataTable, EventService $eventService)
     {
 
-        if($request->ajax()){
+        if ($request->ajax()) {
 
-            $searchTerm = $request->input('search.value');
+            $query = Event::select(['id', 'name', 'event_type', 'start_date', 'end_date', 'logo']);
 
-            $events = Event::select(['id','name','start_date','end_date','logo'])
-            ->where(function($query) use ($searchTerm) {
+            list($eventCount, $events) = $dataTable->setSearchableColumns(['name', 'event_type'])->query($request, $query)->response();
 
-                if($searchTerm){
-                    $query->where('name','ILIKE',"%{$searchTerm}%");
-                }
-
-                return $query;
-            });
-
-            $eventCount = $events->count();
-
-            $events = $events->limit($request->get('limit', 10))
-                ->skip($request->get('offset', 0))
-                ->get()
-            ->map(function($event){
+            $events = $events->map(function ($event) use ($eventService) {
+                $event->event_type = $eventService->findEventType($event->event_type);
                 $event->action = [
                     "<a href='/admin/events/edit/{$event->id}' class='btn btn-sm btn-primary'>Edit</a>",
                     "<a href='/admin/events/edit/{$event->id}' class='btn btn-sm btn-primary' data-bs-toggle='modal' data-bs-target='#milestone-modal'>Milestones</a>"
@@ -48,21 +38,22 @@ class EventsController extends Controller
                 'recordsFiltered' => $eventCount,
                 'data' => $events
             ]);
-
         }
 
         return view('admin.events.list');
     }
 
-    public function create(Request $request, EventService $eventService){
+    public function create(Request $request, EventService $eventService)
+    {
 
         $eventTypes = $eventService->eventTypes();
         $modalities = Modality::all();
 
-        return view('admin.events.create',compact('eventTypes','modalities'));
+        return view('admin.events.create', compact('eventTypes', 'modalities'));
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
 
         $request->validate([
             'name' => 'required',
@@ -72,10 +63,10 @@ class EventsController extends Controller
             'goals' => 'required',
         ]);
 
-        $data = $request->only('name','start_date','end_date','event_type','goals','social_hashtags','description','total_points','registration_url');
+        $data = $request->only('name', 'start_date', 'end_date', 'event_type', 'goals', 'social_hashtags', 'description', 'total_points', 'registration_url');
         $data['event_type'] = strtolower($data['event_type']);
-        $data['registration_url'] = $data['registration_url']??'#';
-        $data['goals'] = json_encode(array_map('trim',explode(',',$data['goals'])));
+        $data['registration_url'] = $data['registration_url'] ?? '#';
+        $data['goals'] = json_encode(array_map('trim', explode(',', $data['goals'])));
         $data['start_date'] = Carbon::parse($data['start_date'])->format('Y-m-d');
         $data['end_date'] = Carbon::parse($data['end_date'])->format('Y-m-d');
 
