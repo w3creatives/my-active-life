@@ -24,6 +24,22 @@ final class EventService
         protected UserPointRepository $userPointRepository
     ) {}
 
+    public function eventTypes($keysOnly = false): array
+    {
+        $eventTypes = [
+            'promotional' => 'Promotional',
+            'regular' => 'Regular',
+            'race' => 'Race',
+            'fit_life' => 'Fit Life',
+        ];
+
+        if($keysOnly) {
+            return array_keys($eventTypes);
+        }
+
+        return $eventTypes;
+    }
+
     public function importManual($event, $manualEntry, $user)
     {
 

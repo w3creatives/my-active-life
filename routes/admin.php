@@ -16,4 +16,9 @@ Route::group(['prefix' => 'admin','namespace' => 'Admin','middleware' => 'admin'
     Route::get('/users', [UsersController::class,'index'])->name('admin.users');
 
     Route::get('/events', [EventsController::class,'index'])->name('admin.events');
+    Route::get('/events/{id}/edit', [EventsController::class,'create'])->name('admin.events.edit');
+    Route::get('/events/add', [EventsController::class,'create'])->name('admin.events.add');
+
+    Route::post('/events/{id}/edit', [EventsController::class,'store']);
+    Route::post('/events/add', [EventsController::class,'store']);
 });
