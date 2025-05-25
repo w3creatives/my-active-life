@@ -31,6 +31,7 @@
                     <th>ID</th>
                     <th>Name</th>
                     <th> Distance</th>
+                    <th width="125">Logo</th>
                     <th>Data</th>
                     <th>Action</th>
                 </tr>
@@ -63,6 +64,7 @@
                     { data: 'id', name: 'id' },
                     { data: 'name', name: 'name' },
                     { data: 'distance', name: 'distance' },
+                    { data: 'logo', name: 'logo', sortable: false,width: 125 },
                     { data: 'data', name: 'data', sortable: false },
                     { data: 'action', name: 'action', sortable: false }
                 ]);

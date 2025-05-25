@@ -25,6 +25,7 @@ class MilestonesController extends Controller
                     'name' => $item->name,
                     'distance' => $item->distance,
                     'data' => $item->video_url ?? '',
+                    'logo' => view('admin.milestones.logo', compact('item'))->render(),
                     'action' => [
                         view('components.actions.milestone', compact('item'))->render()
                     ]
