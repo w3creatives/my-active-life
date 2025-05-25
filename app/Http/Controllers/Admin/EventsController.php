@@ -26,8 +26,7 @@ class EventsController extends Controller
             $events = $events->map(function ($event) use ($eventService) {
                 $event->event_type = $eventService->findEventType($event->event_type);
                 $event->action = [
-                    "<a href='/admin/events/edit/{$event->id}' class='btn btn-sm btn-primary'>Edit</a>",
-                    "<a href='/admin/events/edit/{$event->id}' class='btn btn-sm btn-primary' data-bs-toggle='modal' data-bs-target='#milestone-modal'>Milestones</a>"
+                    view('components.actions.event', compact('event'))->render()
                 ];
                 return $event;
             });
@@ -73,4 +72,6 @@ class EventsController extends Controller
         Event::create($data);
         return redirect()->route('admin.events')->with('alert', ['type' => 'success', 'message' => 'Event created successfully.']);
     }
+
+
 }

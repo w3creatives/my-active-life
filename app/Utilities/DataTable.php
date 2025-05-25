@@ -39,8 +39,11 @@ class DataTable
                     }
                 }
                 return $query;
-            })
-            ->orderBy($orderColumn, $orderDir);
+            });
+
+            if ($orderColumn) {
+                $query = $query->orderBy($orderColumn, $orderDir);
+            }
 
         $this->totalCount = $query->count();
 

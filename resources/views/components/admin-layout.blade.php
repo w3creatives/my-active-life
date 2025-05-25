@@ -40,7 +40,7 @@
     <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
 
     <!-- Vendors CSS -->
-
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/spinkit/spinkit.css') }}" />
     <link rel="stylesheet"
           href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
 
@@ -72,6 +72,13 @@
             <div class="content-wrapper">
                 <!-- Content -->
                 <div class="container-xxl flex-grow-1 container-p-y">
+                    @if (session('alert'))
+                        <div class="alert alert-{{ session('alert.type') }} alert-dismissible" role="alert">
+                            {{ session('alert.message') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
                     {{ $slot }}
                 </div>
                 <!-- / Content -->
@@ -85,6 +92,7 @@
             <!-- Content wrapper -->
         </div>
         <!-- / Layout page -->
+
     </div>
 
     <!-- Overlay -->
@@ -94,6 +102,7 @@
     <div class="drag-target d-none"></div>
 </div>
 <!-- / Layout wrapper -->
+@stack('modals')
 <!-- Helpers -->
 <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
 <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->

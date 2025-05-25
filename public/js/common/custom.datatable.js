@@ -1,10 +1,12 @@
 class CustomDataTable {
+    customTable = null;
+
     initDatatable(elementId, columns) {
 
         $.fn.dataTable.ext.errMode = 'none';
         let elementTable = $(elementId);
 
-        let customTable = new DataTable(elementId, {
+        this.customTable = new DataTable(elementId, {
             searchable: true,
             fixedHeight: true,
             ajax: elementTable.attr('data-ajax-url'),

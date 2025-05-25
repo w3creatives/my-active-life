@@ -8,12 +8,26 @@ use Illuminate\Database\Eloquent\Model;
 class EventMilestone extends Model
 {
     use HasFactory;
-    
-    public function getLogoAttribute(){
-        return url("static/milestones/amerithon-calendar-1.png");
+
+    protected $fillable = ['name','distance','data','description','logo','team_log'];
+
+    public function getLogoAttribute($value){
+        if(!$value){
+            $value = 'amerithon-calendar-1.png';
+        }
+        return url("static/milestones/".$value);
     }
-    
-    public function getTeamLogoAttribute(){ 
-        return url("static/milestones/amerithon-calendar-1.png");
+
+    public function getTeamLogoAttribute($value){
+        if(!$value){
+            $value = 'amerithon-calendar-1.png';
+        }
+        return url("static/milestones/".$value);
+    }
+
+    public function getVideoUrlAttribute(){
+        $data = $this->data ? json_decode($this->data, true) : null;
+
+        return $data['flyover_url'] ?? null;
     }
 }
