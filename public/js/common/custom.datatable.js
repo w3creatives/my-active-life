@@ -43,6 +43,9 @@ class CustomDataTable {
                     first: '<i class="icon-base ti tabler-chevrons-left scaleX-n1-rtl icon-18px"></i>',
                     last: '<i class="icon-base ti tabler-chevrons-right scaleX-n1-rtl icon-18px"></i>'
                 }
+            },
+            createdRow: function (row, data, dataIndex) {
+               $(document).find('[data-bs-toggle="tooltip"]').tooltip();
             }
         });
 
@@ -51,6 +54,7 @@ class CustomDataTable {
 
     initDatatableStyle() {
         setTimeout(() => {
+            
             const elementsToModify = [
                 { selector: '.dt-buttons .btn', classToRemove: 'btn-secondary' },
                 { selector: '.dt-search .form-control', classToRemove: 'form-control-sm', classToAdd: 'ms-4' },

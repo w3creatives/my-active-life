@@ -11,9 +11,13 @@ use App\Models\{
     Event,
     Modality
 };
+use App\Traits\RTEHelpers;
 
 class EventsController extends Controller
 {
+
+    use RTEHelpers;
+
     public function index(Request $request, DataTable $dataTable, EventService $eventService)
     {
 
@@ -42,16 +46,20 @@ class EventsController extends Controller
         return view('admin.events.list');
     }
 
-    public function create(Request $request, EventService $eventService)
+    public function create(Request $request, EventService $eventService, $eventId=null)
     {
+
+        $event = Event::find($eventId);
+
+        $selectedModalities = $this->decodeModalities($event->supported_modalities??0);
 
         $eventTypes = $eventService->eventTypes();
         $modalities = Modality::all();
 
-        return view('admin.events.create', compact('eventTypes', 'modalities'));
+        return view('admin.events.create', compact('eventTypes', 'modalities','event','selectedModalities'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $eventId=null)
     {
 
         $request->validate([
@@ -68,6 +76,14 @@ class EventsController extends Controller
         $data['goals'] = json_encode(array_map('trim', explode(',', $data['goals'])));
         $data['start_date'] = Carbon::parse($data['start_date'])->format('Y-m-d');
         $data['end_date'] = Carbon::parse($data['end_date'])->format('Y-m-d');
+        $data['supported_modalities'] = $this->encodeModalities($request->modalities??[]);
+
+        $event = Event::find($eventId);
+
+        if($event) {
+            $event->fill($data)->save();
+             return redirect()->route('admin.events')->with('alert', ['type' => 'success', 'message' => 'Event updated successfully.']);
+        }
 
         Event::create($data);
         return redirect()->route('admin.events')->with('alert', ['type' => 'success', 'message' => 'Event created successfully.']);

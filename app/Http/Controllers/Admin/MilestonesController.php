@@ -52,6 +52,12 @@ class MilestonesController extends Controller
 
         $eventMilestone = $event->milestones()->find($milestoneId);
 
+        if ($request->ajax()) {
+            return [
+                'html' => view('admin.milestones.add', compact('event', 'eventMilestone'))->render()
+            ];
+        }
+
         return view('admin.milestones.create', compact('event', 'eventMilestone'));
     }
 
