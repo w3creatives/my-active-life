@@ -33,6 +33,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/user-stats', [DashboardController::class, 'getUserStats'])->name('user.stats');
     Route::post('/add-points', [DashboardController::class, 'addPoints'])->name('user.add-points');
 
+    Route::get('/conversations', [DashboardController::class, 'conversations'])->name('user.conversations');
+    Route::get('/conversations/new', [DashboardController::class, 'newConversation'])->name('user.conversations.new');
+
     // Event selection route (temporary session-based)
     Route::post('/events/select-temp', [DashboardController::class, 'selectTempEvent'])->name('events.select-temp');
 });

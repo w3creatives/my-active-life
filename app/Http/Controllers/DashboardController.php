@@ -230,6 +230,16 @@ final class DashboardController extends Controller
         ]);
     }
 
+    public function conversations()
+    {
+        return Inertia::render('conversations');
+    }
+
+    public function newConversation()
+    {
+        return Inertia::render('new-conversation');
+    }
+
     /**
      * Temporarily set the user's selected event (session-based, not persisted)
      */

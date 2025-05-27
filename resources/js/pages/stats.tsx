@@ -9,7 +9,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Dashboard() {
+export default function Stats() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Stats" />
