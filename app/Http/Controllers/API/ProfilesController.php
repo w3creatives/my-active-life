@@ -1,30 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\API\BaseController;
-use Illuminate\Http\Request;
-
-use \Illuminate\Support\Str;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\Rule;
+use App\Models\DataSource;
+use App\Models\DataSourceProfile;
+use App\Models\Event;
+use App\Models\Team;
+use App\Models\TeamFollowRequest;
+use App\Models\User;
+use App\Services\EventService;
+use App\Services\TeamService;
+use App\Services\UserService;
 use Carbon\Carbon;
-use App\Services\{
-    UserService,
-    EventService
-};
-use App\Models\{
-    User,
-    DataSource,
-    DataSourceProfile,
-    Event,
-    Team,
-    TeamFollowRequest
-};
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
-class ProfilesController extends BaseController
+final class ProfilesController extends BaseController
 {
+    public function __construct(
+        private TeamService $teamService
+    ) {}
+
     public function show(Request $request, UserService $userService): JsonResponse
     {
         $user = $request->user();
@@ -42,8 +43,8 @@ class ProfilesController extends BaseController
 
         $basicProfile['id'] = $user->id;
         $basicProfile['name'] = $user->display_name;
-        $basicProfile['has_team'] = !!$preferredTeam;
-        $basicProfile['preferred_team_id'] = $preferredTeam ? $preferredTeam->id : NULL;
+        $basicProfile['has_team'] = (bool) $preferredTeam;
+        $basicProfile['preferred_team_id'] = $preferredTeam ? $preferredTeam->id : null;
         $basicProfile['preferred_team'] = $preferredTeam;
 
         $basicProfile['timezones'] = $userService->timezones();
@@ -55,6 +56,7 @@ class ProfilesController extends BaseController
     {
         $profile = $userService->profile($request);
         $profile['timezones'] = $userService->timezones();
+
         return $this->sendResponse($profile, 'Response');
     }
 
@@ -96,7 +98,7 @@ class ProfilesController extends BaseController
             'gender',
             'settings',
             'shirt_size',
-            'preferred_event_id'
+            'preferred_event_id',
         ]))->save();
 
         return $this->sendResponse([], 'Profile Updated');
@@ -113,9 +115,8 @@ class ProfilesController extends BaseController
 
         if (Cache::has($cacheName)) {
             $item = Cache::get($cacheName);
-            //  return $this->sendResponse($item, 'Response'); 
+            //  return $this->sendResponse($item, 'Response');
         }
-
 
         $profiles = DataSource::select(['id', 'name', 'short_name', 'description', 'resynchronizable', 'profile'])
             ->with(['sourceProfile' => function ($query) use ($user) {
@@ -126,13 +127,15 @@ class ProfilesController extends BaseController
 
                 $authUrl = DataSource::authUrls($item->short_name);
                 if ($authUrl) {
-                    $item->oauth_url = $authUrl . '?' . http_build_query(['uid' => $user->id]);
+                    $item->oauth_url = $authUrl.'?'.http_build_query(['uid' => $user->id]);
                 } else {
                     $item->oauth_url = null;
                 }
+
                 return $item;
             });
         Cache::put($cacheName, $profiles, now()->addHours(2));
+
         return $this->sendResponse($profiles, '');
     }
 
@@ -145,19 +148,19 @@ class ProfilesController extends BaseController
             [
                 'data_source_id' => [
                     'required',
-                    //Rule::unique((new DataSourceProfile)->getTable(),'data_source_id')->ignore($user->id, 'user_id'),
+                    // Rule::unique((new DataSourceProfile)->getTable(),'data_source_id')->ignore($user->id, 'user_id'),
                     Rule::unique((new DataSourceProfile)->getTable(), 'data_source_id')
                         ->using(function ($q) use ($user) {
                             $q->where('user_id', $user->id);
-                        })
+                        }),
                 ],
                 'access_token' => 'required',
                 'refresh_token' => '', // required remove to save gramin record. Gramin does not have this value
                 'token_expires_at' => 'date', // required remove to save gramin record. Gramin does not have this value
-                'access_token_secret' => 'required'
+                'access_token_secret' => 'required',
             ],
             [
-                'data_source_id.unique' => 'Source already exists'
+                'data_source_id.unique' => 'Source already exists',
             ]
         );
 
@@ -166,26 +169,25 @@ class ProfilesController extends BaseController
         return $this->sendResponse([], 'Data source saved');
     }
 
-
     public function destroy(Request $request, EventService $eventService): JsonResponse
     {
         $user = $request->user();
 
         $request->validate([
             'data_source_id' => [
-                'required'
+                'required',
             ],
-            'synced_mile_action' => 'required|in:preserve,delete'
+            'synced_mile_action' => 'required|in:preserve,delete',
         ]);
 
-        if ($request->synced_mile_action == 'delete') {
+        if ($request->synced_mile_action === 'delete') {
             $eventService->deleteSourceSyncedMile($user, $request->data_source_id);
         }
 
         $profile = $user->profiles()->where('data_source_id', $request->data_source_id)->first();
 
-        if (!$profile) {
-            return $this->sendError('ERROR', ['error' => "Data source is not connected"]);
+        if (! $profile) {
+            return $this->sendError('ERROR', ['error' => 'Data source is not connected']);
         }
 
         $profile->delete();
@@ -198,21 +200,21 @@ class ProfilesController extends BaseController
         $user = $request->user();
 
         $request->validate([
-            "name" => 'required|in:bibs,follow_requests,team_bibs,team_follow_requests,team_updates',
-            "notification_enabled" => 'required|boolean'
+            'name' => 'required|in:bibs,follow_requests,team_bibs,team_follow_requests,team_updates',
+            'notification_enabled' => 'required|boolean',
         ]);
 
         $settings = json_decode($user->settings, true);
 
-        $isEnabled = !!$request->notification_enabled;
+        $isEnabled = (bool) $request->notification_enabled;
 
         $deniedNotifications = $settings['denied_notifications'];
 
         // if(in_array($request->name, $deniedNotifications)){
 
-        if (!$isEnabled) {
+        if (! $isEnabled) {
             $deniedNotifications[] = $request->name;
-        } else if (in_array($request->name, $deniedNotifications)) {
+        } elseif (in_array($request->name, $deniedNotifications)) {
 
             $deniedNotifications = array_flip($deniedNotifications);
             unset($deniedNotifications[$request->name]);
@@ -221,7 +223,7 @@ class ProfilesController extends BaseController
 
         // }
 
-        $settings['denied_notifications']  = array_values($deniedNotifications);
+        $settings['denied_notifications'] = array_values($deniedNotifications);
 
         $user->fill(['settings' => json_encode($settings)])->save();
 
@@ -233,12 +235,12 @@ class ProfilesController extends BaseController
         $user = $request->user();
 
         $request->validate([
-            "manual_entry" => 'required|boolean'
+            'manual_entry' => 'required|boolean',
         ]);
 
         $settings = json_decode($user->settings, true);
 
-        $settings['manual_entry_populates_all_events']  = !!$request->manual_entry;
+        $settings['manual_entry_populates_all_events'] = (bool) $request->manual_entry;
 
         $user->fill(['settings' => json_encode($settings)])->save();
 
@@ -250,12 +252,12 @@ class ProfilesController extends BaseController
         $user = $request->user();
 
         $request->validate([
-            "attitude" => 'required|in:default,yoda,tough_love,positive,cheerleader,scifi,historian,superhero'
+            'attitude' => 'required|in:default,yoda,tough_love,positive,cheerleader,scifi,historian,superhero',
         ]);
 
         $settings = json_decode($user->settings, true);
 
-        $settings['attitude']  = $request->attitude;
+        $settings['attitude'] = $request->attitude;
 
         $user->fill(['settings' => json_encode($settings)])->save();
 
@@ -267,11 +269,11 @@ class ProfilesController extends BaseController
         $user = $request->user();
 
         $request->validate([
-            "mileage_goal" => 'required',
-            "event_id" => [
+            'mileage_goal' => 'required',
+            'event_id' => [
                 'required',
                 Rule::exists((new Event)->getTable(), 'id'),
-            ]
+            ],
         ]);
 
         $participation = $user->participations()->where('event_id', $request->event_id)->first();
@@ -308,19 +310,19 @@ class ProfilesController extends BaseController
 
         $user->fill(['settings' => json_encode($settings)])->save();
 
-        return $this->sendResponse([], sprintf("Successfully updated your goal for %s to be %s.", $event->name, $mileageGoal));
+        return $this->sendResponse([], sprintf('Successfully updated your goal for %s to be %s.', $event->name, $mileageGoal));
     }
 
     public function updateEventModality(Request $request): JsonResponse
     {
 
         $request->validate([
-            "name" => 'required|in:daily_steps,run,walk,swim,bike,other',
-            "notification_enabled" => 'required|boolean',
-            "event_id" => [
+            'name' => 'required|in:daily_steps,run,walk,swim,bike,other',
+            'notification_enabled' => 'required|boolean',
+            'event_id' => [
                 'required',
                 Rule::exists((new Event)->getTable(), 'id'),
-            ]
+            ],
         ]);
 
         $user = $request->user();
@@ -344,9 +346,10 @@ class ProfilesController extends BaseController
         $modalityOverrides = $collection->merge($modalityName);
 
         $modalityOverrides = $modalityOverrides->filter(function ($item) use ($modalityName, $notificationEnabled) {
-            if (!$notificationEnabled) {
-                return $modalityName != $item;
+            if (! $notificationEnabled) {
+                return $modalityName !== $item;
             }
+
             return true;
         })->unique()->values()->toArray();
 
@@ -362,16 +365,16 @@ class ProfilesController extends BaseController
         $user = $request->user();
 
         $request->validate([
-            "setting" => 'required|in:notification,manual_entry,attitude,rty_mileage_goal,modalities',
-            "event_id" => [
-                Rule::requiredIf(in_array($request->setting, ['rty_mileage_goal', 'modalities']))
-            ]
+            'setting' => 'required|in:notification,manual_entry,attitude,rty_mileage_goal,modalities',
+            'event_id' => [
+                Rule::requiredIf(in_array($request->setting, ['rty_mileage_goal', 'modalities'])),
+            ],
         ]);
         $cacheName = "user_setting_{$user->id}_{$request->setting}_{$request->event_id}";
 
         if (Cache::has($cacheName)) {
             $item = Cache::get($cacheName);
-            //  return $this->sendResponse($item, 'Response'); 
+            //  return $this->sendResponse($item, 'Response');
         }
         $settings = json_decode($user->settings, true);
 
@@ -383,8 +386,8 @@ class ProfilesController extends BaseController
 
                 $data['notifications'] = collect($notifications)->map(function ($item) use ($settings) {
                     return [
-                        "name" => $item,
-                        "notification_enabled" => !in_array($item, $settings['denied_notifications'])
+                        'name' => $item,
+                        'notification_enabled' => ! in_array($item, $settings['denied_notifications']),
                     ];
                 });
                 break;
@@ -395,14 +398,14 @@ class ProfilesController extends BaseController
             case 'attitude':
                 $data['attitude'] = (isset($settings['attitude'])) ? $settings['attitude'] : 'default';
                 $data['all_attitudes'] = [
-                    "default" => "Relaxed",
-                    "yoda" => "Yoda",
-                    "tough_love" => "Tough Love",
-                    "positive" => "Positive",
-                    "cheerleader" => "Cheerleader",
-                    "scifi" => "Sci-Fi",
-                    "historian" => "Historian",
-                    "superhero" => "Super Hero",
+                    'default' => 'Relaxed',
+                    'yoda' => 'Yoda',
+                    'tough_love' => 'Tough Love',
+                    'positive' => 'Positive',
+                    'cheerleader' => 'Cheerleader',
+                    'scifi' => 'Sci-Fi',
+                    'historian' => 'Historian',
+                    'superhero' => 'Super Hero',
                 ];
                 break;
             case 'rty_mileage_goal':
@@ -425,15 +428,15 @@ class ProfilesController extends BaseController
 
                 $distance = $rtyGoal;
 
-                if (!$rtyGoal) {
+                if (! $rtyGoal) {
                     $distance = $event->total_points;
                 }
 
                 $totalDays = Carbon::parse($participation->subscription_end_date)->diffInDays(Carbon::parse($event->start_date)->subDay(0));
 
-                $userPoint = $user->points()->selectRaw("SUM(amount) AS total_mile")->where('event_id', $event->id)->where('date', '>=', Carbon::parse($event->start_date)->format('Y-m-d'))->where('date', '<=', Carbon::now()->format('Y-m-d'))->first();
+                $userPoint = $user->points()->selectRaw('SUM(amount) AS total_mile')->where('event_id', $event->id)->where('date', '>=', Carbon::parse($event->start_date)->format('Y-m-d'))->where('date', '<=', Carbon::now()->format('Y-m-d'))->first();
 
-                $userTotalPointDays = 0; //$user->points()->where('event_id',$event->id)->where('date','>=',Carbon::parse($event->start_date)->format('Y-m-d'))->where('date','<=', Carbon::now()->format('Y-m-d'))->groupBy('date')->count();
+                $userTotalPointDays = 0; // $user->points()->where('event_id',$event->id)->where('date','>=',Carbon::parse($event->start_date)->format('Y-m-d'))->where('date','<=', Carbon::now()->format('Y-m-d'))->groupBy('date')->count();
 
                 $userTotalPoints = $userPoint->total_mile;
 
@@ -441,11 +444,11 @@ class ProfilesController extends BaseController
 
                 $totalRemainingDays = $totalDays - $totalDayTillToday;
 
-                if (!$totalDayTillToday) {
+                if (! $totalDayTillToday) {
                     $totalDayTillToday = 1;
                 }
 
-                if (!$totalRemainingDays) {
+                if (! $totalRemainingDays) {
                     $totalRemainingDays = 1;
                 }
 
@@ -462,8 +465,8 @@ class ProfilesController extends BaseController
                     'completed_miles' => number_format($userTotalPoints, 2, '.', ''),
                     'completed_percentage' => number_format($completedPercentage, 2, '.', ''),
                     'completion_date' => $participation->subscription_end_date,
-                    'extra' => compact('totalRemainingDays', 'userTotalPoints', 'totalDayTillToday', 'totalDays', 'userTotalPointDays', 'event', 'participation')
-                    //'completion_date_formatted' => Carbon::parse($participation->subscription_end_date)->format('M Do Y'),
+                    'extra' => compact('totalRemainingDays', 'userTotalPoints', 'totalDayTillToday', 'totalDays', 'userTotalPointDays', 'event', 'participation'),
+                    // 'completion_date_formatted' => Carbon::parse($participation->subscription_end_date)->format('M Do Y'),
                 ];
                 break;
             case 'modalities':
@@ -477,21 +480,21 @@ class ProfilesController extends BaseController
 
                 $modalityOverrides = isset($settings['modality_overrides']) ? $settings['modality_overrides'] : [];
 
-                $modalities = ["daily_steps", "run", "walk", "swim", "bike", "other"];
+                $modalities = ['daily_steps', 'run', 'walk', 'swim', 'bike', 'other'];
 
                 $data['modalities'] = collect($modalities)->map(function ($item) use ($modalityOverrides) {
                     return [
-                        "name" => $item,
-                        "notification_enabled" => in_array($item, $modalityOverrides)
+                        'name' => $item,
+                        'notification_enabled' => in_array($item, $modalityOverrides),
                     ];
                 });
 
                 break;
         }
 
-
         Cache::put($cacheName, $data, now()->addHours(2));
-        return $this->sendResponse($data, "User Settings");
+
+        return $this->sendResponse($data, 'User Settings');
     }
 
     public function eventParticipants(Request $request): JsonResponse
@@ -502,7 +505,7 @@ class ProfilesController extends BaseController
 
         if (Cache::has($cacheName)) {
             $item = Cache::get($cacheName);
-            // return $this->sendResponse($item, 'Response'); 
+            // return $this->sendResponse($item, 'Response');
         }
 
         $participations = $user->participations()->where('subscription_end_date', '>=', Carbon::now()->format('Y-m-d'))->with('event')->whereHas('event')->simplePaginate(100)
@@ -517,63 +520,41 @@ class ProfilesController extends BaseController
                 $team = $membership ? $membership->team : null;
 
                 if ($team) {
-                    $team->is_team_owner = $team->owner_id == $user->id;
+                    $team->is_team_owner = $team->owner_id === $user->id;
                 }
 
-                $event->has_team = !is_null($membership);
+                $event->has_team = ! is_null($membership);
                 $event->preferred_team_id = $membership ? $team->id : null;
                 $event->preferred_team = $membership ? $team : null;
-                $event->is_expired = !Carbon::parse($event->end_date)->gt(Carbon::now());
+                $event->is_expired = ! Carbon::parse($event->end_date)->gt(Carbon::now());
 
                 $participation->event = $event;
 
                 return $participation;
             });
         Cache::put($cacheName, $participations, now()->addHours(2));
+
         return $this->sendResponse($participations, 'Response');
-    }
-
-    private function decodeModalities($sum)
-    {
-        $decoded = [];
-
-        $modalities = [
-            'daily_steps' => 1,
-            'run' => 2,
-            'walk' => 4,
-            'bike' => 8,
-            'swim' => 16,
-            'other' => 32
-        ];
-
-        foreach ($modalities as $key => $value) {
-            if (($sum & $value) !== 0) {
-                $decoded[] = $key;
-            }
-        }
-
-        return $decoded;
     }
 
     public function updateEventParticipantPrivacy(Request $request): JsonResponse
     {
         $request->validate([
-            "event_id" => [
+            'event_id' => [
                 'required',
                 Rule::exists((new Event)->getTable(), 'id'),
             ],
-            "public_profile" => 'required|boolean'
+            'public_profile' => 'required|boolean',
         ]);
 
         $user = $request->user();
 
         $participation = $user->participations()->where('event_id', $request->event_id)->first();
 
-        $participation->fill(['public_profile' => !!$request->public_profile])->save();
+        $participation->fill(['public_profile' => (bool) $request->public_profile])->save();
 
-        return $this->sendResponse([], "Privacy updated");
+        return $this->sendResponse([], 'Privacy updated');
     }
-
 
     public function requestTeamFollow(Request $request, $type = null): JsonResponse
     {
@@ -599,17 +580,18 @@ class ProfilesController extends BaseController
 
         $followRequest = $team->followerRequests()->where(['prospective_follower_id' => $user->id, 'event_id' => $request->event_id])->first();
 
-        if ($type == 'undo') {
+        if ($type === 'undo') {
 
-            if (!is_null($followRequest)) {
+            if (! is_null($followRequest)) {
                 $followRequest->delete();
+
                 return $this->sendResponse([], 'Follow request undone');
             }
 
             return $this->sendError('ERROR', ['error' => 'Follow request does not exist']);
         }
 
-        if (!is_null($followRequest)) {
+        if (! is_null($followRequest)) {
             return $this->sendError('ERROR', ['error' => 'Follow request already exists']);
         }
 
@@ -620,14 +602,13 @@ class ProfilesController extends BaseController
             return $this->sendResponse([], 'Following');
         }
 
-        $team->followerRequests()->updateOrcreate(['prospective_follower_id' => $user->id,'event_id' => $request->event_id],['prospective_follower_id' => $user->id,'event_id' => $request->event_id,'status' => 'request_to_follow_issued']);
-        
-        return $this->sendResponse([], "Follow requested");
+        $team->followerRequests()->updateOrcreate(['prospective_follower_id' => $user->id, 'event_id' => $request->event_id], ['prospective_follower_id' => $user->id, 'event_id' => $request->event_id, 'status' => 'request_to_follow_issued']);
+
+        return $this->sendResponse([], 'Follow requested');
     }
 
     public function teamFollowing(Request $request, $type = null): JsonResponse
     {
-
         $request->validate([
             'event_id' => [
                 'required',
@@ -637,44 +618,16 @@ class ProfilesController extends BaseController
 
         $user = $request->user();
         $page = $request->page ?? 1;
+
         $cacheName = "user_team_following_{$user->id}_{$page}";
 
         if (Cache::has($cacheName)) {
             $item = Cache::get($cacheName);
-            // return $this->sendResponse($item, 'Response'); 
+            // return $this->sendResponse($item, 'Response');
         }
 
-        $followings = $user->teamFollowings()->where('event_id', $request->event_id)->with('team')->simplePaginate(100)
-            ->through(function ($item) use ($user) {
+        $followings = $this->teamService->following($user, $request->event_id, $page);
 
-                $team = $item->team;
-
-                $teamTotalDistance = $item->team->totalPoints()->where('event_id', $team->event_id)->sum('amount');
-
-                $teamTotalPoint = $team->event->total_points;
-
-                $pending = 0;
-
-                if ($teamTotalDistance > $teamTotalPoint) {
-                    $teamTotalDistance = $teamTotalPoint;
-                }
-
-                $pendingDistance = $teamTotalPoint - $teamTotalDistance;
-
-                $progressPercentage = ($teamTotalDistance / $teamTotalPoint) * 100;
-
-                $item->statistics = [
-                    'distance_total' => round($teamTotalPoint, 2),
-                    'distance_completed' => round($teamTotalDistance, 2),
-                    'distance_remaining' => round($pendingDistance, 2),
-                    'progress_percentage' => round($progressPercentage, 2)
-                ];
-
-                return $item;
-                //dd($item->team->totalPoints()->where('event_id',$team->event_id)->sum('amount'),$team->event->total_points);
-
-            });
-        Cache::put($cacheName, $followings, now()->addHours(2));
         return $this->sendResponse($followings, 'Response');
     }
 
@@ -693,12 +646,12 @@ class ProfilesController extends BaseController
         $page = $request->page ?? 1;
         $cacheName = "user_team_follow_request_{$user->id}_{$page}";
 
-        ///if(Cache::has($cacheName)){
+        // /if(Cache::has($cacheName)){
         //    $item = Cache::get($cacheName);
-        // return $this->sendResponse($item, 'Response'); 
+        // return $this->sendResponse($item, 'Response');
         //           }
 
-        $followings = TeamFollowRequest::whereNotIn('status',['request_to_follow_approved','request_to_follow_ignored'])->whereHas('team', function ($query) use ($user, $request) {
+        $followings = TeamFollowRequest::whereNotIn('status', ['request_to_follow_approved', 'request_to_follow_ignored'])->whereHas('team', function ($query) use ($user, $request) {
             return $query->where('event_id', $request->event_id)->where('owner_id', $user->id);
         })
             ->with('user', function ($query) {
@@ -712,5 +665,27 @@ class ProfilesController extends BaseController
         // $followings = $user->teamFollowingRequests()->where('event_id', $request->event_id)->with('team')->simplePaginate(100);
         // Cache::put($cacheName, $followings, now()->addHours(2));
         return $this->sendResponse($followings, 'Response');
+    }
+
+    private function decodeModalities($sum)
+    {
+        $decoded = [];
+
+        $modalities = [
+            'daily_steps' => 1,
+            'run' => 2,
+            'walk' => 4,
+            'bike' => 8,
+            'swim' => 16,
+            'other' => 32,
+        ];
+
+        foreach ($modalities as $key => $value) {
+            if (($sum & $value) !== 0) {
+                $decoded[] = $key;
+            }
+        }
+
+        return $decoded;
     }
 }

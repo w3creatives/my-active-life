@@ -3,6 +3,170 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 
+// Define interfaces for the data structures
+interface Person {
+    id: number;
+    name: string;
+    progress: number;
+    miles: number;
+    isFollowing: boolean;
+}
+
+interface Team {
+    id: number;
+    name: string;
+    progress: number;
+    miles: number;
+    isFollowing: boolean;
+}
+
+interface TeamStatistics {
+    distance_total: number;
+    distance_completed: number;
+    distance_remaining: number;
+    progress_percentage: number;
+}
+
+interface EventData {
+    id: number;
+    name: string;
+    social_hashtags: string;
+    description: string;
+    start_date: string;
+    end_date: string;
+    total_points: string;
+    registration_url: string;
+    team_size: number;
+    organization_id: number;
+    created_at: string;
+    updated_at: string;
+    supported_modalities: number;
+    event_type: string;
+    open: boolean;
+    template: number;
+    logo: string;
+    bibs_name: string;
+    event_group: string;
+    calendar_days: null | string;
+    goals: string;
+    logo_url: string;
+}
+
+interface TeamData {
+    id: number;
+    name: string;
+    event_id: number;
+    owner_id: number;
+    public_profile: boolean;
+    created_at: string;
+    updated_at: string;
+    settings: string;
+    event: EventData;
+}
+
+interface TeamFollowing {
+    id: number;
+    follower_id: number;
+    team_id: number;
+    event_id: number;
+    created_at: string;
+    updated_at: string;
+    statistics: TeamStatistics;
+    team: TeamData;
+}
+
+interface TeamFollowingsResponse {
+    current_page: number;
+    data: TeamFollowing[];
+    first_page_url: string;
+    from: number;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+}
+
+interface UserFollowing {
+    id: number;
+    display_name: string;
+    first_name: string;
+    last_name: string;
+    total_miles: number;
+}
+
+interface UserFollowingsResponse {
+    current_page: number;
+    data: UserFollowing[];
+    first_page_url: string;
+    from: number;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+}
+
+interface EventParticipant {
+    id: number;
+    display_name: string;
+    first_name: string;
+    last_name: string;
+    public_profile: boolean;
+    following_status_text: string;
+    following_status: string;
+}
+
+interface EventParticipantsResponse {
+    current_page: number;
+    data: EventParticipant[];
+    first_page_url: string;
+    from: number;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+}
+
+// Define interface for team data from API
+interface TeamToFollow {
+    id: number;
+    name: string;
+    public_profile: boolean;
+    settings: string;
+    event_id: number;
+    is_team_owner: boolean;
+    membership_status: string | null;
+}
+
+interface TeamsToFollowResponse {
+    current_page: number;
+    data: TeamToFollow[];
+    first_page_url: string;
+    from: number;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+}
+
+interface FollowProps {
+    teamFollowings?: {
+        data: TeamFollowingsResponse;
+    };
+    userFollowings?: {
+        data: UserFollowingsResponse;
+    };
+    users?: {
+        data: EventParticipantsResponse;
+    };
+    teams?: {
+        data: TeamsToFollowResponse;
+    };
+}
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Follow',
@@ -10,41 +174,34 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Mock data for demonstration
-const followedPeople = [
-    { id: 1, name: 'Jane Smith', progress: 75, miles: 125.5, isFollowing: true },
-    { id: 2, name: 'John Doe', progress: 45, miles: 78.2, isFollowing: true },
-    { id: 3, name: 'Alex Johnson', progress: 90, miles: 156.8, isFollowing: true },
-];
-
-const followedTeams = [
-    { id: 1, name: 'Road Runners', progress: 82, miles: 432.1, isFollowing: true },
-    { id: 2, name: 'Marathon Masters', progress: 63, miles: 287.5, isFollowing: true },
-];
-
-// Mock data for people to follow
-const peopleToFollow = [
-    { id: 4, name: 'Sarah Williams', city: 'Denver', state: 'CO', isFollowing: false },
-    { id: 5, name: 'Michael Brown', city: 'Seattle', state: 'WA', isFollowing: false },
-    { id: 6, name: 'Emily Davis', city: 'Boston', state: 'MA', isFollowing: false },
-    { id: 7, name: 'David Wilson', city: 'Chicago', state: 'IL', isFollowing: false },
-    { id: 8, name: 'Lisa Taylor', city: 'Austin', state: 'TX', isFollowing: false },
-];
-
-// Mock data for teams to follow
-const teamsToFollow = [
-    { id: 3, name: 'Speed Demons', members: 12, miles: 567.8, isFollowing: false },
-    { id: 4, name: 'Trail Blazers', members: 8, miles: 342.5, isFollowing: false },
-    { id: 5, name: 'Pace Setters', members: 15, miles: 789.3, isFollowing: false },
-    { id: 6, name: 'Mile Munchers', members: 6, miles: 234.7, isFollowing: false },
-    { id: 7, name: 'Endurance Elite', members: 10, miles: 456.2, isFollowing: false },
-];
-
-export default function Dashboard() {
+export default function Dashboard({ teamFollowings, userFollowings, users, teams }: FollowProps) {
     const [peopleSearch, setPeopleSearch] = useState('');
     const [teamSearch, setTeamSearch] = useState('');
     const [peoplePerPage, setPeoplePerPage] = useState(5);
     const [teamsPerPage, setTeamsPerPage] = useState(5);
+
+    // Extract teams and people from the API responses
+    const followedTeams: Team[] = teamFollowings?.data?.map(following => ({
+        id: following.team.id,
+        name: following.team.name,
+        progress: following.statistics.progress_percentage,
+        miles: following.statistics.distance_completed,
+        isFollowing: true
+    })) || [];
+
+    const followedPeople: Person[] = userFollowings?.data?.map(user => ({
+        id: user.id,
+        name: user.display_name,
+        progress: 0,
+        miles: user.total_miles,
+        isFollowing: true
+    })) || [];
+
+    // Get users to follow from the provided data
+    const usersToFollow = users?.data || [];
+
+    // Get teams to follow from the provided data
+    const teamsToFollow = teams?.data || [];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -54,41 +211,36 @@ export default function Dashboard() {
                 <div className="bg-white rounded-lg shadow-sm p-6">
                     <h2 className="text-xl font-semibold mb-4">People I Follow</h2>
                     {followedPeople.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <tbody>
-                                    {followedPeople.map((person) => (
-                                        <tr key={person.id} className="border-b last:border-b-0">
-                                            <td className="py-4 pr-4 w-48">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
-                                                        {person.name.charAt(0)}
-                                                    </div>
-                                                    <span className="font-medium">{person.name}</span>
-                                                </div>
-                                            </td>
-                                            <td className="py-4 px-4 w-full">
-                                                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                                    <div
-                                                        className="bg-blue-600 h-2.5 rounded-full"
-                                                        style={{ width: `${person.progress}%` }}
-                                                    ></div>
-                                                </div>
-                                            </td>
-                                            <td className="py-4 px-4 whitespace-nowrap">
-                                                <span className="font-medium">{person.miles.toFixed(1)} miles</span>
-                                            </td>
-                                            <td className="py-4 pl-4">
-                                                <button
-                                                    className="px-4 py-2 rounded-md bg-red-500 text-white hover:bg-red-600 transition-colors"
-                                                >
-                                                    Unfollow
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div className="space-y-4">
+                            {followedPeople.map((person) => (
+                                <div key={person.id} className="flex items-center justify-between border-b pb-4 last:border-b-0">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
+                                            {person.name.charAt(0)}
+                                        </div>
+                                        <span className="font-medium">{person.name}</span>
+                                    </div>
+
+                                    <div className="flex-1 mx-6">
+                                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div
+                                                className="bg-blue-600 h-2.5 rounded-full"
+                                                style={{ width: `${person.progress}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-6">
+                                        <span className="font-medium whitespace-nowrap">{person.miles.toFixed(1)} miles</span>
+
+                                        <button
+                                            className="px-3 py-2 rounded-md bg-red-500 text-white hover:bg-red-600 transition-colors"
+                                        >
+                                            Unfollow
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     ) : (
                         <p className="text-gray-500">You are not following anyone.</p>
@@ -99,41 +251,35 @@ export default function Dashboard() {
                 <div className="bg-white rounded-lg shadow-sm p-6">
                     <h2 className="text-xl font-semibold mb-4">Teams I Follow</h2>
                     {followedTeams.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <tbody>
-                                    {followedTeams.map((team) => (
-                                        <tr key={team.id} className="border-b last:border-b-0">
-                                            <td className="py-4 pr-4 w-48">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
-                                                        {team.name.charAt(0)}
-                                                    </div>
-                                                    <span className="font-medium">{team.name}</span>
-                                                </div>
-                                            </td>
-                                            <td className="py-4 px-4 w-full">
-                                                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                                    <div
-                                                        className="bg-green-600 h-2.5 rounded-full"
-                                                        style={{ width: `${team.progress}%` }}
-                                                    ></div>
-                                                </div>
-                                            </td>
-                                            <td className="py-4 px-4 whitespace-nowrap">
-                                                <span className="font-medium">{team.miles.toFixed(1)} miles</span>
-                                            </td>
-                                            <td className="py-4 pl-4">
-                                                <button
-                                                    className="px-4 py-2 rounded-md bg-red-500 text-white hover:bg-red-600 transition-colors"
-                                                >
-                                                    Unfollow
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div className="space-y-4">
+                            {followedTeams.map((team) => (
+                                <div key={team.id} className="flex items-center justify-between border-b pb-4 last:border-b-0">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
+                                            {team.name.charAt(0)}
+                                        </div>
+                                        <span className="font-medium">{team.name}</span>
+                                    </div>
+
+                                    <div className="flex-1 mx-6">
+                                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div
+                                                className="bg-green-600 h-2.5 rounded-full"
+                                                style={{ width: `${team.progress}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-6">
+                                        <span className="font-medium whitespace-nowrap">{team.miles.toFixed(1)} miles</span>
+                                        <button
+                                            className="px-3 py-2 rounded-md bg-red-500 text-white hover:bg-red-600 transition-colors"
+                                        >
+                                            Unfollow
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     ) : (
                         <p className="text-gray-500">You are not following any teams.</p>
@@ -178,51 +324,59 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 text-xs uppercase text-gray-700">
-                                <tr>
-                                    <th className="px-6 py-3 text-left">Name</th>
-                                    <th className="px-6 py-3 text-left">City</th>
-                                    <th className="px-6 py-3 text-left">State</th>
-                                    <th className="px-6 py-3 text-right"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {peopleToFollow.map((person) => (
-                                    <tr key={person.id} className="border-b last:border-b-0">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
-                                                    {person.name.charAt(0)}
-                                                </div>
-                                                <span className="font-medium">{person.name}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">{person.city}</td>
-                                        <td className="px-6 py-4">{person.state}</td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button
-                                                className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-                                            >
-                                                Follow
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    {usersToFollow.length > 0 ? (
+                        <div className="space-y-4">
+                            {usersToFollow.map((person) => (
+                                <div key={person.id} className="flex items-center justify-between border-b pb-4 last:border-b-0">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
+                                            {person.display_name.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <span className="font-medium block">{person.display_name}</span>
+                                            <span className="text-sm text-gray-500">{person.first_name} {person.last_name}</span>
+                                        </div>
+                                    </div>
 
-                    <div className="flex justify-between items-center mt-4">
-                        <div className="text-sm text-gray-700">
-                            Showing <span className="font-medium">1</span> to <span className="font-medium">{peoplePerPage}</span> of <span className="font-medium">{peopleToFollow.length}</span> results
+                                    <div>
+                                        <button
+                                            className={`px-4 py-2 rounded-md ${
+                                                person.following_status === 'following'
+                                                    ? 'bg-green-500 hover:bg-green-600'
+                                                    : person.following_status === 'request_to_follow_issued'
+                                                        ? 'bg-yellow-500 hover:bg-yellow-600'
+                                                        : 'bg-blue-500 hover:bg-blue-600'
+                                            } text-white transition-colors`}
+                                        >
+                                            {person.following_status_text}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                        <div className="flex gap-1">
-                            <button className="px-3 py-1 border rounded-md bg-gray-100 hover:bg-gray-200">Previous</button>
-                            <button className="px-3 py-1 border rounded-md bg-gray-100 hover:bg-gray-200">Next</button>
+                    ) : (
+                        <p className="text-gray-500 py-4 text-center">No participants found.</p>
+                    )}
+
+                    {users?.data?.next_page_url && (
+                        <div className="flex justify-between items-center mt-4">
+                            <div className="text-sm text-gray-700">
+                                Showing <span className="font-medium">{users.data.from}</span> to <span className="font-medium">{users.data.to}</span> results
+                            </div>
+                            <div className="flex gap-1">
+                                {users.data.prev_page_url && (
+                                    <a href={users.data.prev_page_url} className="px-3 py-1 border rounded-md bg-gray-100 hover:bg-gray-200">
+                                        Previous
+                                    </a>
+                                )}
+                                {users.data.next_page_url && (
+                                    <a href={users.data.next_page_url} className="px-3 py-1 border rounded-md bg-gray-100 hover:bg-gray-200">
+                                        Next
+                                    </a>
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Choose Teams To Follow Section */}
@@ -268,46 +422,73 @@ export default function Dashboard() {
                             <thead className="bg-gray-50 text-xs uppercase text-gray-700">
                                 <tr>
                                     <th className="px-6 py-3 text-left">Team</th>
-                                    <th className="px-6 py-3 text-left">Members</th>
-                                    <th className="px-6 py-3 text-left">Mileage</th>
+                                    <th className="px-6 py-3 text-left">Status</th>
                                     <th className="px-6 py-3 text-right"></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {teamsToFollow.map((team) => (
-                                    <tr key={team.id} className="border-b last:border-b-0">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
-                                                    {team.name.charAt(0)}
+                                {teamsToFollow.length > 0 ? (
+                                    teamsToFollow.map((team) => (
+                                        <tr key={team.id} className="border-b last:border-b-0">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
+                                                        {team.name.charAt(0)}
+                                                    </div>
+                                                    <span className="font-medium">{team.name}</span>
                                                 </div>
-                                                <span className="font-medium">{team.name}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">{team.members}</td>
-                                        <td className="px-6 py-4">{team.miles.toFixed(1)} miles</td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button
-                                                className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-                                            >
-                                                Follow
-                                            </button>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {team.membership_status ? (
+                                                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                                                        {team.membership_status}
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs">
+                                                        Not a member
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <button
+                                                    className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                                                    disabled={team.membership_status === "Joined"}
+                                                >
+                                                    {team.membership_status === "Joined" ? "Joined" : "Follow"}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={3} className="px-6 py-4 text-center text-gray-500">
+                                            No teams found.
                                         </td>
                                     </tr>
-                                ))}
+                                )}
                             </tbody>
                         </table>
                     </div>
 
-                    <div className="flex justify-between items-center mt-4">
-                        <div className="text-sm text-gray-700">
-                            Showing <span className="font-medium">1</span> to <span className="font-medium">{teamsPerPage}</span> of <span className="font-medium">{teamsToFollow.length}</span> results
+                    {teams?.data?.next_page_url && (
+                        <div className="flex justify-between items-center mt-4">
+                            <div className="text-sm text-gray-700">
+                                Showing <span className="font-medium">{teams.data.from}</span> to <span className="font-medium">{teams.data.to}</span> results
+                            </div>
+                            <div className="flex gap-1">
+                                {teams.data.prev_page_url && (
+                                    <a href={teams.data.prev_page_url} className="px-3 py-1 border rounded-md bg-gray-100 hover:bg-gray-200">
+                                        Previous
+                                    </a>
+                                )}
+                                {teams.data.next_page_url && (
+                                    <a href={teams.data.next_page_url} className="px-3 py-1 border rounded-md bg-gray-100 hover:bg-gray-200">
+                                        Next
+                                    </a>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex gap-1">
-                            <button className="px-3 py-1 border rounded-md bg-gray-100 hover:bg-gray-200">Previous</button>
-                            <button className="px-3 py-1 border rounded-md bg-gray-100 hover:bg-gray-200">Next</button>
-                        </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </AppLayout>

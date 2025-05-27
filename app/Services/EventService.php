@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
 use App\Models\Event;
+use App\Models\EventParticipation;
 use App\Models\Team;
 use App\Models\UserPoint;
 use App\Repositories\EventRepository;
@@ -13,6 +13,7 @@ use App\Repositories\UserPointRepository;
 use App\Traits\UserEventParticipationTrait;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 final class EventService
@@ -33,14 +34,14 @@ final class EventService
             'fit_life' => 'Fit Life',
         ];
 
-        if($keysOnly) {
+        if ($keysOnly) {
             return array_keys($eventTypes);
         }
 
         return $eventTypes;
     }
 
-    public  function findEventType($key)
+    public function findEventType($key)
     {
         $eventTypes = $this->eventTypes();
 
@@ -459,15 +460,10 @@ final class EventService
         $this->userPointRepository->create($user, $data, $condition);
     }
 
-    private function calculateUserTotal($user, $event, $startDate, $endDate)
-    {
-        return $user->points()->where(['event_id' => $event->id])->where('date', '>=', $startDate)->where('date', '<=', $endDate)->sum('amount');
-    }
-
     public function userPointWorkflow($userId, $eventId): void
     {
 
-        //https://tracker.runtheedge.com/user_points/user_point_workflow?user_id=279&event_id=64
+        // https://tracker.runtheedge.com/user_points/user_point_workflow?user_id=279&event_id=64
 
         Http::withQueryParameters([
             'user_id' => $userId,
@@ -475,5 +471,64 @@ final class EventService
         ])
             ->post('https://tracker.runtheedge.com/user_points/user_point_workflow');
 
+    }
+
+    public function userParticipations($user, $eventId, $searchTerm = '', $pageLimit = 100)
+    {
+        return EventParticipation::where('event_id', $eventId)
+            ->whereHas('user', function ($query) use ($searchTerm) {
+                if ($searchTerm) {
+                    $query->where('first_name', 'LIKE', "{$searchTerm}%")
+                        ->orWhere('last_name', 'LIKE', "{$searchTerm}%")
+                        ->orWhere('display_name', 'LIKE', "{$searchTerm}%");
+                }
+
+                return $query;
+            })
+            ->simplePaginate($pageLimit)
+            ->through(function ($participation) use ($user) {
+                $member = $participation->user;
+
+                $followingTextStatus = $participation->public_profile ? 'Request Follow' : 'Follow';
+                $followingStatus = null;
+
+                $following = $user->following()->where('event_id', $participation->event_id)->where('followed_id', $member->id)->count();
+
+                if ($following) {
+                    $followingTextStatus = 'Following';
+                    $followingStatus = 'following';
+                } else {
+
+                    if (! $participation->public_profile) {
+                        $userFollowingRequest = $user->followingRequests()->where(['event_id' => $participation->event_id, 'followed_id' => $member->id])->first();
+
+                        if ($userFollowingRequest && $userFollowingRequest->status === 'request_to_follow_issued') {
+                            $followingTextStatus = 'Requested follow';
+                            $followingStatus = 'request_to_follow_issued';
+                        } else {
+                            $followingTextStatus = 'Request Follow';
+                            $followingStatus = 'request_to_follow';
+                        }
+                    } else {
+                        $followingTextStatus = 'Follow';
+                        $followingStatus = 'follow';
+                    }
+                }
+
+                return [
+                    'id' => $member->id,
+                    'display_name' => trim($member->display_name),
+                    'first_name' => trim($member->first_name),
+                    'last_name' => trim($member->last_name),
+                    'public_profile' => $participation->public_profile,
+                    'following_status_text' => $followingTextStatus,
+                    'following_status' => $followingStatus,
+                ];
+            });
+    }
+
+    private function calculateUserTotal($user, $event, $startDate, $endDate)
+    {
+        return $user->points()->where(['event_id' => $event->id])->where('date', '>=', $startDate)->where('date', '<=', $endDate)->sum('amount');
     }
 }

@@ -1,13 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
-use Carbon\Carbon;
-use App\Models\User;
 use App\Repositories\UserPointRepository;
 use App\Traits\UserEventParticipationTrait;
+use Carbon\Carbon;
 
-class UserPointService
+final class UserPointService
 {
     use UserEventParticipationTrait;
 
@@ -27,7 +28,7 @@ class UserPointService
             'date' => $point['date'],
             'modality' => $point['modality'],
             'event_id' => $point['eventId'],
-            'data_source_id' => $point['dataSourceId']
+            'data_source_id' => $point['dataSourceId'],
         ];
 
         $this->userPointRepository->create($user, $point, $condition);

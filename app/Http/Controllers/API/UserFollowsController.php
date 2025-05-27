@@ -1,30 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\API\BaseController;
-use Illuminate\Http\Request;
+use App\Models\Event;
+use App\Models\EventParticipation;
+use App\Models\User;
+use App\Services\EventService;
+use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use App\Models\{
-    User,
-    UserFollow,
-    UserFollowRequest,
-    Event,
-    EventParticipation
-};
 
-class UserFollowsController extends BaseController
+final class UserFollowsController extends BaseController
 {
+    public function __construct(
+        private EventService $eventService,
+        private UserService $userService
+    ) {}
+
     public function participates(Request $request): JsonResponse
     {
         $user = $request->user();
 
         $request->validate([
-            "event_id" => [
+            'event_id' => [
                 'required',
                 Rule::exists((new Event)->getTable(), 'id'),
-            ]
+            ],
         ]);
 
         $pageLimit = $request->page_limit ?? 100;
@@ -35,59 +39,11 @@ class UserFollowsController extends BaseController
 
         $hasParticipation = $user->participations()->where('event_id', $eventId)->count();
 
-        if (!$hasParticipation) {
+        if (! $hasParticipation) {
             return $this->sendError('ERROR', ['error' => 'You are not participating in this event']);
         }
 
-        $users = EventParticipation::where('event_id', $eventId)
-            ->whereHas('user', function ($query) use ($searchTerm) {
-                if ($searchTerm) {
-                    $query->where('first_name', 'LIKE', "{$searchTerm}%")
-                        ->orWhere('last_name', 'LIKE', "{$searchTerm}%")
-                        ->orWhere('display_name', 'LIKE', "{$searchTerm}%");
-                }
-
-                return $query;
-            })
-            ->simplePaginate($pageLimit)
-            ->through(function ($participation) use ($user, $eventId) {
-                $member = $participation->user;
-
-                $followingTextStatus = $participation->public_profile ? "Request Follow" : "Follow";
-                $followingStatus = null;
-
-                $following = $user->following()->where('event_id', $participation->event_id)->where('followed_id', $member->id)->count();
-
-                if ($following) {
-                    $followingTextStatus = "Following";
-                    $followingStatus = "following";
-                } else {
-
-                    if (!$participation->public_profile) {
-                        $userFollowingRequest = $user->followingRequests()->where(['event_id' => $participation->event_id, 'followed_id' => $member->id])->first();
-
-                        if ($userFollowingRequest && $userFollowingRequest->status == 'request_to_follow_issued') {
-                            $followingTextStatus = "Requested follow";
-                            $followingStatus = "request_to_follow_issued";
-                        } else {
-                            $followingTextStatus = "Request Follow";
-                            $followingStatus = "request_to_follow";
-                        }
-                    } else {
-                        $followingTextStatus = "Follow";
-                        $followingStatus = "follow";
-                    }
-                }
-                return [
-                    'id' => $member->id,
-                    'display_name' => trim($member->display_name),
-                    'first_name' => trim($member->first_name),
-                    'last_name' => trim($member->last_name),
-                    'public_profile' => $participation->public_profile,
-                    'following_status_text' => $followingTextStatus,
-                    'following_status' => $followingStatus,
-                ];
-            });
+        $users = $this->eventService->userParticipations($user, $eventId, $searchTerm, $pageLimit);
 
         return $this->sendResponse($users, 'Response');
     }
@@ -97,26 +53,15 @@ class UserFollowsController extends BaseController
         $user = $request->user();
 
         $request->validate([
-            "event_id" => [
+            'event_id' => [
                 'required',
                 Rule::exists((new Event)->getTable(), 'id'),
-            ]
+            ],
         ]);
 
         $pageLimit = $request->page_limit ?? 100;
 
-        $followers = $user->followers()->where('event_id', $request->event_id)->simplePaginate($pageLimit)
-            ->through(function ($item) use ($user) {
-                $follower = $item->follower;
-
-                return [
-                    'id' => $follower->id,
-                    'display_name' => trim($follower->display_name),
-                    'first_name' => trim($follower->first_name),
-                    'last_name' => trim($follower->last_name),
-                    'total_miles' => $follower->totalPoints()->where('event_id', $item->event_id)->sum('amount')
-                ];
-            });
+        $followers = $this->userService->followers($user, $request->event_id, $pageLimit);
 
         return $this->sendResponse($followers, 'Response');
     }
@@ -126,28 +71,17 @@ class UserFollowsController extends BaseController
         $user = $request->user();
 
         $request->validate([
-            "event_id" => [
+            'event_id' => [
                 'required',
                 Rule::exists((new Event)->getTable(), 'id'),
-            ]
+            ],
         ]);
 
         $pageLimit = $request->page_limit ?? 100;
 
-        $followers = $user->following()->where('event_id', $request->event_id)->simplePaginate($pageLimit)
-            ->through(function ($item) use ($user) {
-                $follower = $item->following;
+        $followings = $this->userService->followings($user, $request->event_id, $pageLimit);
 
-                return [
-                    'id' => $follower->id,
-                    'display_name' => trim($follower->display_name),
-                    'first_name' => trim($follower->first_name),
-                    'last_name' => trim($follower->last_name),
-                    'total_miles' => $follower->totalPoints()->where('event_id', $item->event_id)->sum('amount')
-                ];
-            });
-
-        return $this->sendResponse($followers, 'Response');
+        return $this->sendResponse($followings, 'Response');
     }
 
     public function undoFollowing(Request $request): JsonResponse
@@ -155,16 +89,15 @@ class UserFollowsController extends BaseController
         $user = $request->user();
 
         $request->validate([
-            "user_id" => [
+            'user_id' => [
                 'required',
                 Rule::exists((new User)->getTable(), 'id'),
             ],
-            "event_id" => [
+            'event_id' => [
                 'required',
                 Rule::exists((new Event)->getTable(), 'id'),
-            ]
+            ],
         ]);
-
 
         $following = $user->following()->where('event_id', $request->event_id)->where('followed_id', $request->user_id)->first();
 
@@ -184,15 +117,15 @@ class UserFollowsController extends BaseController
         $user = $request->user();
 
         $request->validate([
-            "event_id" => [
+            'event_id' => [
                 'required',
                 Rule::exists((new Event)->getTable(), 'id'),
-            ]
+            ],
         ]);
 
         $memberParticipation = EventParticipation::where('event_id', $request->event_id)->where('user_id', $user->id)->first();
 
-        if (!$memberParticipation) {
+        if (! $memberParticipation) {
             return $this->sendError('ERROR', ['error' => 'Event not found']);
         }
 
@@ -205,7 +138,7 @@ class UserFollowsController extends BaseController
             ->whereIn('status', ['request_to_follow_issued', 'request_to_follow_ignored'])
             ->where('event_id', $request->event_id)
             ->simplePaginate($pageLimit)
-            ->through(function ($item) use ($user) {
+            ->through(function ($item) {
                 $follower = $item->follower;
 
                 return [
@@ -213,7 +146,7 @@ class UserFollowsController extends BaseController
                     'display_name' => trim($follower->display_name),
                     'first_name' => trim($follower->first_name),
                     'last_name' => trim($follower->last_name),
-                    'total_miles' => $follower->totalPoints()->where('event_id', $item->event_id)->sum('amount')
+                    'total_miles' => $follower->totalPoints()->where('event_id', $item->event_id)->sum('amount'),
                 ];
             });
 
@@ -225,26 +158,25 @@ class UserFollowsController extends BaseController
         $user = $request->user();
 
         $request->validate([
-            "user_id" => [
+            'user_id' => [
                 'required',
                 Rule::exists((new User)->getTable(), 'id'),
             ],
-            "event_id" => [
+            'event_id' => [
                 'required',
                 Rule::exists((new Event)->getTable(), 'id'),
-            ]
+            ],
         ]);
-
 
         $memberParticipation = EventParticipation::where('event_id', $request->event_id)->where('user_id', $request->user_id)->first();
 
-        if (!$memberParticipation) {
+        if (! $memberParticipation) {
             return $this->sendError('ERROR', ['error' => 'User is not participating in this event']);
         }
 
         $userParticipation = $user->participations()->where('event_id', $request->event_id)->first();
 
-        if (!$userParticipation) {
+        if (! $userParticipation) {
             return $this->sendError('ERROR', ['error' => 'you are not participating in this event']);
         }
 
@@ -265,29 +197,29 @@ class UserFollowsController extends BaseController
 
         $user->followingRequests()->updateOrCreate(['followed_id' => $request->user_id, 'event_id' => $request->event_id], ['followed_id' => $request->user_id, 'event_id' => $request->event_id, 'status' => 'request_to_follow_issued']);
 
-
         return $this->sendResponse([], 'Requested follow');
     }
+
     public function followRequestAction(Request $request, $action): JsonResponse
     {
         $user = $request->user();
 
         $request->validate([
-            "user_id" => [
+            'user_id' => [
                 'required',
                 Rule::exists((new User)->getTable(), 'id'),
             ],
-            "event_id" => [
+            'event_id' => [
                 'required',
                 Rule::exists((new Event)->getTable(), 'id'),
-            ]
+            ],
         ]);
 
-        if (!in_array($action, ['cancel', 'accept', 'decline'])) {
+        if (! in_array($action, ['cancel', 'accept', 'decline'])) {
             return $this->sendError('ERROR', ['error' => 'Invalid action']);
         }
 
-        if ($action == 'cancel') {
+        if ($action === 'cancel') {
 
             $followingRequest = $user->followingRequests()->where(['event_id' => $request->event_id, 'followed_id' => $request->user_id])->first();
             if (is_null($followingRequest)) {
@@ -295,9 +227,9 @@ class UserFollowsController extends BaseController
             }
 
             $followingRequest->delete();
+
             return $this->sendResponse([], 'Follow request cancelled');
         }
-
 
         $follower = $user->followRequests()->where('event_id', $request->event_id)->where('prospective_follower_id', $request->user_id)->first();
 
@@ -305,7 +237,7 @@ class UserFollowsController extends BaseController
             return $this->sendError('ERROR', ['error' => 'No record found']);
         }
 
-        $isAccepted = $action == 'accept';
+        $isAccepted = $action === 'accept';
 
         $follower->status = $isAccepted ? 'request_to_follow_approved' : 'request_to_follow_ignored';
         $follower->save();
@@ -319,6 +251,7 @@ class UserFollowsController extends BaseController
             }
 
             $user->followers()->updateOrCreate(['event_id' => $request->event_id, 'follower_id' => $request->user_id], ['event_id' => $request->event_id, 'follower_id' => $request->user_id]);
+
             return $this->sendResponse([], 'Following request accepted');
         }
 

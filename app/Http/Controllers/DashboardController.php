@@ -6,6 +6,9 @@ namespace App\Http\Controllers;
 
 use App\Actions\EventTutorials\GetEventTutorials;
 use App\Models\Event;
+use App\Services\EventService;
+use App\Services\TeamService;
+use App\Services\UserService;
 use App\Traits\RTEHelpers;
 use App\Traits\UserPointFetcher;
 use Carbon\Carbon;
@@ -41,9 +44,20 @@ final class DashboardController extends Controller
         ]);
     }
 
-    public function follow(): Response
+    public function follow(UserService $userService, TeamService $teamService, EventService $eventService): Response
     {
-        return Inertia::render('follow');
+        $user = auth()->user();
+        $teamFollowings = $teamService->following($user, 64)->toArray();
+        $userFollowings = $userService->followings($user, 64)->toArray();
+        $users = $eventService->userParticipations($user, 64, '', 5)->toArray();
+        $teams = $teamService->all($user, 64, '', 'all', 1, 5)->toArray();
+
+        return Inertia::render('follow', [
+            'teamFollowings' => $teamFollowings,
+            'userFollowings' => $userFollowings,
+            'users' => $users,
+            'teams' => $teams,
+        ]);
     }
 
     /**

@@ -1,12 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repositories;
 
-use Carbon\Carbon;
+use App\Models\EventParticipation;
 
-class EventRepository
+final class EventRepository
 {
-    public function importManual(){
-        
-    }
+    public function importManual() {}
 }
