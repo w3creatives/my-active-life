@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,14 +58,15 @@ export default function NewConversation() {
             </Button>
           </div>
           <nav className="p-2 space-y-1">
-            <Button
-              variant={activeFolder === 'inbox' ? 'secondary' : 'ghost'}
-              className="w-full justify-start gap-2"
-              onClick={() => setActiveFolder('inbox')}
-            >
-              <Inbox size={16} />
-              <span>Inbox</span>
-            </Button>
+            <Link href={route('user.conversations')}>
+              <Button
+                variant={activeFolder === 'inbox' ? 'secondary' : 'ghost'}
+                className="w-full justify-start gap-2"
+              >
+                <Inbox size={16} />
+                <span>Inbox</span>
+              </Button>
+            </Link>
             <Button
               variant={activeFolder === 'sent' ? 'secondary' : 'ghost'}
               className="w-full justify-start gap-2"

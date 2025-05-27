@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,10 +90,12 @@ export default function Conversations() {
         {/* Sidebar */}
         <div className="w-64 border-r flex flex-col">
           <div className="p-4 border-b">
-            <Button variant="default" className="w-full justify-start gap-2">
-              <MessageSquare size={16} />
-              <span>New Message</span>
-            </Button>
+            <Link href={route('user.conversations.new')}>
+                <Button variant="default" className="w-full justify-start gap-2">
+                  <MessageSquare size={16} />
+                  <span>New Message</span>
+                </Button>
+            </Link>
           </div>
           <nav className="p-2 space-y-1">
             <Button
