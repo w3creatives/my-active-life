@@ -13,16 +13,16 @@ class EventMilestone extends Model
 
     public function getLogoAttribute($value){
         if(!$value){
-            $value = 'amerithon-calendar-1.png';
+            return null;
         }
-        return url("static/milestones/".$value);
+        return url("uploads/milestones/".$value);
     }
 
     public function getTeamLogoAttribute($value){
         if(!$value){
-            $value = 'amerithon-calendar-1.png';
+            return null;
         }
-        return url("static/milestones/".$value);
+        return url("uploads/milestones/".$value);
     }
 
     public function getVideoUrlAttribute(){
