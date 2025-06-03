@@ -56,7 +56,7 @@
                 customDatatable.initDatatable('#eventlist-table', [
                     { data: 'id', name: 'id' },
                     { data: 'name', name: 'name' },
-                    { data: 'event_type', name: 'event_type' },
+                    { data: 'event_type_text', name: 'event_type_text' },
                     { data: 'start_date', name: 'start_date' },
                     { data: 'end_date', name: 'end_date' },
                     { data: 'action', name: 'action', sortable: false }

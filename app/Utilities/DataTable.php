@@ -47,8 +47,8 @@ class DataTable
 
         $this->totalCount = $query->count();
 
-        $this->data = $query->limit($request->get('limit', 10))
-            ->skip($request->get('offset', 0))
+        $this->data = $query->limit($request->get('length', 10))
+            ->skip($request->get('start', 0))
             ->get();
 
         return $this;

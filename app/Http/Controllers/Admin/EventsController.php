@@ -28,7 +28,7 @@ class EventsController extends Controller
             list($eventCount, $events) = $dataTable->setSearchableColumns(['name', 'event_type'])->query($request, $query)->response();
 
             $events = $events->map(function ($event) use ($eventService) {
-                $event->event_type = $eventService->findEventType($event->event_type);
+                $event->event_type_text = $eventService->findEventType($event->event_type);
                 $event->action = [
                     view('components.actions.event', compact('event'))->render()
                 ];

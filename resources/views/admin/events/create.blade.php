@@ -6,6 +6,7 @@
             <div class="card">
                 <h5 class="card-header">{{ $event?'Update':'Add'}} Event</h5>
                 <div class="card-body">
+                    <x-alert.validation :errors=$errors></x-alert.validation>
                     <form action="" class="needs-validation" method="POST" id="event-form" novalidate>
                         @csrf
                         <div class="mb-4">

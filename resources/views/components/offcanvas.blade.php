@@ -1,5 +1,5 @@
 <div
-    class="offcanvas offcanvas-end"
+    class="offcanvas offcanvas-end {{ $ajaxContent?'ajax-canvas':'' }}"
     tabindex="-1"
     id="{{ $id }}"
     aria-labelledby="{{ $id }}Label">

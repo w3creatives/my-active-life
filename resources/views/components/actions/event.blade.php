@@ -4,7 +4,16 @@
         <div class="dropdown-menu dropdown-menu-end m-0">
             <a href="{{ route('admin.events.edit', $event->id) }}" class="dropdown-item waves-effect"><i
                     class="icon-base ti tabler-pencil mb-2"></i> Edit Event</a>
-            <a href="{{ route('admin.events.milestones', $event->id) }}" class="dropdown-item waves-effect"><i class="icon-base ti tabler-target mb-2"></i> Milestones</a>
+            @switch($event->event_type)
+                @case('regular')
+                    <a href="{{ route('admin.events.milestones', $event->id) }}" class="dropdown-item waves-effect"><i
+                            class="icon-base ti tabler-target mb-2"></i> Milestones</a>
+                @break
+                @case('fit_life')
+                    <a href="{{ route('admin.events.activities', $event->id) }}" class="dropdown-item waves-effect"><i
+                            class="icon-base ti tabler-target mb-2"></i> Activities</a>
+                @break
+            @endswitch
         </div>
     </div>
 </div>

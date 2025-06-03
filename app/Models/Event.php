@@ -17,6 +17,9 @@ class Event extends Model
         return url("static/".trim($this->logo));
     }
 
+    public function scopeType($query, $type){
+        return $query->where('event_type', $type);
+    }
     public function organization(){
         return $this->belongsTo(Organization::class);
     }

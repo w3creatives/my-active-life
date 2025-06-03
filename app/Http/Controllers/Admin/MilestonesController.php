@@ -27,8 +27,8 @@ class MilestonesController extends Controller
                     'data' => $item->video_url ?? '',
                     'logo' => view('admin.milestones.logo', compact('item'))->render(),
                     'action' => [
-                        view('components.actions.milestone', compact('item'))->render()
-                    ]
+                        view('components.actions.milestone', compact('item'))->render(),
+                    ],
                 ];
             });
 
@@ -36,11 +36,15 @@ class MilestonesController extends Controller
                 'draw' => $request->get('draw'),
                 'recordsTotal' => $itemCount,
                 'recordsFiltered' => $itemCount,
-                'data' => $items
+                'data' => $items,
             ]);
         }
 
-        $event = Event::find($eventId);
+        $event = Event::type('regular')->find($eventId);
+
+        if(!$event){
+            return redirect()->back()->with('alert', ['type' => 'danger', 'message' => 'Invalid event.']);
+        }
 
         return view('admin.milestones.list', compact('event'));
     }
