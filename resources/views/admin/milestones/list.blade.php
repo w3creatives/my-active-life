@@ -7,28 +7,11 @@
                         Milestones</h5>
                 </div>
             </div>
-            <div class="d-md-flex justify-content-between align-items-center dt-layout-end col-md-auto ms-auto mt-0">
-                <div class="dt-buttons btn-group flex-wrap mb-0">
-                    <a href="{{ route('admin.events') }}" class="btn btn-label-primary me-4">Back to Events</a>
-                        
-                    <a href="{{ route('admin.events.milestones.create',$event->id) }}"
-                        class="btn create-new btn-primary" tabindex="0" data-bs-toggled="offcanvas"
-                        data-bs-targetd="#action-milestone-modal" data-action-title="Add Milestone"
-                        aria-controls="eventlist-table"
-                        type="button">
-                        <span>
-                            <span class="d-flex align-items-center gap-2">
-                                <i class="icon-base ti tabler-plus icon-sm"></i>
-                                <span class="d-none d-sm-inline-block">Add New Milestone</span>
-                            </span>
-                        </span>
-                    </a>
-                </div>
-            </div>
+           <x-event.list-action :event="$event" :activity="$activity"></x-event.list-action>
         </div>
         <div class="card-datatable text-nowrap">
             <table class="datatables-ajax table table-bordered" id="milestonelist-table"
-                data-ajax-url="{{ route('admin.events.milestones', $event->id) }}">
+                data-ajax-url="">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -47,7 +30,7 @@
     <x-modal id="view-milestone-modal" title="Milestone Details" ajax-content="true">
         @push('modal-footer')
         <div class="d-flex justify-content-between mt-3">
-        
+
             <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Close</button>
         </div>
         @endpush

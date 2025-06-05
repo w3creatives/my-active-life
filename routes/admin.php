@@ -16,6 +16,9 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
 
     Route::get('/users', [UsersController::class, 'index'])->name('admin.users');
 
+    /**
+     * Events Routes
+     */
     Route::get('/events', [EventsController::class, 'index'])->name('admin.events');
     Route::get('/events/{id}/edit', [EventsController::class, 'create'])->name('admin.events.edit');
     Route::get('/events/add', [EventsController::class, 'create'])->name('admin.events.add');
@@ -38,8 +41,9 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::get('/events/{id}/activities', [ActivitiesController::class, 'index'])->name('admin.events.activities');
     Route::get('/events/{id}/activities/create/{activityId?}', [ActivitiesController::class, 'create'])->name('admin.events.activities.create');
     Route::post('/events/{id}/activities/create/{activityId?}', [ActivitiesController::class, 'store']);
-    Route::get('/events/{id}/activities/{milestoneId}/edit', [ActivitiesController::class, 'create'])->name('admin.events.activities.edit');
-    Route::post('/events/{id}/activities/{milestoneId}/edit', [ActivitiesController::class, 'store']);
-    Route::get('/events/{id}/activities/{milestoneId}/view', [ActivitiesController::class, 'view'])->name('admin.events.activities.view');
+    Route::delete('/events/{id}/activities/delete/{activityId}', [ActivitiesController::class, 'destroy'])->name('admin.events.activities.delete');
 
+    Route::get('/events/{id}/activities/{activityId}/milestones', [MilestonesController::class, 'index'])->name('admin.events.activity.milestones');
+    Route::get('/events/{id}/activities/{activityId}/milestones/create', [MilestonesController::class, 'create'])->name('admin.events.activity.milestones.create');
+    Route::post('/events/{id}/activities/{activityId}/milestones/create', [MilestonesController::class, 'store']);
 });

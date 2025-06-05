@@ -96,4 +96,19 @@ class ActivitiesController extends Controller
         $event->fitActivities()->create($data);
         return redirect()->route('admin.events.activities', $eventId)->with('alert', ['type' => 'success', 'message' => 'Activity created.']);
     }
+
+    public function destroy(Request $request, $eventId, $activityId){
+
+        $event = Event::find($eventId);
+
+        $activity = $event->fitActivities()->find($activityId);
+
+        if(!$activity){
+            return redirect()->route('admin.events.activities', $eventId)->with('alert', ['type' => 'danger', 'message' => 'Invalid activity.']);
+        }
+
+        $activity->delete();
+
+        return redirect()->route('admin.events.activities', $eventId)->with('alert', ['type' => 'success', 'message' => 'Activity deleted.']);
+    }
 }

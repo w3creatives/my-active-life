@@ -10,26 +10,46 @@ use Illuminate\Http\Request;
 
 class MilestonesController extends Controller
 {
-    public function index(Request $request, DataTable $dataTable, $eventId)
+    public function index(Request $request, DataTable $dataTable)
     {
+        $eventId = $request->route()->parameter('id');
+        $activityId = $request->route()->parameter('activityId');
+
+        $event = Event::find($eventId);
+
+        $activity = $event->fitActivities()->find($activityId);
+
         if ($request->ajax()) {
 
-            $query = EventMilestone::select(['id', 'name', 'distance', 'data', 'event_id'])
-                ->where('event_id', $eventId);
+            if ($event->event_type == 'regular') {
+                $query = $event->milestones()->select(['id', 'name', 'distance', 'data', 'event_id']);
+                $searchableColumns = ['name', 'distance'];
+            } else {
+                $query = $activity->milestones()->select(['id', 'name', 'total_points', 'data', 'activity_id']);
+                $searchableColumns = ['name', 'total_points'];
+            }
 
-            list($itemCount, $items) = $dataTable->setSearchableColumns(['name', 'distance'])->query($request, $query)->response();
+            list($itemCount, $items) = $dataTable->setSearchableColumns($searchableColumns)->query($request, $query)->response();
 
-            $items = $items->map(function ($item) {
-                return [
+            $items = $items->map(function ($item) use ($event) {
+
+                $data = [
                     'id' => $item->id,
                     'name' => $item->name,
-                    'distance' => $item->distance,
+                    'distance' => isset($item->distance)?$item->distance:$item->total_points,
                     'data' => $item->video_url ?? '',
-                    'logo' => view('admin.milestones.logo', compact('item'))->render(),
                     'action' => [
-                        view('components.actions.milestone', compact('item'))->render(),
+                        view('components.actions.milestone', compact('item', 'event'))->render(),
                     ],
                 ];
+
+                if ($event->event_type == 'regular') {
+                    $data['logo'] = view('admin.milestones.logo', compact('item'))->render();
+                } else {
+                    $data['logo'] = 'N/A';
+                }
+
+                return $data;
             });
 
             return response()->json([
@@ -38,19 +58,17 @@ class MilestonesController extends Controller
                 'recordsFiltered' => $itemCount,
                 'data' => $items,
             ]);
-        }
+       }
 
-        $event = Event::type('regular')->find($eventId);
-
-        if(!$event){
-            return redirect()->back()->with('alert', ['type' => 'danger', 'message' => 'Invalid event.']);
-        }
-
-        return view('admin.milestones.list', compact('event'));
+        return view('admin.milestones.list', compact('event','activity'));
     }
 
-    public function create(Request $request, $eventId, $milestoneId = null)
+    public function create(Request $request)
     {
+
+        $eventId = $request->route()->parameter('id');
+        $activityId = $request->route()->parameter('activityId');
+        $milestoneId = $request->route()->parameter('milestoneId');
 
         $event = Event::findOrFail($eventId);
 
@@ -62,11 +80,24 @@ class MilestonesController extends Controller
             ];
         }
 
-        return view('admin.milestones.create', compact('event', 'eventMilestone'));
+        $isRegularEvent = $event->event_type == 'regular';
+
+        if ($isRegularEvent) {
+            $backUrl = route('admin.events.milestones', $event->id);
+        } else {
+            $backUrl = route('admin.events.activity.milestones', [$event->id, $activityId]);
+        }
+
+
+        return view('admin.milestones.create', compact('event', 'eventMilestone', 'isRegularEvent', 'backUrl'));
     }
 
-    public function store(Request $request, $eventId, $milestoneId = null)
+    public function store(Request $request, $eventId)
     {
+        $eventId = $request->route()->parameter('id');
+        $milestoneId = $request->route()->parameter('milestoneId');
+
+        $event = Event::findOrFail($eventId);
 
         $request->validate([
             'name' => 'required',
@@ -75,39 +106,61 @@ class MilestonesController extends Controller
             'team_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        $event = Event::findOrFail($eventId);
-
-        $data = $request->only(['name', 'description', 'distance']);
+        $data = $request->only(['name', 'distance', 'description']);
 
         $videoData = $request->video_url ? ['flyover_url' => $request->video_url] : [];
 
         $data['data'] = json_encode($videoData);
 
-        $eventMilestone = $event->milestones()->find($milestoneId);
+        if ($event->event_type === 'regular') {
 
-        // Handle logo upload
-        if ($request->hasFile('logo')) {
-            $logoFile = $request->file('logo');
-            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
-            $logoFile->move(public_path('uploads/milestones'), $logoFileName, 'public');
-            $data['logo'] = $logoFileName;
+            if ($request->hasFile('logo')) {
+                $logoFile = $request->file('logo');
+                $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getC3lientOriginalExtension();
+                $logoFile->move(public_path('uploads/milestones'), $logoFileName, 'public');
+                $data['logo'] = $logoFileName;
+            }
+
+            if ($request->hasFile('team_logo')) {
+                $teamLogoFile = $request->file('team_logo');
+                $teamLogoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $teamLogoFile->getClientOriginalExtension();
+                $teamLogoFile->move(public_path('uploads/milestones'), $teamLogoFileName, 'public');
+                $data['team_logo'] = $teamLogoFileName;
+            }
+
+            $eventMilestone = $event->milestones()->find($milestoneId);
+
+            if ($eventMilestone) {
+                $eventMilestone->fill($data)->save();
+                return redirect()->route('admin.events.milestones', $event->id)->with('alert', ['type' => 'success', 'message' => 'Milestone updated successfully.']);
+            }
+
+            $event->milestones()->create($data);
+
+            return redirect()->route('admin.events.milestones', $event->id)->with('alert', ['type' => 'success', 'message' => 'Milestone created successfully.']);
         }
-        if ($request->hasFile('team_logo')) {
-            $teamLogoFile = $request->file('team_logo');
-            $teamLogoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $teamLogoFile->getClientOriginalExtension();
-            $teamLogoFile->move(public_path('uploads/milestones'), $teamLogoFileName, 'public');
 
-            $data['team_logo'] = $teamLogoFileName;
+        if ($event->event_type === 'fit_life') {
+            $data['total_points'] = $data['distance'];
+            unset($data['distance']);
+
+            $activityId = $request->route()->parameter('activityId');
+            $activity = $event->fitActivities()->find($activityId);
+            $eventMilestone = $activity->milestones()->find($milestoneId);
+
+            $flashMessage = 'Milestone created successfully.';
+
+            if ($eventMilestone) {
+                $eventMilestone->fill($data)->save();
+                $flashMessage = 'Milestone updated successfully.';
+            }
+
+            $activity->milestones()->create($data);
+
+            return redirect()
+                ->route('admin.events.activity.milestones', [$event->id, $activityId])
+                ->with('alert', ['type' => 'success', 'message' => $flashMessage]);
         }
-
-        if ($eventMilestone) {
-            $eventMilestone->fill($data)->save();
-            return redirect()->route('admin.events.milestones', $event->id)->with('alert', ['type' => 'success', 'message' => 'Milestone updated successfully.']);
-        }
-
-        $event->milestones()->create($data);
-
-        return redirect()->route('admin.events.milestones', $event->id)->with('alert', ['type' => 'success', 'message' => 'Milestone created successfully.']);
     }
 
     public function view(Request $request, $eventId, $milestoneId)

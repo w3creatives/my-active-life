@@ -82,7 +82,7 @@
                                    data-parsley-trigger="change">
                         </div>
                         <div class="d-flex justify-content-between mt-3">
-                            <button type="submit" class="btn btn-primary">{{ $activity?'Update':'Add'}}Activity
+                            <button type="submit" class="btn btn-primary">{{ $activity?'Update':'Add'}} Activity
                             </button>
                             <a href="{{ route('admin.events.activities', $eventId) }}" class="btn btn-label-primary">Back
                                 to List</a>
