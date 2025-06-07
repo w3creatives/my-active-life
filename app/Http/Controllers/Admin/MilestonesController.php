@@ -72,15 +72,21 @@ class MilestonesController extends Controller
 
         $event = Event::findOrFail($eventId);
 
-        $eventMilestone = $event->milestones()->find($milestoneId);
+        $isRegularEvent = $event->event_type == 'regular';
+
+        if($isRegularEvent){
+            $eventMilestone = $event->milestones()->find($milestoneId);
+        } else {
+            $activity = $event->fitActivities()->find($activityId);
+            $eventMilestone = $activity->milestones()->find($milestoneId);
+            $eventMilestone->distance = $eventMilestone->total_points;
+        }
 
         if ($request->ajax()) {
             return [
                 'html' => view('admin.milestones.add', compact('event', 'eventMilestone'))->render()
             ];
         }
-
-        $isRegularEvent = $event->event_type == 'regular';
 
         if ($isRegularEvent) {
             $backUrl = route('admin.events.milestones', $event->id);
@@ -92,7 +98,7 @@ class MilestonesController extends Controller
         return view('admin.milestones.create', compact('event', 'eventMilestone', 'isRegularEvent', 'backUrl'));
     }
 
-    public function store(Request $request, $eventId)
+    public function store(Request $request)
     {
         $eventId = $request->route()->parameter('id');
         $milestoneId = $request->route()->parameter('milestoneId');

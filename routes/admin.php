@@ -46,4 +46,8 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::get('/events/{id}/activities/{activityId}/milestones', [MilestonesController::class, 'index'])->name('admin.events.activity.milestones');
     Route::get('/events/{id}/activities/{activityId}/milestones/create', [MilestonesController::class, 'create'])->name('admin.events.activity.milestones.create');
     Route::post('/events/{id}/activities/{activityId}/milestones/create', [MilestonesController::class, 'store']);
+
+    Route::get('/events/{id}/activities/{activityId}/milestones/{milestoneId}/edit', [MilestonesController::class, 'create'])->name('admin.events.activity.milestones.edit');
+    Route::post('/events/{id}/activities/{activityId}/milestones/{milestoneId}/edit', [MilestonesController::class, 'store']);
+
 });
