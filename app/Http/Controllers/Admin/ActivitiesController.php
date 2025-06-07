@@ -23,7 +23,7 @@ class ActivitiesController extends Controller
 
             $items = $items->map(function ($item) {
                 $item->action = [
-                    view('components.actions.activity', compact('item'))->render(),
+                    view('admin.activities.actions.activity', compact('item'))->render(),
                 ];
                 return $item;
             });

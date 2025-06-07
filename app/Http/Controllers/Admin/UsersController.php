@@ -22,6 +22,11 @@ class UsersController extends Controller
             list($userCount, $users) = $dataTable->setSearchableColumns(['first_name', 'last_name', 'email', 'display_name'])
                 ->query($request, $query)->response();
 
+            $users = $users->map(function ($user) {
+               $user->action = [];
+               return $user;
+            });
+
             return response()->json([
                 'draw' => $request->get('draw'),
                 'recordsTotal' => $userCount,

@@ -39,7 +39,7 @@ class MilestonesController extends Controller
                     'distance' => isset($item->distance)?$item->distance:$item->total_points,
                     'data' => $item->video_url ?? '',
                     'action' => [
-                        view('components.actions.milestone', compact('item', 'event'))->render(),
+                        view('admin.milestones.actions.milestone', compact('item', 'event'))->render(),
                     ],
                 ];
 

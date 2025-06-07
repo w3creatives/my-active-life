@@ -30,7 +30,7 @@ class EventsController extends Controller
             $events = $events->map(function ($event) use ($eventService) {
                 $event->event_type_text = $eventService->findEventType($event->event_type);
                 $event->action = [
-                    view('components.actions.event', compact('event'))->render()
+                    view('admin.events.actions.event', compact('event'))->render()
                 ];
                 return $event;
             });
