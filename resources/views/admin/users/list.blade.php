@@ -8,7 +8,7 @@
             </div>
             <div class="d-md-flex justify-content-between align-items-center dt-layout-end col-md-auto ms-auto mt-0">
                 <div class="dt-buttons btn-group flex-wrap mb-0">
-                    <a href="#" class="btn create-new btn-primary" tabindex="0"
+                    <a href="{{ route('admin.users.create') }}" class="btn create-new btn-primary" tabindex="0"
                        aria-controls="eventlist-table"
                        type="button">
                         <span>

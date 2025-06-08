@@ -14,7 +14,16 @@ use App\Http\Controllers\Admin\{
 Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admin'], function () {
     Route::get('/show', [DashboardController::class, 'show'])->name('admin.show');
 
+    /**
+     * Users Routes
+     */
     Route::get('/users', [UsersController::class, 'index'])->name('admin.users');
+    Route::get('/users/create', [UsersController::class, 'create'])->name('admin.users.create');
+    Route::post('/users/create', [UsersController::class, 'store']);
+    Route::get('/users/{id}/edit', [UsersController::class, 'create'])->name('admin.users.edit');
+    Route::post('/users/{id}/edit', [UsersController::class, 'store']);
+
+
 
     /**
      * Events Routes
