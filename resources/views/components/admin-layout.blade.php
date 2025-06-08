@@ -2,12 +2,12 @@
 
 <html
     lang="en"
-    class="layout-navbar-fixed layout-menu-fixed layout-compact"
+    class="layout-navbar-fixed layout-menu-fixed layout-compact {{ $themeConfig['menuCollapsed']?'layout-menu-collapsed':'' }}"
     dir="ltr"
     data-skin="default"
     data-assets-path="{{ asset('assets/') }}"
-    data-template="vertical-menu-template-starter"
-    data-bs-theme="light">
+    data-template="admin"
+    data-bs-theme="{{ $themeConfig['theme'] }}">
 <head>
     <meta charset="utf-8" />
     <meta
