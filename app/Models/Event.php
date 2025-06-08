@@ -54,6 +54,11 @@ class Event extends Model
         return $this->hasMany(FitLifeActivity::class);
     }
 
+    public function fitLifeRegistrations()
+    {
+        return $this->hasManyThrough(FitLifeActivityRegistration::class, FitLifeActivity::class,'event_id','activity_id');
+    }
+
     public function participations()
     {
         return $this->hasMany(EventParticipation::class,'event_id','id');

@@ -8,12 +8,29 @@ use Illuminate\View\Component;
 
 class Sidebar extends Component
 {
-    /**
-     * Create a new component instance.
-     */
+    public  $menuItems;
+    public $currentNav;
+
     public function __construct()
     {
-        //
+        list($prefix, $currentNav) = explode('/', request()->path());
+
+        $this->currentNav = $currentNav;
+
+        $this->menuItems = [
+            [
+                'route' => 'admin.users',
+                'icon' => 'tabler-smart-home',
+                'label' => 'Users',
+                'route_group' => 'users',
+            ],
+            [
+                'route' => 'admin.events',
+                'icon' => 'tabler-app-window',
+                'label' => 'Events',
+                'route_group' => 'events',
+            ],
+        ];
     }
 
     /**

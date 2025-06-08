@@ -9,6 +9,7 @@ use App\Services\FitbitService;
 use App\Services\GarminService;
 use App\Services\StravaService;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 final class AppServiceProvider extends ServiceProvider
@@ -37,7 +38,6 @@ final class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
     }
 
     /**

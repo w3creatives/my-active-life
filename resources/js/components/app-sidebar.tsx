@@ -47,6 +47,13 @@ const footerNavItems: NavItem[] = [
         icon: Settings,
     },
 ];
+const footerImpersonateNavItems: NavItem[] = [
+    {
+        title: 'Logout User',
+        href: route('impersonate.leave'),
+        icon: Settings,
+    },
+];
 
 export function AppSidebar() {
     const { auth } = usePage().props as any;
@@ -90,6 +97,11 @@ export function AppSidebar() {
                 <SidebarFooter>
                     <NavFooter items={footerNavItems} className="mt-auto" />
                 </SidebarFooter>
+            )}
+            {auth.is_impersonating && (
+                <SidebarFooter>
+                <NavFooter items={footerImpersonateNavItems} className="mt-auto" />
+            </SidebarFooter>
             )}
         </Sidebar>
     );

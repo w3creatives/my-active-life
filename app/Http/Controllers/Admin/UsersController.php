@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\User;
 use App\Utilities\DataTable;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -17,7 +16,6 @@ final class UsersController extends Controller
 {
     public function index(Request $request, DataTable $dataTable)
     {
-
         if ($request->ajax()) {
 
             $query = User::select(['first_name', 'last_name', 'email', 'display_name', 'id'])
@@ -53,7 +51,7 @@ final class UsersController extends Controller
 
         $events = Event::active();
 
-        if (!$user) {
+        if (! $user) {
             $events->orWhereHas('participations', function ($query) use ($user) {
                 return $query->where('user_id', $user->id);
             });
@@ -80,7 +78,7 @@ final class UsersController extends Controller
             ],
             'password' => [
                 'required_if_accepted:enabled_password',
-                Rule::excludeIf(!$request->get('enabled_password', false)),
+                Rule::excludeIf(! $request->get('enabled_password', false)),
                 Password::min(6),
             ],
             'confirm_password' => [
@@ -118,10 +116,32 @@ final class UsersController extends Controller
                     ]
                 );
         }
-        try {
-            $user->participations()->whereNotIn('event_id', $request->get('event'))->delete();
-        } catch (Exception $e) {
+
+        $userParticipations = $user->participations()->whereNotIn('event_id', $request->get('event'))->with('event')->get();
+
+        if ($userParticipations->count()) {
+            foreach ($userParticipations as $userParticipation) {
+                $event = $userParticipation->event;
+
+                switch ($event->event_type) {
+                    case 'fit_life':
+                        $hasRegistration = $event->fitLifeRegistrations()->where('user_id', $user->id)->count();
+
+                        if (! $hasRegistration) {
+                            $userParticipation->delete();
+                        }
+                        break;
+                    case 'regular':
+                        $hasPoint = $user->points()->where('event_id', $event->id)->count();
+
+                        if (! $hasPoint) {
+                            $userParticipation->delete();
+                        }
+                        break;
+                }
+            }
         }
+
         return redirect()->route('admin.users')->with('alert', ['type' => 'success', 'message' => $flashMessage]);
     }
 }

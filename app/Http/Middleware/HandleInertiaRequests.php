@@ -39,6 +39,8 @@ final class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $manager = app('impersonate');
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -57,6 +59,7 @@ final class HandleInertiaRequests extends Middleware
                         ->get();
                 },
                 'is_admin' => $request->user() ? (bool) $request->user()->super_admin : false,
+                'is_impersonating' => $manager->isImpersonating(),
             ],
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),

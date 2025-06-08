@@ -9,11 +9,19 @@ use App\Http\Controllers\Admin\{
     DashboardController,
     MilestonesController,
     UsersController,
-    EventsController};
+    EventsController,
+    ImpersonateController,
+};
+
+Route::impersonate();
+
+Route::group(['prefix' => 'impersonated', 'namespace' => 'Admin', 'middleware' => 'auth'], function () {
+    Route::get('login', [ImpersonateController::class, 'login'])->name('impersonate.login');
+});
 
 Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admin'], function () {
-    Route::get('/show', [DashboardController::class, 'show'])->name('admin.show');
 
+    Route::get('/show', [DashboardController::class, 'show'])->name('admin.show');
     /**
      * Users Routes
      */
@@ -22,7 +30,6 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::post('/users/create', [UsersController::class, 'store']);
     Route::get('/users/{id}/edit', [UsersController::class, 'create'])->name('admin.users.edit');
     Route::post('/users/{id}/edit', [UsersController::class, 'store']);
-
 
 
     /**

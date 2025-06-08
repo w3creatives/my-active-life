@@ -4,6 +4,8 @@
         <div class="dropdown-menu dropdown-menu-end m-0">
             <a href="{{ route('admin.users.edit', $user->id) }}" class="dropdown-item waves-effect"><i
                     class="icon-base ti tabler-pencil mb-2"></i> Edit</a>
+            <a href="{{ route('impersonate', ['id' => $user->id]) }}" class="dropdown-item waves-effect"><i
+                    class="icon-base ti tabler-login mb-2"></i> Login as User</a>
         </div>
     </div>
 </div>
