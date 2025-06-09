@@ -57,10 +57,15 @@ final class TeamService
         return $user->teamFollowingRequests()->where('event_id', $eventId)->with('team')->simplePaginate(100);
     }
 
-    public function all($user, $eventId, $searchTerm = '', $listType = 'all', $page = 1, $pageLimit = 20)
+    public function all($user, $eventId, $searchTerm = '', $listType = 'all', $perPage = 20, string $source = 'api')
     {
-        return $teams = Team::where(function ($query) use ($user, $listType, $searchTerm) {
+        $columns = ['id', 'name', 'public_profile', 'settings', 'owner_id', 'event_id'];
 
+        $paginationArgs = $source === 'web'
+            ? [$perPage, ['*'], 'teamsPage']
+            : [$perPage];
+
+        return $teams = Team::where(function ($query) use ($user, $listType, $searchTerm) {
             switch ($listType) {
                 case 'own':
                     $query->where('owner_id', $user->id);
@@ -94,7 +99,7 @@ final class TeamService
 
                 return $query->where('event_id', $eventId);
             })
-            ->simplePaginate($pageLimit, ['id', 'name', 'public_profile', 'settings', 'owner_id', 'event_id'])
+            ->simplePaginate(...$paginationArgs)
             ->through(function ($team) use ($user, $eventId) {
                 $team->is_team_owner = $team->owner_id === $user->id;
 
@@ -111,6 +116,8 @@ final class TeamService
                 unset($team->memberships);
                 unset($team->invites);
                 unset($team->owner_id);
+                $team->total_members = $team->memberships()->where('event_id', $eventId)->count();
+                $team->total_miles = (float) $team->totalPoints()->where('event_id', $eventId)->sum('amount');
 
                 return $team;
             });
@@ -119,9 +126,16 @@ final class TeamService
     /**
      * Returns teams that the user is following
      */
-    public function following(User $user, int $eventId, int $page = 1)
+    public function following(User $user, int $eventId, int $perPage = 100, string $source = 'api')
     {
-        return $user->teamFollowings()->where('event_id', $eventId)->with('team')->simplePaginate(100)
+        $paginationArgs = $source === 'web'
+            ? [$perPage, ['*'], 'teamFollowingPage']
+            : [$perPage];
+
+        return $user->teamFollowings()
+            ->where('event_id', $eventId)
+            ->with('team')
+            ->simplePaginate(...$paginationArgs)
             ->through(function ($item) {
                 $team = $item->team;
                 $teamTotalDistance = (float) $item->team->totalPoints()->where('event_id', $team->event_id)->sum('amount');

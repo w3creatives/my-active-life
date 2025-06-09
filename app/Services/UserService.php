@@ -127,9 +127,15 @@ final class UserService
             });
     }
 
-    public function followings($user, $event_id, $pageLimit = 100)
+    public function followings($user, $event_id, $perPage = 100, string $source = 'api')
     {
-        return $user->following()->where('event_id', $event_id)->simplePaginate($pageLimit)
+        $paginationArgs = $source === 'web'
+            ? [$perPage, ['*'], 'userFollowingPage']
+            : [$perPage];
+
+        return $user->following()
+            ->where('event_id', $event_id)
+            ->simplePaginate(...$paginationArgs)
             ->through(function ($item) {
                 $follower = $item->following;
 

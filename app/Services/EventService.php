@@ -473,8 +473,12 @@ final class EventService
 
     }
 
-    public function userParticipations($user, $eventId, $searchTerm = '', $pageLimit = 100)
+    public function userParticipations($user, $eventId, $searchTerm = '', $perPage = 100, string $source = 'api')
     {
+        $paginationArgs = $source === 'web'
+            ? [$perPage, ['*'], 'usersPage']
+            : [$perPage];
+
         return EventParticipation::where('event_id', $eventId)
             ->whereHas('user', function ($query) use ($searchTerm) {
                 if ($searchTerm) {
@@ -485,7 +489,7 @@ final class EventService
 
                 return $query;
             })
-            ->simplePaginate($pageLimit)
+            ->simplePaginate(...$paginationArgs)
             ->through(function ($participation) use ($user) {
                 $member = $participation->user;
 
@@ -520,6 +524,8 @@ final class EventService
                     'display_name' => trim($member->display_name),
                     'first_name' => trim($member->first_name),
                     'last_name' => trim($member->last_name),
+                    'city' => !empty($member->city) ? trim($member->city) : '',
+                    'state' => !empty($member->state) ? trim($member->state) : '',
                     'public_profile' => $participation->public_profile,
                     'following_status_text' => $followingTextStatus,
                     'following_status' => $followingStatus,
