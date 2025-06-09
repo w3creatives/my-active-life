@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\User;
 use App\Utilities\DataTable;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -49,9 +50,9 @@ final class UsersController extends Controller
 
         $user = User::find($request->route()->parameter('id'));
 
-        $events = Event::active();
+        $events = Event::active()->orderBy('end_date', 'DESC');
 
-        if (! $user) {
+        if ($user) {
             $events->orWhereHas('participations', function ($query) use ($user) {
                 return $query->where('user_id', $user->id);
             });
@@ -78,7 +79,7 @@ final class UsersController extends Controller
             ],
             'password' => [
                 'required_if_accepted:enabled_password',
-                Rule::excludeIf(! $request->get('enabled_password', false)),
+                Rule::excludeIf(!$request->get('enabled_password', false)),
                 Password::min(6),
             ],
             'confirm_password' => [
@@ -111,8 +112,8 @@ final class UsersController extends Controller
                     [
                         'event_id' => $event->id,
                         'subscribed' => true,
-                        'subscription_start_date' => $event->start_date,
-                        'subscription_end_date' => $event->end_date,
+                        'subscription_start_date' => Carbon::parse($request->input('start_date.' . $event->id))->format('Y-m-d'),
+                        'subscription_end_date' => Carbon::parse($request->input('end_date.' . $event->id))->format('Y-m-d'),
                     ]
                 );
         }
@@ -127,14 +128,15 @@ final class UsersController extends Controller
                     case 'fit_life':
                         $hasRegistration = $event->fitLifeRegistrations()->where('user_id', $user->id)->count();
 
-                        if (! $hasRegistration) {
+                        if (!$hasRegistration) {
                             $userParticipation->delete();
                         }
                         break;
                     case 'regular':
+                    case 'promotional':
                         $hasPoint = $user->points()->where('event_id', $event->id)->count();
 
-                        if (! $hasPoint) {
+                        if (!$hasPoint) {
                             $userParticipation->delete();
                         }
                         break;

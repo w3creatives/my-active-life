@@ -60,25 +60,46 @@
                             <h5 class="m-0 me-2">Assign Events</h5>
                             <div class="table-responsive overflow-hidden" style="height: 300px" id="table-scrollable">
                                 <table class="table card-table">
+                                    <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Subscription Start Date</th>
+                                        <th>Subscription End Date</th>
+                                        <th>Event Start/End Date</th>
+                                    </tr>
+                                    </thead>
                                     <tbody class="table-border-bottom-0">
                                     @foreach($events as $event)
+                                        @php
+                                            $subscriptionStartDate = $event->hasUserParticipation($user,false, 'subscription_start_date');
+                                            $subscriptionEndDate = $event->hasUserParticipation($user,false, 'subscription_end_date');
+                                        @endphp
                                         <tr>
                                             <td class="w-100 ps-0 pt-0">
                                                 <div class="d-flex justify-content-start align-items-center">
                                                     <div class="form-check mt-4">
                                                         <input class="form-check-input" type="checkbox" name="event[]"
                                                                value="{{ $event->id }}"
-                                                               {{ $event->hasUserParticipation($user)?'checked':'' }} id="event-item-{{ $event->id }}" {{ $event->isPastEvent()?'disabled':'' }}>
+                                                               {{ $event->hasUserParticipation($user)?'checked':'' }} data-end-item="subscription-item-{{$event->id}}" {{ $event->isPastEvent()?'disabled':'' }}>
                                                         <label class="form-check-label"
                                                                for="event-item-{{ $event->id }}"> {{ $event->name }}</label>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td class="text-end pe-0 text-nowrap">
-                                                <h6 class="mb-0 text-{{ $event->isPastEvent()?'danger':'success' }}">{{ $event->isPastEvent()?'Expired':'Active' }}</h6>
+                                                <input type="date" name="start_date[{{$event->id}}]"
+                                                       class="form-control start-date @error('start_date') parsley-error @enderror" data-item="subscription-item-{{$event->id}}" value="{{ $subscriptionStartDate?$subscriptionStartDate:$event->start_date }}" {{ $event->isPastEvent()?'disabled':'' }} required
+                                                       data-parsley-trigger="change" placeholder="YYYY-MM-DD">
                                             </td>
                                             <td class="text-end pe-0 text-nowrap">
-                                                <h6 class="mb-0">{{ \Carbon\Carbon::parse($event->start_date)->format('m/d/Y') }}
+                                                <input type="date" name="end_date[{{$event->id}}]" data-item="subscription-{{$event->id}}"
+                                                       class="form-control end-date @error('end_date') parsley-error @enderror" {{ $event->isPastEvent()?'disabled':'' }} required
+                                                       data-parsley-trigger="change" placeholder="YYYY-MM-DD" value="{{ $subscriptionEndDate?$subscriptionEndDate:$event->end_date }}">
+
+                                            </td>
+
+                                            <td class="text-end pe-0 text-nowrap">
+                                                <h6 class="mb-0   text-{{ $event->isPastEvent()?'danger':'' }}">{{ \Carbon\Carbon::parse($event->start_date)->format('m/d/Y') }}
                                                     - {{ \Carbon\Carbon::parse($event->end_date)->format('m/d/Y') }}</h6>
                                             </td>
                                         </tr>
@@ -100,6 +121,7 @@
         <link rel="stylesheet" href="{{ asset('assets/vendor/libs/@form-validation/form-validation.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
         <link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
+        <link rel="stylesheet" href="{{ asset('assets/vendor/libs/flatpickr/flatpickr.css') }}" />
     @endpush
     @push('scripts')
         {{-- <script src="{{ asset('assets/js/plugins/parsley.min.js') }}"></script>--}}
@@ -107,6 +129,8 @@
         <script src="{{ asset('assets/vendor/libs/@form-validation/bootstrap5.js') }}"></script>
         <script src="{{ asset('assets/vendor/libs/@form-validation/auto-focus.js') }}"></script>
         <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
+        <script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
+        <script src="{{ asset('assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
         <script src="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js') }}"></script>
         <script type="text/javascript">
             (function() {
@@ -115,6 +139,25 @@
 
                 new PerfectScrollbar('#table-scrollable', {
                     wheelPropagation: false
+                });
+
+                const flatpickrEndDate = {};
+
+                $('.start-date').flatpickr({
+                    monthSelectorType: 'static',
+                    static: true,
+                    onChange: function(sel_date, date_str, e) {
+                        let dataItem = e.element.data('end-item');
+                        console.log(dataItem, $(e.element))
+                        flatpickrEndDate[dataItem].set("minDate", date_str);
+                    }
+                });
+                $('.end-date').each(function(){
+                    let dataItem = $(this).attr('data-item');
+                    flatpickrEndDate[dataItem] =  $(this).flatpickr({
+                        monthSelectorType: 'static',
+                        static: true
+                    });
                 });
 
                 $('.enable-password').change(function() {
