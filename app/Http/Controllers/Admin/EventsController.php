@@ -9,7 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\{
     Event,
-    Modality
+    Modality,
 };
 use App\Traits\RTEHelpers;
 
@@ -23,7 +23,7 @@ class EventsController extends Controller
 
         if ($request->ajax()) {
 
-            $query = Event::select(['id', 'name', 'event_type', 'start_date', 'end_date', 'logo']);
+            $query = Event::allowedTypes()->select(['id', 'name', 'event_type', 'start_date', 'end_date', 'logo']);
 
             list($eventCount, $events) = $dataTable->setSearchableColumns(['name', 'event_type'])->query($request, $query)->response();
 
@@ -53,7 +53,7 @@ class EventsController extends Controller
 
         $selectedModalities = $this->decodeModalities($event->supported_modalities??0);
 
-        $eventTypes = $eventService->eventTypes();
+        $eventTypes = collect($eventService->eventTypes())->except('race');
         $modalities = Modality::all();
 
         return view('admin.events.create', compact('eventTypes', 'modalities','event','selectedModalities'));

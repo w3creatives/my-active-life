@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\{
     UsersController,
     EventsController,
     ImpersonateController,
+    StreaksController,
 };
 
 Route::impersonate();
@@ -66,4 +67,14 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::get('/events/{id}/activities/{activityId}/milestones/{milestoneId}/edit', [MilestonesController::class, 'create'])->name('admin.events.activity.milestones.edit');
     Route::post('/events/{id}/activities/{activityId}/milestones/{milestoneId}/edit', [MilestonesController::class, 'store']);
 
+    /**
+     * Promotional Events Streaks routes
+     */
+    Route::get('/events/{id}/streaks', [StreaksController::class, 'index'])->name('admin.events.streaks');
+    Route::get('/events/{id}/streaks/create', [StreaksController::class, 'create'])->name('admin.events.streaks.create');
+    Route::post('/events/{id}/streaks/create', [StreaksController::class, 'store']);
+
+    Route::get('/events/{id}/streaks/{streakId}/edit', [StreaksController::class, 'create'])->name('admin.events.streaks.edit');
+    Route::post('/events/{id}/streaks/{streakId}/edit', [StreaksController::class, 'store']);
+    Route::delete('/events/{id}/streaks/{streakId}/delete', [StreaksController::class, 'destroy'])->name('admin.events.streaks.delete');
 });

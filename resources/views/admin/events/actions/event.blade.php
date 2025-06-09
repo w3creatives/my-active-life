@@ -13,6 +13,10 @@
                     <a href="{{ route('admin.events.activities', $event->id) }}" class="dropdown-item waves-effect"><i
                             class="icon-base ti tabler-target mb-2"></i> Activities</a>
                 @break
+                @case('promotional')
+                    <a href="{{ route('admin.events.streaks', $event->id) }}" class="dropdown-item waves-effect"><i
+                            class="icon-base ti tabler-target mb-2"></i> Streaks</a>
+                @break
             @endswitch
         </div>
     </div>

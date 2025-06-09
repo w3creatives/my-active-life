@@ -6,6 +6,9 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @method static promotional()
+ */
 class Event extends Model
 {
     use HasFactory;
@@ -29,11 +32,18 @@ class Event extends Model
         return $query->where('event_type', $type);
     }
 
+    public function scopePromotional($query){
+        return $query->where('event_type', 'promotional');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('end_date', '>=', date('Y-m-d'));
     }
-
+    public  function scopeAllowedTypes($query)
+    {
+        return $query->whereIn('event_type', ['fit_life','regular','promotional']);
+    }
     public function organization()
     {
         return $this->belongsTo(Organization::class);
@@ -52,6 +62,11 @@ class Event extends Model
     public function fitActivities()
     {
         return $this->hasMany(FitLifeActivity::class);
+    }
+
+    public function streaks()
+    {
+        return $this->hasMany(EventStreak::class);
     }
 
     public function fitLifeRegistrations()

@@ -8,15 +8,20 @@ use Illuminate\View\Component;
 
 class ListAction extends Component
 {
-    public string $addMilestoneUrl;
-    public function __construct(public $event, public $activity)
+    public string $addActionUrl;
+    public string $addActionTitle = 'Milestone';
+    public function __construct(public $event, public $activity = null)
     {
         switch ($event->event_type) {
             case 'regular':
-                $this->addMilestoneUrl = route('admin.events.milestones.create',$event->id);
+                $this->addActionUrl = route('admin.events.milestones.create',$event->id);
                 break;
             case 'fit_life':
-                $this->addMilestoneUrl = route('admin.events.activity.milestones.create', [$event->id, $activity->id]);
+                $this->addActionUrl = route('admin.events.activity.milestones.create', [$event->id, $activity->id]);
+                break;
+            case 'promotional':
+                $this->addActionUrl = route('admin.events.streaks.create',$event->id);
+                $this->addActionTitle = 'Streak';
                 break;
         }
     }
