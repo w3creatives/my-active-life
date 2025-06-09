@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Actions\EventTutorials\GetEventTutorials;
+use App\Actions\Follow\UndoFollowing;
 use App\Models\Event;
 use App\Services\EventService;
+use App\Services\MailboxerService;
 use App\Services\TeamService;
 use App\Services\UserService;
 use App\Traits\RTEHelpers;
@@ -14,6 +16,7 @@ use App\Traits\UserPointFetcher;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -44,19 +47,30 @@ final class DashboardController extends Controller
         ]);
     }
 
-    public function follow(UserService $userService, TeamService $teamService, EventService $eventService): Response
+    public function follow(Request $request, UserService $userService, TeamService $teamService, EventService $eventService): Response
     {
         $user = auth()->user();
-        $teamFollowings = $teamService->following($user, 64)->toArray();
-        $userFollowings = $userService->followings($user, 64)->toArray();
-        $users = $eventService->userParticipations($user, 64, '', 5)->toArray();
-        $teams = $teamService->all($user, 64, '', 'all', 1, 5)->toArray();
+        $userSearchTerm = $request->input('searchUser', '');
+        $perPageUser = (int) request('perPageUser', 5);
+        $teamSearchTerm = $request->input('searchTeam', '');
+        $perPageTeam = (int) request('perPageTeam', 5);
 
-        return Inertia::render('follow', [
+        $teamFollowings = $teamService->following($user, 64, 5, 'web')->toArray();
+        $userFollowings = $userService->followings($user, 64, 5, 'web')->toArray();
+        $users = $eventService->userParticipations($user, 64, $userSearchTerm, $perPageUser, 'web')->toArray();
+        $teams = $teamService->all($user, 64, $teamSearchTerm, 'all', $perPageTeam, 'web')->toArray();
+
+        return Inertia::render('follow/index', [
             'teamFollowings' => $teamFollowings,
             'userFollowings' => $userFollowings,
             'users' => $users,
             'teams' => $teams,
+            'filters' => array_filter([
+                'searchUser' => $userSearchTerm ?: null,
+                'perPageUser' => $perPageUser !== 5 ? $perPageUser : null, // default is 5
+                'searchTeam' => $teamSearchTerm ?: null,
+                'perPageTeam' => $perPageTeam !== 5 ? $perPageTeam : null, // default is 5
+            ]),
         ]);
     }
 
@@ -230,9 +244,14 @@ final class DashboardController extends Controller
         ]);
     }
 
-    public function conversations()
+    public function conversations(MailboxerService $mailbox)
     {
-        return Inertia::render('conversations');
+        $user = Auth::user();
+        $conversations = $mailbox->getConversations($user)->toJson();
+
+        return Inertia::render('conversations', [
+            'conversations' => $conversations,
+        ]);
     }
 
     public function newConversation()
@@ -254,5 +273,16 @@ final class DashboardController extends Controller
 
         // Return to the previous page with updated props
         return redirect()->back();
+    }
+
+    public function unfollow(Request $request, UndoFollowing $undoFollowing)
+    {
+        $result = (new UndoFollowing())($request, $request->user());
+
+        if (!$result['success']) {
+            return redirect()->back()->with('error', $result['message']);
+        }
+
+        return redirect()->back()->with('success', $result['message']);
     }
 }

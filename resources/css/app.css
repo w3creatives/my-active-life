@@ -56,6 +56,66 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+
+    --color-green-50: #e3fcf0;
+    --color-green-100: #c3f9de;
+    --color-green-200: #86f3bd;
+    --color-green-300: #4eee9e;
+    --color-green-400: #16e47d;
+    --color-green-500: #10a75c;
+    --color-green-600: #0d874a;
+    --color-green-700: #0a6638;
+    --color-green-800: #064124;
+    --color-green-900: #032112;
+    --color-green-950: #02130a;
+
+    --color-red-50: #fce3e9;
+    --color-red-100: #f9c3cf;
+    --color-red-200: #f386a0;
+    --color-red-300: #ee4e73;
+    --color-red-400: #e41646;
+    --color-red-500: #a71032;
+    --color-red-600: #870d29;
+    --color-red-700: #660a1f;
+    --color-red-800: #410614;
+    --color-red-900: #21030a;
+    --color-red-950: #130206;
+    
+    --color-yellow-50: #fef9e7;
+    --color-yellow-100: #fdf3ce;
+    --color-yellow-200: #fbe69d;
+    --color-yellow-300: #f8da6d;
+    --color-yellow-400: #f6ce3c;
+    --color-yellow-500: #f4c20d;
+    --color-yellow-600: #c39b09;
+    --color-yellow-700: #927407;
+    --color-yellow-800: #624d04;
+    --color-yellow-900: #312702;
+    --color-yellow-950: #181301;
+
+    --color-black-50: #e8e8e8;
+    --color-black-100: #d1d1d1;
+    --color-black-200: #a3a3a3;
+    --color-black-300: #757575;
+    --color-black-400: #474747;
+    --color-black-500: #1a1a1a;
+    --color-black-600: #141414;
+    --color-black-700: #0f0f0f;
+    --color-black-800: #0a0a0a;
+    --color-black-900: #050505;
+    --color-black-950: #030303;
+
+    --color-gray-50: #f0f0f0;
+    --color-gray-100: #e0e0e0;
+    --color-gray-200: #c4c4c4;
+    --color-gray-300: #a6a6a6;
+    --color-gray-400: #878787;
+    --color-gray-500: #6a6a6a;
+    --color-gray-600: #545454;
+    --color-gray-700: #404040;
+    --color-gray-800: #2b2b2b;
+    --color-gray-900: #141414;
+    --color-gray-950: #0a0a0a;
 }
 
 /*
