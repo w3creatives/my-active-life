@@ -1,7 +1,7 @@
 <x-admin-layout>
 
     <div class="row g-6">
-        <div class="col-md-8 offset-2">
+        <div class="col-md-12">
             <div class="card">
                 <h5 class="card-header">{{ $activity?'Update':'Add'}} Activity</h5>
                 <div class="card-body">
@@ -9,77 +9,87 @@
                     <form action="" class="needs-validation" enctype="multipart/form-data" method="POST" id="event-form"
                           novalidate>
                         @csrf
-                        <div class="mb-4">
-                            <label for="sponsor" class="form-label">Sponsor</label>
-                            <input type="text" id="sponsor" name="sponsor" class="form-control" value="{{ $activity->sponsor ?? old('sponsor') }}" required>
-                        </div>
-                        <div class="mb-4">
-                            <label for="category" class="form-label">Category</label>
-                            <input type="text" id="category" name="category" class="form-control" value="{{ $activity->category ?? old('category') }}" required>
-                        </div>
-                        <div class="mb-4">
-                            <label for="group" class="form-label">Group</label>
-                            <input type="text" id="group" name="group" class="form-control" value="{{ $activity->group ?? old('group') }}" required>
-                        </div>
-                        <div class="mb-4">
-                            <label for="name" class="form-label">Name</label>
-                            <input type="text" id="name" name="name"
-                                   class="form-control @error('name') parsley-error @enderror"
-                                   value="{{ $activity->name ?? old('name') }}"
-                                   data-parsley-trigger="change" required>
-                        </div>
-                        <div class="mb-4">
-                            <label for="description" class="form-label">Description</label>
-                            <div class="w-100" id="text-editor" data-textarea-el="#description"></div>
-                            <textarea name="description" id="description"
-                                      class="form-control d-none">{{ $activity->description ?? old('description') }}</textarea>
-                        </div>
-                        <div class="mb-4">
-                            <label for="total_points" class="form-label">Total Points</label>
-                            <input type="number" name="total_points" id="total_points"
-                                   class="form-control @error('total_points') parsley-error @enderror"
-                                   value="{{ $activity->total_points ?? old('total_points') }}" required
-                                   data-parsley-trigger="change">
-                        </div>
-                        <div class="mb-4">
-                            <label for="sports" class="form-label">Sports</label>
-                            <select class="form-select select2 @error('sports') parsley-error @enderror" name="sports[]" id="sports" multiple
-                                    aria-label="Default select example" data-parsley-trigger="change"
-                                    aria-label="Default select example" required>
-                                @foreach(['RUNNING','WALKING', 'BIKING', 'SWIMMING', 'OTHER'] as $sportType)
-                                    <option value="{{ $sportType }}" {{ in_array($sportType, old('sports',$sports))?'selected':'' }}>{{ $sportType }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <div class="row">
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="sponsor" class="form-label">Sponsor</label>
+                                <input type="text" id="sponsor" name="sponsor" class="form-control"
+                                       value="{{ $activity->sponsor ?? old('sponsor') }}" required>
+                            </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="category" class="form-label">Category</label>
+                                <input type="text" id="category" name="category" class="form-control"
+                                       value="{{ $activity->category ?? old('category') }}" required>
+                            </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="group" class="form-label">Group</label>
+                                <input type="text" id="group" name="group" class="form-control"
+                                       value="{{ $activity->group ?? old('group') }}" required>
+                            </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="name" class="form-label">Name</label>
+                                <input type="text" id="name" name="name"
+                                       class="form-control @error('name') parsley-error @enderror"
+                                       value="{{ $activity->name ?? old('name') }}"
+                                       data-parsley-trigger="change" required>
+                            </div>
 
-                        <div class="mb-4">
-                            <label for="available_from" class="form-label">Available From</label>
-                            <input type="text" name="available_from" id="available_from"
-                                   class="form-control start-date @error('available_from') parsley-error @enderror"
-                                   value="{{ $activity->available_from??old('available_from') }}" required
-                                   data-parsley-trigger="change" placeholder="YYYY-MM-DD">
-                        </div>
-                        <div class="mb-4">
-                            <label for="available_until" class="form-label">Available Until</label>
-                            <input type="text" name="available_until" id="available_until"
-                                   class="form-control end-date @error('available_until') parsley-error @enderror"
-                                   required
-                                   data-parsley-trigger="change" placeholder="YYYY-MM-DD"
-                                   value="{{ $activity->available_until??old('available_until') }}">
-                        </div>
-                        <div class="mb-4">
-                            <label for="tags" class="form-label">Tags</label>
-                            <input type="text" name="tags" id="tags"
-                                   class="form-control @error('tags') parsley-error @enderror"
-                                   value="{{ $activity->tags ?? old('tags') }}" placeholder="WACKY,FUN,FITLIFE,HAPPY" required
-                                   data-parsley-trigger="change">
-                        </div>
-                        <div class="mb-4">
-                            <label for="social_hashtags" class="form-label">Social Hashtags</label>
-                            <input type="text" name="social_hashtags" id="social_hashtags"
-                                   class="form-control @error('social_hashtags') parsley-error @enderror"
-                                   value="{{ $activity->social_hashtags ?? old('social_hashtags') }}" placeholder="#FITLIFEPROJECT #IMPACT #REWARDS #IMPACT8K" required
-                                   data-parsley-trigger="change">
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="total_points" class="form-label">Total Points</label>
+                                <input type="number" name="total_points" id="total_points"
+                                       class="form-control @error('total_points') parsley-error @enderror"
+                                       value="{{ $activity->total_points ?? old('total_points') }}" required
+                                       data-parsley-trigger="change">
+                            </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="sports" class="form-label">Sports</label>
+                                <select class="form-select select2 @error('sports') parsley-error @enderror"
+                                        name="sports[]" id="sports" multiple
+                                        aria-label="Default select example" data-parsley-trigger="change"
+                                        aria-label="Default select example" required>
+                                    @foreach(['RUNNING','WALKING', 'BIKING', 'SWIMMING', 'OTHER'] as $sportType)
+                                        <option
+                                            value="{{ $sportType }}" {{ in_array($sportType, old('sports',$sports))?'selected':'' }}>{{ $sportType }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="available_from" class="form-label">Available From</label>
+                                <input type="text" name="available_from" id="available_from"
+                                       class="form-control start-date @error('available_from') parsley-error @enderror"
+                                       value="{{ $activity->available_from??old('available_from') }}" required
+                                       data-parsley-trigger="change" placeholder="YYYY-MM-DD">
+                            </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="available_until" class="form-label">Available Until</label>
+                                <input type="text" name="available_until" id="available_until"
+                                       class="form-control end-date @error('available_until') parsley-error @enderror"
+                                       required
+                                       data-parsley-trigger="change" placeholder="YYYY-MM-DD"
+                                       value="{{ $activity->available_until??old('available_until') }}">
+                            </div>
+                            <div class="mb-4 col-xl-12 col-sm-12 col-md-12">
+                                <label for="tags" class="form-label">Tags</label>
+                                <input type="text" name="tags" id="tags"
+                                       class="form-control @error('tags') parsley-error @enderror"
+                                       value="{{ $activity->tags ?? old('tags') }}"
+                                       placeholder="WACKY,FUN,FITLIFE,HAPPY" required
+                                       data-parsley-trigger="change">
+                            </div>
+                            <div class="mb-4 col-xl-12 col-sm-12 col-md-12">
+                                <label for="social_hashtags" class="form-label">Social Hashtags</label>
+                                <input type="text" name="social_hashtags" id="social_hashtags"
+                                       class="form-control @error('social_hashtags') parsley-error @enderror"
+                                       value="{{ $activity->social_hashtags ?? old('social_hashtags') }}"
+                                       placeholder="#FITLIFEPROJECT #IMPACT #REWARDS #IMPACT8K" required
+                                       data-parsley-trigger="change">
+                            </div>
+                            <div class="mb-4 col-xl-12 col-sm-12 col-md-12">
+                                <label for="description" class="form-label">Description</label>
+                                <div class="w-100" id="text-editor" data-textarea-el="#description"></div>
+                                <textarea name="description" id="description"
+                                          class="form-control d-none">{{ $activity->description ?? old('description') }}</textarea>
+                            </div>
                         </div>
                         <div class="d-flex justify-content-between mt-3">
                             <button type="submit" class="btn btn-primary">{{ $activity?'Update':'Add'}} Activity
