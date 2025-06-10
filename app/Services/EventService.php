@@ -32,6 +32,7 @@ final class EventService
             'regular' => 'Regular',
             'race' => 'Race',
             'fit_life' => 'Fit Life',
+            'month' => 'Month',
         ];
 
         if ($keysOnly) {

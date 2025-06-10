@@ -21,7 +21,7 @@ class MilestonesController extends Controller
 
         if ($request->ajax()) {
 
-            if ($event->event_type == 'regular') {
+            if (in_array($event->event_type,  ['regular','month'])) {
                 $query = $event->milestones()->select(['id', 'name', 'distance', 'data', 'event_id']);
                 $searchableColumns = ['name', 'distance'];
             } else {
@@ -72,7 +72,7 @@ class MilestonesController extends Controller
 
         $event = Event::findOrFail($eventId);
 
-        $isRegularEvent = $event->event_type == 'regular';
+        $isRegularEvent = in_array($event->event_type,['regular','month']);
 
         if($isRegularEvent){
             $eventMilestone = $event->milestones()->find($milestoneId);
@@ -118,7 +118,7 @@ class MilestonesController extends Controller
 
         $data['data'] = json_encode($videoData);
 
-        if ($event->event_type === 'regular') {
+        if (in_array($event->event_type,['regular','month'])) {
 
             if ($request->hasFile('logo')) {
                 $logoFile = $request->file('logo');

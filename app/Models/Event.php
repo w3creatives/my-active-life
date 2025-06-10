@@ -42,7 +42,7 @@ class Event extends Model
     }
     public  function scopeAllowedTypes($query)
     {
-        return $query->whereIn('event_type', ['fit_life','regular','promotional']);
+        return $query->whereIn('event_type', ['fit_life','regular','promotional','month']);
     }
     public function organization()
     {

@@ -6,17 +6,18 @@
                     class="icon-base ti tabler-pencil mb-2"></i> Edit Event</a>
             @switch($event->event_type)
                 @case('regular')
+                @case('month')
                     <a href="{{ route('admin.events.milestones', $event->id) }}" class="dropdown-item waves-effect"><i
                             class="icon-base ti tabler-target mb-2"></i> Milestones</a>
-                @break
+                    @break
                 @case('fit_life')
                     <a href="{{ route('admin.events.activities', $event->id) }}" class="dropdown-item waves-effect"><i
                             class="icon-base ti tabler-target mb-2"></i> Activities</a>
-                @break
+                    @break
                 @case('promotional')
                     <a href="{{ route('admin.events.streaks', $event->id) }}" class="dropdown-item waves-effect"><i
                             class="icon-base ti tabler-target mb-2"></i> Streaks</a>
-                @break
+                    @break
             @endswitch
         </div>
     </div>

@@ -10,17 +10,19 @@ class ListAction extends Component
 {
     public string $addActionUrl;
     public string $addActionTitle = 'Milestone';
+
     public function __construct(public $event, public $activity = null)
     {
         switch ($event->event_type) {
             case 'regular':
-                $this->addActionUrl = route('admin.events.milestones.create',$event->id);
+            case 'month':
+                $this->addActionUrl = route('admin.events.milestones.create', $event->id);
                 break;
             case 'fit_life':
                 $this->addActionUrl = route('admin.events.activity.milestones.create', [$event->id, $activity->id]);
                 break;
             case 'promotional':
-                $this->addActionUrl = route('admin.events.streaks.create',$event->id);
+                $this->addActionUrl = route('admin.events.streaks.create', $event->id);
                 $this->addActionTitle = 'Streak';
                 break;
         }
