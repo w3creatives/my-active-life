@@ -1,7 +1,7 @@
 <x-admin-layout>
     <div class="row g-6">
 
-        <div class="col-md-8 offset-2">
+        <div class="col-md-12">
             <div class="card">
                 <h5 class="card-header">{{ $user?'Update':'Add'}} User Details</h5>
                 <div class="card-body">
@@ -75,11 +75,11 @@
                                             $subscriptionEndDate = $event->hasUserParticipation($user,false, 'subscription_end_date');
                                         @endphp
                                         <tr>
-                                            <td class="w-100 ps-0 pt-0">
+                                            <td class="w-50 ps-0 pt-0">
                                                 <div class="d-flex justify-content-start align-items-center">
                                                     <div class="form-check mt-4">
                                                         <input class="form-check-input" type="checkbox" name="event[]"
-                                                               value="{{ $event->id }}"
+                                                               value="{{ $event->id }}" id="event-item-{{ $event->id }}"
                                                                {{ $event->hasUserParticipation($user)?'checked':'' }} data-end-item="subscription-item-{{$event->id}}" {{ $event->isPastEvent()?'disabled':'' }}>
                                                         <label class="form-check-label"
                                                                for="event-item-{{ $event->id }}"> {{ $event->name }}</label>

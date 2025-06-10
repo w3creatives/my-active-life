@@ -2,7 +2,7 @@
 
     <div class="row g-6">
 
-        <div class="col-md-8 offset-2">
+        <div class="col-md-12">
             <div class="card">
                 <h5 class="card-header">{{ $event->name }}: {{ $eventStreak? 'Update' : 'Add' }} Streak</h5>
                 <div class="card-body">
@@ -11,30 +11,30 @@
                     <form action="" class="needs-validation" enctype="multipart/form-data" method="POST" id="event-form"
                           novalidate>
                         @csrf
+                        <div class="row">
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="name" class="form-label">Name</label>
+                                <input type="text" id="name" name="name"
+                                       class="form-control @error('name') parsley-error @enderror"
+                                       value="{{ $eventStreak->name ?? old('name') }}"
+                                       data-parsley-trigger="change" required>
+                            </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="days_count" class="form-label">Days Count</label>
+                                <input type="text" name="days_count" id="days_count"
+                                       class="form-control @error('days_count') parsley-error @enderror"
+                                       value="{{ $eventStreak->days_count ?? old('days_count') }}" required
+                                       data-parsley-trigger="change">
+                            </div>
 
-                        <div class="mb-4">
-                            <label for="name" class="form-label">Name</label>
-                            <input type="text" id="name" name="name"
-                                   class="form-control @error('name') parsley-error @enderror"
-                                   value="{{ $eventStreak->name ?? old('name') }}"
-                                   data-parsley-trigger="change" required>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="min_distance" class="form-label">Mininum Distance (Miles)</label>
+                                <input type="number" name="min_distance" id="min_distance"
+                                       class="form-control @error('min_distance') parsley-error @enderror"
+                                       value="{{ $eventStreak->min_distance ?? old('min_distance') }}" required
+                                       data-parsley-trigger="change">
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label for="days_count" class="form-label">Days Count</label>
-                            <input type="text" name="days_count" id="days_count"
-                                   class="form-control @error('days_count') parsley-error @enderror"
-                                   value="{{ $eventStreak->days_count ?? old('days_count') }}" required
-                                   data-parsley-trigger="change">
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="min_distance" class="form-label">Mininum Distance (Miles)</label>
-                            <input type="number" name="min_distance" id="min_distance"
-                                   class="form-control @error('min_distance') parsley-error @enderror"
-                                   value="{{ $eventStreak->min_distance ?? old('min_distance') }}" required
-                                   data-parsley-trigger="change">
-                        </div>
-
                         <div class="d-flex justify-content-between mt-3">
 
                             <button type="submit" class="btn btn-primary">{{ $eventStreak? 'Update' : 'Add' }}

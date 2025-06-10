@@ -2,7 +2,7 @@
 
     <div class="row g-6">
 
-        <div class="col-md-8 offset-2">
+        <div class="col-md-12">
             <div class="card">
                 <h5 class="card-header">{{ $event->name }}: {{ $eventMilestone? 'Update' : 'Add' }} Milestone</h5>
                 <div class="card-body">
@@ -12,58 +12,55 @@
                           novalidate>
                         @csrf
 
-                        <div class="mb-4">
-                            <label for="name" class="form-label">Name</label>
-                            <input type="text" id="name" name="name"
-                                   class="form-control @error('name') parsley-error @enderror"
-                                   value="{{ $eventMilestone->name ?? '' }}"
-                                   data-parsley-trigger="change" required>
-                        </div>
-                        @if($isRegularEvent)
-                            <div class="mb-4">
-                                <label for="description" class="form-label">Description</label>
-                                <textarea name="description" id="description"
-                                          class="form-control">{{ $eventMilestone->description ?? '' }}</textarea>
+                        <div class="row">
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="name" class="form-label">Name</label>
+                                <input type="text" id="name" name="name"
+                                       class="form-control @error('name') parsley-error @enderror"
+                                       value="{{ $eventMilestone->name ?? '' }}"
+                                       data-parsley-trigger="change" required>
                             </div>
-                        @endif
-                        <div class="mb-4">
-                            <label for="distance" class="form-label">Distance (Miles)</label>
-                            <input type="number" name="distance" id="distance"
-                                   class="form-control @error('distance') parsley-error @enderror"
-                                   value="{{ $eventMilestone->distance ?? '' }}" required
-                                   data-parsley-trigger="change">
-                        </div>
-                        <div class="mb-4">
-                            <label for="video_url" class="form-label">Video URL</label>
-                            <input type="text" name="video_url" id="video_url"
-                                   class="form-control @error('video_url') parsley-error @enderror"
-                                   value="{{ $eventMilestone->video_url ?? '' }}" required
-                                   data-parsley-trigger="change">
-                        </div>
-                        @if($isRegularEvent)
-                            <div class="row">
-                                <div class="col">
-                                    <div class="mb-4">
-                                        <label for="logo" class="form-label">Logo</label>
-                                        <input type="file" id="logo" name="logo" data-preview=".logo-preview"
-                                               class="form-control choose-file">
-                                        <div class="logo-preview d-none mt-3">
-                                            <img src="" class="img-fluid img" style="height: 100px;" />
-                                        </div>
+
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="distance" class="form-label">Distance (Miles)</label>
+                                <input type="number" name="distance" id="distance"
+                                       class="form-control @error('distance') parsley-error @enderror"
+                                       value="{{ $eventMilestone->distance ?? '' }}" required
+                                       data-parsley-trigger="change">
+                            </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="video_url" class="form-label">Video URL</label>
+                                <input type="text" name="video_url" id="video_url"
+                                       class="form-control @error('video_url') parsley-error @enderror"
+                                       value="{{ $eventMilestone->video_url ?? '' }}" required
+                                       data-parsley-trigger="change">
+                            </div>
+
+                            @if($isRegularEvent)
+                                <div class="mb-4 col-xl-12 col-sm-12 col-md-12">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea name="description" id="description"
+                                              class="form-control">{{ $eventMilestone->description ?? '' }}</textarea>
+                                </div>
+                                <div class="mb-4 col-xl-6 col-sm-12 col-md-6">
+                                    <label for="logo" class="form-label">Logo</label>
+                                    <input type="file" id="logo" name="logo" data-preview=".logo-preview"
+                                           class="form-control choose-file">
+                                    <div class="logo-preview d-none mt-3">
+                                        <img src="" class="img-fluid img" style="height: 100px;" />
                                     </div>
                                 </div>
-                                <div class="col">
-                                    <div class="mb-4">
-                                        <label for="team_logo" class="form-label">Team Logo</label>
-                                        <input type="file" id="team_logo" data-preview=".team-logo-preview"
-                                               name="team_logo" class="form-control choose-file">
-                                        <div class="team-logo-preview d-none mt-3">
-                                            <img src="" class="img-fluid img" style="height: 100px;" />
-                                        </div>
+                                <div class="mb-4 col-xl-6 col-sm-12 col-md-6">
+                                    <label for="team_logo" class="form-label">Team Logo</label>
+                                    <input type="file" id="team_logo" data-preview=".team-logo-preview"
+                                           name="team_logo" class="form-control choose-file">
+                                    <div class="team-logo-preview d-none mt-3">
+                                        <img src="" class="img-fluid img" style="height: 100px;" />
                                     </div>
                                 </div>
-                            </div>
-                        @endif
+
+                            @endif
+                        </div>
                         <div class="d-flex justify-content-between mt-3">
 
                             <button type="submit" class="btn btn-primary">{{ $eventMilestone? 'Update' : 'Add' }}

@@ -79,7 +79,11 @@ class Event extends Model
         return $this->hasMany(EventParticipation::class,'event_id','id');
     }
 
-    public function hasUserParticipation(User $user, $count = true, $field=null){
+    public function hasUserParticipation($user, $count = true, $field=null){
+
+        if(!$user) {
+            return false;
+        }
 
         $participation = $this->participations()->where('user_id',$user->id);
 
