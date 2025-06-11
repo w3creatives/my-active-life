@@ -20,7 +20,16 @@ class FitLifeActivity extends Model
 
         return $query->where('available_from','<=', $currentDate)->where('available_until','>=',$currentDate);
     }
+    public function getPrizeUrlAttribute(){
+        $data = $this->data ? json_decode($this->data, true) : null;
 
+        return $data['prize']['url'] ?? null;
+    }
+    public function getPrizeDescriptionAttribute(){
+        $data = $this->data ? json_decode($this->data, true) : null;
+
+        return $data['prize']['description'] ?? null;
+    }
     public function registrations(){
         return $this->hasMany(FitLifeActivityRegistration::class,'activity_id','id');
     }

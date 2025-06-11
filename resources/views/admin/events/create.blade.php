@@ -99,6 +99,7 @@
                                 <input type="text" id="event_group" name="event_group" class="form-control"
                                        value="{{ $event->event_group??'' }}" placeholder="">
                             </div>
+
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="logo" class="form-label">Logo</label>
                                 <input type="file" id="logo" name="logo" data-preview=".logo-preview"

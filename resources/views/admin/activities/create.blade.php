@@ -85,6 +85,17 @@
                                        data-parsley-trigger="change">
                             </div>
                             <div class="mb-4 col-xl-12 col-sm-12 col-md-12">
+                                <label for="prize_url" class="form-label">Prize URL</label>
+                                <input type="text" id="prize_url" name="prize_url" class="form-control"
+                                       value="{{ $activity->prize_url??'' }}" placeholder="">
+                            </div>
+                            <div class="mb-4 col-xl-12 col-sm-12 col-md-12">
+                                <label for="prize_description" class="form-label">Prize Description</label>
+                                <textarea class="form-control @error('prize_description') parsley-error @enderror"
+                                          name="prize_description" id="prize_description" data-parsley-trigger="change" rows="3"
+                                          required>{{ $activity->prize_description??'' }}</textarea>
+                            </div>
+                            <div class="mb-4 col-xl-12 col-sm-12 col-md-12">
                                 <label for="description" class="form-label">Description</label>
                                 <div class="w-100" id="text-editor" data-textarea-el="#description"></div>
                                 <textarea name="description" id="description"

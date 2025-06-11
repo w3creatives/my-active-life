@@ -84,6 +84,8 @@ class ActivitiesController extends Controller
         $data['available_until'] = Carbon::parse($data['available_until'])->format('Y-m-d');
         $data['sports'] = sprintf('{%s}',implode(',',array_map('trim',$data['sports'])));
 
+        $data['data'] = json_encode(['prize' => ['url' => $request->get('prize_url'), 'description' => $request->get('prize_description')]]);
+        
         $event = Event::find($eventId);
 
         $activity = $event->fitActivities()->find($activityId);
