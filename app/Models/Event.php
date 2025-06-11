@@ -19,7 +19,10 @@ class Event extends Model
 
     public function getLogoUrlAttribute()
     {
-        return url("static/" . trim($this->logo));
+        if(file_exists(public_path('uploads/events/' . $this->attributes['logo']))){
+            return url("uploads/events/" . trim($this->attributes['logo']));
+        }
+        return url("static/" . trim($this->attributes['logo']));
     }
 
     public function isPastEvent()

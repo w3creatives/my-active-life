@@ -31,6 +31,9 @@
                     <th>Event Type</th>
                     <th>Start Date</th>
                     <th>End Date</th>
+                    <th>Status</th>
+                    <th>bibs name</th>
+                    <th>event group</th>
                     <th width="50">
                         Action
                     </th>
@@ -59,6 +62,9 @@
                     { data: 'event_type_text', name: 'event_type_text' },
                     { data: 'start_date', name: 'start_date' },
                     { data: 'end_date', name: 'end_date' },
+                    {data:'status', name: 'status'},
+                    {data:'bibs_name', name: 'bibs_name'},
+                    {data:'event_group', name: 'event_group'},
                     { data: 'action', name: 'action', sortable: false }
                 ]);
             });
