@@ -111,7 +111,7 @@
                                 <div class="w-100 text-editor" id="description-editor"
                                      data-textarea-el="#description"></div>
                                 <textarea name="description" id="description"
-                                          class="form-control d-none">{{ $activity->description ?? old('description') }}</textarea>
+                                          class="form-control d-none">{!! $activity->description ?? old('description') !!}</textarea>
                             </div>
                         </div>
                         <div class="mb-4 col-xl-12 col-sm-12 col-md-12">
@@ -126,7 +126,7 @@
                             <div class="w-100 text-editor" id="about-description-editor"
                                  data-textarea-el="#about_description"></div>
                             <textarea name="about_description" id="about-description"
-                                      class="form-control d-none">{{ $activity->about_description ?? old('about_description') }}</textarea>
+                                      class="form-control d-none">{!! $activity->about_description ?? old('about_description') !!}</textarea>
                         </div>
 
                         <div class="d-flex justify-content-between mt-3">
