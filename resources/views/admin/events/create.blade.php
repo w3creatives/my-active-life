@@ -3,8 +3,17 @@
     <div class="row g-6">
 
         <div class="col-md-12">
-            <div class="card">
-                <h5 class="card-header">{{ $event?'Update':'Add'}} Event</h5>
+            <div class="card card-action">
+                <div class="card-header">
+                    <h5 class="card-action-title mb-0">{{ $event?'Update':'Add'}} Event</h5>
+                    <div class="card-action-element">
+                        <ul class="list-inline mb-0">
+                            <li class="list-inline-item">
+                                <a href="{{ route('admin.events') }}" class="btn btn-label-primary">Back to List</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
                 <div class="card-body">
                     <x-alert.validation :errors=$errors></x-alert.validation>
                     <form action="" class="needs-validation" method="POST" id="event-form" novalidate>
@@ -117,7 +126,20 @@
                         </div>
                         <div class="d-flex justify-content-between mt-3">
                             <button type="submit" class="btn btn-primary">{{ $event?'Update':'Add'}} Event</button>
-                            <a href="{{ route('admin.events') }}" class="btn btn-label-primary">Back to List</a>
+                            @if($event)
+                            @switch($event->event_type)
+                                @case('regular')
+                                @case('month')
+                                    <a href="{{ route('admin.events.milestones', $event->id) }}" class="btn btn-dark">Milestones</a>
+                                    @break
+                                @case('fit_life')
+                                    <a href="{{ route('admin.events.activities', $event->id) }}" class="btn btn-dark">Activities</a>
+                                    @break
+                                @case('promotional')
+                                    <a href="{{ route('admin.events.streaks', $event->id) }}" class="btn btn-dark">Streaks</a>
+                                    @break
+                            @endswitch
+                            @endif
                         </div>
                     </form>
                 </div>

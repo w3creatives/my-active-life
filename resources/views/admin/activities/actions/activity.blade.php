@@ -8,7 +8,7 @@
                 <i class="icon-base ti tabler-target mb-2"></i> View Details
             </a>
 
-            <a href="{{ route('admin.events.activity.milestones.create', [$item->event_id, $item->id]) }}" class="dropdown-item waves-effect"><i
+            <a href="{{ route('admin.events.activity.milestones', [$item->event_id, $item->id]) }}" class="dropdown-item waves-effect"><i
                     class="icon-base ti tabler-target mb-2"></i> Milestones</a>
             <button class="dropdown-item waves-effect text-danger action-delete" data-confirm-form="#activity-action-delete-form-{{ $item->id }}">
                 <i class="icon-base ti tabler-trash me-1"></i> Delete Activity

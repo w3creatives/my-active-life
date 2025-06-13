@@ -2,8 +2,18 @@
 
     <div class="row g-6">
         <div class="col-md-12">
-            <div class="card">
-                <h5 class="card-header">{{ $activity?'Update':'Add'}} Activity</h5>
+            <div class="card card-action">
+                <div class="card-header">
+                    <h5 class="card-action-title mb-0">{{ $activity?'Update':'Add'}} Activity</h5>
+                    <div class="card-action-element">
+                        <ul class="list-inline mb-0">
+                            <li class="list-inline-item">
+                                <a href="{{ route('admin.events.activities', $eventId) }}"
+                                   class="btn btn-label-primary">Back to List</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
                 <div class="card-body">
                     <x-alert.validation :errors=$errors></x-alert.validation>
                     <form action="" class="needs-validation" enctype="multipart/form-data" method="POST" id="event-form"
@@ -92,21 +102,40 @@
                             <div class="mb-4 col-xl-12 col-sm-12 col-md-12">
                                 <label for="prize_description" class="form-label">Prize Description</label>
                                 <textarea class="form-control @error('prize_description') parsley-error @enderror"
-                                          name="prize_description" id="prize_description" data-parsley-trigger="change" rows="3"
+                                          name="prize_description" id="prize_description" data-parsley-trigger="change"
+                                          rows="3"
                                           required>{{ $activity->prize_description??'' }}</textarea>
                             </div>
                             <div class="mb-4 col-xl-12 col-sm-12 col-md-12">
                                 <label for="description" class="form-label">Description</label>
-                                <div class="w-100" id="text-editor" data-textarea-el="#description"></div>
+                                <div class="w-100 text-editor" id="description-editor"
+                                     data-textarea-el="#description"></div>
                                 <textarea name="description" id="description"
                                           class="form-control d-none">{{ $activity->description ?? old('description') }}</textarea>
                             </div>
                         </div>
+                        <div class="mb-4 col-xl-12 col-sm-12 col-md-12">
+                            <label for="about_title" class="form-label">About Title</label>
+                            <input type="text" id="about_title" name="about_title"
+                                   class="form-control @error('about_title') parsley-error @enderror"
+                                   value="{{ $activity->about_title ?? old('about_title') }}"
+                                   data-parsley-trigger="change" required>
+                        </div>
+                        <div class="mb-4 col-xl-12 col-sm-12 col-md-12">
+                            <label for="about_description" class="form-label">About Description</label>
+                            <div class="w-100 text-editor" id="about-description-editor"
+                                 data-textarea-el="#about_description"></div>
+                            <textarea name="about_description" id="about-description"
+                                      class="form-control d-none">{{ $activity->about_description ?? old('about_description') }}</textarea>
+                        </div>
+
                         <div class="d-flex justify-content-between mt-3">
                             <button type="submit" class="btn btn-primary">{{ $activity?'Update':'Add'}} Activity
                             </button>
-                            <a href="{{ route('admin.events.activities', $eventId) }}" class="btn btn-label-primary">Back
-                                to List</a>
+                            @if($activity)
+                                <a href="{{ route('admin.events.activity.milestones', [$activity->event_id, $activity->id]) }}"
+                                   class="btn btn-dark">Milestones</a>
+                            @endif
                         </div>
                     </form>
                 </div>
@@ -133,21 +162,31 @@
                 'use strict';
                 $('.select2').select2();
 
-                const editorEl = $('#text-editor');
-
-                const editor = new Quill('#text-editor', {
-                    bounds: '#text-editor',
+                const descriptionEditor = new Quill('#description-editor', {
+                    bounds: '#description-editor',
                     placeholder: 'Type Something...',
 
                     theme: 'snow'
                 });
 
-                editor.on('text-change', function(delta, oldDelta, source) {
-                    console.log(editor.container.firstChild.innerHTML);
-                    $('#description').val(editor.container.firstChild.innerHTML);
+                descriptionEditor.on('text-change', function(delta, oldDelta, source) {
+                    $('#description').val(descriptionEditor.container.firstChild.innerHTML);
                 });
 
-                editor.setText($('#description').val());
+                descriptionEditor.setContents(descriptionEditor.clipboard.convert({ html: $('#description').val() }), 'silent');
+
+                const aboutDescriptionEditor = new Quill('#about-description-editor', {
+                    bounds: '#about-description-editor',
+                    placeholder: 'Type Something...',
+
+                    theme: 'snow'
+                });
+
+                aboutDescriptionEditor.on('text-change', function(delta, oldDelta, source) {
+                    $('#about-description').val(aboutDescriptionEditor.container.firstChild.innerHTML);
+                });
+
+                aboutDescriptionEditor.setContents(aboutDescriptionEditor.clipboard.convert({ html: $('#about-description').val() }), 'silent');
 
                 $('#available_from').flatpickr({
                     monthSelectorType: 'static',

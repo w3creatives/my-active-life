@@ -75,17 +75,19 @@ class ActivitiesController extends Controller
         ]);
 
         $data = $request->only([
-            'sponsor', 'category', 'group', 'name', 'description',
+            'sponsor', 'category', 'group', 'name',
             'total_points', 'available_from', 'available_until',
             'tags', 'social_hashtags', 'sports',
         ]);
+
+        $data['description'] = json_encode(['description' => $request->get('description'),'about_title' => $request->get('about_title'), 'about_description' => $request->get('about_description')]);
 
         $data['available_from'] = Carbon::parse($data['available_from'])->format('Y-m-d');
         $data['available_until'] = Carbon::parse($data['available_until'])->format('Y-m-d');
         $data['sports'] = sprintf('{%s}',implode(',',array_map('trim',$data['sports'])));
 
         $data['data'] = json_encode(['prize' => ['url' => $request->get('prize_url'), 'description' => $request->get('prize_description')]]);
-        
+
         $event = Event::find($eventId);
 
         $activity = $event->fitActivities()->find($activityId);
