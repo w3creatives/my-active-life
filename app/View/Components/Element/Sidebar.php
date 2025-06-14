@@ -30,6 +30,12 @@ class Sidebar extends Component
                 'label' => 'Events',
                 'route_group' => 'events',
             ],
+            [
+                'route' => 'admin.email.builders',
+                'icon' => 'tabler-app-window',
+                'label' => 'Email Templates',
+                'route_group' => 'email-builders',
+            ],
         ];
     }
 
