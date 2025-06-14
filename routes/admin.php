@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\{
     EventsController,
     ImpersonateController,
     StreaksController,
+    EmailBuildersController,
 };
 
 Route::impersonate();
@@ -77,4 +78,15 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::get('/events/{id}/streaks/{streakId}/edit', [StreaksController::class, 'create'])->name('admin.events.streaks.edit');
     Route::post('/events/{id}/streaks/{streakId}/edit', [StreaksController::class, 'store']);
     Route::delete('/events/{id}/streaks/{streakId}/delete', [StreaksController::class, 'destroy'])->name('admin.events.streaks.delete');
+
+    /**
+     * Email Builder routes
+     */
+    Route::get('/email-builders/create', [EmailBuildersController::class, 'create'])->name('admin.email.builders.create');
+    Route::post('/email-builders/create', [EmailBuildersController::class, 'store']);
+    Route::get('/email-builders/{id}/edit', [EmailBuildersController::class, 'create'])->name('admin.email.builders.edit');
+    Route::post('/email-builders/{id}/edit', [EmailBuildersController::class, 'store']);
+    Route::get('/email-builders', [EmailBuildersController::class, 'index'])->name('admin.email.builders');
+
+    Route::delete('/email-builders/{id}/delete', [EmailBuildersController::class, 'destroy'])->name('admin.email.builders.destroy');
 });
