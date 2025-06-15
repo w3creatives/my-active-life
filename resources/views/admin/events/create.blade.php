@@ -1,4 +1,4 @@
-<x-admin-layout>
+<x-admin-layout title="{{ $event?'Update':'Add'}} Event">
 
     <div class="row g-6">
 
@@ -113,9 +113,27 @@
                                 <label for="logo" class="form-label">Logo</label>
                                 <input type="file" id="logo" name="logo" data-preview=".logo-preview"
                                        class="form-control choose-file">
-                                <div class="logo-preview {{ (($event && !$event->logo_url) || !$event)?'d-none':'' }} mt-3">
-                                    <img src="{{ $event->logo_url??'' }}" class="img-fluid img" style="height: 100px;" />
+
+                            </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <div
+                                    class="logo-preview {{ (($event && !$event->logo_url) || !$event)?'d-none':'' }} mt-3">
+                                    <img src="{{ $event->logo_url??'' }}" class="img-fluid img"
+                                         style="height: 100px;" />
                                 </div>
+                            </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+
+                                <label for="email_template_id" class="form-label">Email Template</label>
+                                <select class="form-select" name="email_template_id" id="email_template_id"
+                                        aria-label="Default select example" data-parsley-trigger="change"
+                                        aria-label="Default select example">
+                                    <option selected="" value="">Select Email Template</option>
+                                    @foreach($emailTemplates as $emailTemplate)
+                                        <option
+                                            value="{{ $emailTemplate->id }}" {{ ($event && $event->email_template_id == $emailTemplate->id)?'selected':''}}>{{ $emailTemplate->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="mb-4 col-xl-8 col-sm-12 col-md-6">
                                 <label for="description" class="form-label">Description</label>
@@ -127,18 +145,20 @@
                         <div class="d-flex justify-content-between mt-3">
                             <button type="submit" class="btn btn-primary">{{ $event?'Update':'Add'}} Event</button>
                             @if($event)
-                            @switch($event->event_type)
-                                @case('regular')
-                                @case('month')
-                                    <a href="{{ route('admin.events.milestones', $event->id) }}" class="btn btn-dark">Milestones</a>
-                                    @break
-                                @case('fit_life')
-                                    <a href="{{ route('admin.events.activities', $event->id) }}" class="btn btn-dark">Activities</a>
-                                    @break
-                                @case('promotional')
-                                    <a href="{{ route('admin.events.streaks', $event->id) }}" class="btn btn-dark">Streaks</a>
-                                    @break
-                            @endswitch
+                                @switch($event->event_type)
+                                    @case('regular')
+                                    @case('month')
+                                        <a href="{{ route('admin.events.milestones', $event->id) }}"
+                                           class="btn btn-dark">Milestones</a>
+                                        @break
+                                    @case('fit_life')
+                                        <a href="{{ route('admin.events.activities', $event->id) }}"
+                                           class="btn btn-dark">Activities</a>
+                                        @break
+                                    @case('promotional')
+                                        <a href="{{ route('admin.events.streaks', $event->id) }}" class="btn btn-dark">Streaks</a>
+                                        @break
+                                @endswitch
                             @endif
                         </div>
                     </form>

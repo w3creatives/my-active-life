@@ -12,7 +12,7 @@ final class AdminLayout extends Component
 {
     public array $themeConfig = [];
 
-    public function __construct()
+    public function __construct(public string $title = '')
     {
         $this->themeConfig = [
             'theme' => request()->cookie('templateCustomizer-admin--Theme') ?? 'system',

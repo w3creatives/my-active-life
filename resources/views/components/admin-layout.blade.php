@@ -14,7 +14,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>RTE Admin {{ $title??'' }}</title>
+    <title>RTE Admin {{ $title?" - $title":'' }}</title>
 
     <meta name="description" content="" />
     <!-- Favicon -->

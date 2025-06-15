@@ -34,6 +34,18 @@
                                        value="{{ $eventStreak->min_distance ?? old('min_distance') }}" required
                                        data-parsley-trigger="change">
                             </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="email_template_id" class="form-label">Email Template</label>
+                                <select class="form-select" name="email_template_id" id="email_template_id"
+                                        aria-label="Default select example" data-parsley-trigger="change"
+                                        aria-label="Default select example">
+                                    <option selected="" value="">Select Email Template</option>
+                                    @foreach($emailTemplates as $emailTemplate)
+                                        <option
+                                            value="{{ $emailTemplate->id }}" {{ (old('email_template_id',$selectedEmailTemplate) == $emailTemplate->id)?'selected':''}}>{{ $emailTemplate->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                         <div class="d-flex justify-content-between mt-3">
 

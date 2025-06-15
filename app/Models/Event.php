@@ -77,6 +77,9 @@ class Event extends Model
         return $this->hasManyThrough(FitLifeActivityRegistration::class, FitLifeActivity::class,'event_id','activity_id');
     }
 
+    public function emailTemplate(){
+        return $this->belongsTo(EmailTemplate::class,'email_template_id','id');
+    }
     public function participations()
     {
         return $this->hasMany(EventParticipation::class,'event_id','id');

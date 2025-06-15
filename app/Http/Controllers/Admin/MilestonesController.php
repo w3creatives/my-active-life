@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\EmailTemplate;
 use App\Models\Event;
 use App\Models\EventMilestone;
 use App\Utilities\DataTable;
@@ -94,8 +95,11 @@ class MilestonesController extends Controller
             $backUrl = route('admin.events.activity.milestones', [$event->id, $activityId]);
         }
 
+        $emailTemplates = EmailTemplate::query()->get();
 
-        return view('admin.milestones.create', compact('event', 'eventMilestone', 'isRegularEvent', 'backUrl'));
+        $selectedEmailTemplate = ($eventMilestone && $eventMilestone->email_template_id) ? $eventMilestone->email_template_id : $event->email_template_id;
+
+        return view('admin.milestones.create', compact('event', 'eventMilestone', 'isRegularEvent', 'backUrl','emailTemplates','selectedEmailTemplate'));
     }
 
     public function store(Request $request)
@@ -117,6 +121,8 @@ class MilestonesController extends Controller
         $videoData = $request->video_url ? ['flyover_url' => $request->video_url] : [];
 
         $data['data'] = json_encode($videoData);
+
+        $data['email_template_id'] = $request->get('email_template_id', null);
 
         if (in_array($event->event_type,['regular','month'])) {
 

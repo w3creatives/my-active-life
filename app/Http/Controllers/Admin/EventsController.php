@@ -7,10 +7,7 @@ use App\Services\EventService;
 use App\Utilities\DataTable;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\{
-    Event,
-    Modality,
-};
+use App\Models\{EmailTemplate, Event, Modality};
 use App\Traits\RTEHelpers;
 
 class EventsController extends Controller
@@ -55,12 +52,14 @@ class EventsController extends Controller
 
         $event = Event::find($eventId);
 
+        $emailTemplates = EmailTemplate::query()->get();
+
         $selectedModalities = $this->decodeModalities($event->supported_modalities ?? 0);
 
         $eventTypes = collect($eventService->eventTypes())->except('race');
         $modalities = Modality::all();
 
-        return view('admin.events.create', compact('eventTypes', 'modalities', 'event', 'selectedModalities'));
+        return view('admin.events.create', compact('eventTypes', 'modalities', 'event', 'selectedModalities', 'emailTemplates'));
     }
 
     public function store(Request $request, $eventId = null)
@@ -82,6 +81,7 @@ class EventsController extends Controller
         $data['end_date'] = Carbon::parse($data['end_date'])->format('Y-m-d');
         $data['supported_modalities'] = $this->encodeModalities($request->modalities ?? []);
         $data['open'] = $request->get('open_status');
+        $data['email_template_id'] = $request->get('email_template_id', null);
 
         if ($request->hasFile('logo')) {
             $logoFile = $request->file('logo');

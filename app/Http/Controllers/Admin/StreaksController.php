@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\EmailTemplate;
 use App\Models\Event;
 use App\Utilities\DataTable;
 use Exception;
@@ -56,11 +57,16 @@ final class StreaksController extends Controller
 
         $eventId = $request->route()->parameter('id');
 
-        $event = Event::find($eventId);
+        $event = Event::promotional()->findOrFail($eventId);
 
         $eventStreak = $event->streaks()->find($request->route()->parameter('streakId'));
 
-        return view('admin.streaks.create', compact('event', 'eventStreak'));
+        $emailTemplates = EmailTemplate::query()->get();
+
+        $selectedEmailTemplate = ($eventStreak && $eventStreak->email_template_id) ? $eventStreak->email_template_id : $event->email_template_id;
+
+
+        return view('admin.streaks.create', compact('event', 'eventStreak','emailTemplates', 'selectedEmailTemplate'));
     }
 
     public function store(Request $request)
@@ -81,6 +87,7 @@ final class StreaksController extends Controller
         $data = $request->only(['name', 'days_count']);
 
         $data['data'] = json_encode(['min_distance' => $request->min_distance]);
+        $data['email_template_id'] = $request->get('email_template_id', null);
 
         if ($streak) {
             $streak->fill($data)->save();
