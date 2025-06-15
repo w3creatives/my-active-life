@@ -1,18 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\EmailTemplate;
+use App\Models\Event;
+use App\Models\Modality;
 use App\Services\EventService;
+use App\Traits\RTEHelpers;
 use App\Utilities\DataTable;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\{EmailTemplate, Event, Modality};
-use App\Traits\RTEHelpers;
 
-class EventsController extends Controller
+final class EventsController extends Controller
 {
-
     use RTEHelpers;
 
     public function index(Request $request, DataTable $dataTable, EventService $eventService)
@@ -20,19 +23,21 @@ class EventsController extends Controller
 
         if ($request->ajax()) {
 
-            $query = Event::allowedTypes()->select(['id', 'name', 'event_type', 'start_date', 'open', 'bibs_name', 'event_group', 'logo', 'end_date', 'logo']);
+            $query = Event::allowedTypes()->select(['id', 'name', 'event_type', 'start_date', 'open', 'bibs_name', 'event_group', 'logo', 'end_date', 'logo', 'email_template_id']);
 
-            list($eventCount, $events) = $dataTable->setSearchableColumns(['name', 'event_type'])->query($request, $query)->response();
+            [$eventCount, $events] = $dataTable->setSearchableColumns(['name', 'event_type'])->query($request, $query)->response();
 
             $events = $events->map(function ($event) use ($eventService) {
-                //$event->name = view('admin.events.actions.title', compact('event'))->render();
+                // $event->name = view('admin.events.actions.title', compact('event'))->render();
                 $event->event_type_text = $eventService->findEventType($event->event_type);
                 $event->status = $event->open ? 'Open' : 'Closed';
                 $event->bibs_name = $event->bibs_name ?? '--';
                 $event->event_group = $event->event_group ?? '--';
+                $event->email_template_name = $event->emailTemplate->name??'--';
                 $event->action = [
-                    view('admin.events.actions.event', compact('event'))->render()
+                    view('admin.events.actions.event', compact('event'))->render(),
                 ];
+
                 return $event;
             });
 
@@ -40,7 +45,7 @@ class EventsController extends Controller
                 'draw' => $request->get('draw'),
                 'recordsTotal' => $eventCount,
                 'recordsFiltered' => $eventCount,
-                'data' => $events
+                'data' => $events,
             ]);
         }
 
@@ -74,7 +79,7 @@ class EventsController extends Controller
         ]);
 
         $data = $request->only('name', 'start_date', 'end_date', 'event_type', 'goals', 'social_hashtags', 'description', 'total_points', 'registration_url', 'bibs_name', 'event_group');
-        $data['event_type'] = strtolower($data['event_type']);
+        $data['event_type'] = mb_strtolower($data['event_type']);
         $data['registration_url'] = $data['registration_url'] ?? '#';
         $data['goals'] = json_encode(array_map('trim', explode(',', $data['goals'])));
         $data['start_date'] = Carbon::parse($data['start_date'])->format('Y-m-d');
@@ -85,7 +90,7 @@ class EventsController extends Controller
 
         if ($request->hasFile('logo')) {
             $logoFile = $request->file('logo');
-            $logoFileName = 'event_' . time() . '_' . uniqid() . '.' . $logoFile->getC3lientOriginalExtension();
+            $logoFileName = 'event_'.time().'_'.uniqid().'.'.$logoFile->getC3lientOriginalExtension();
             $logoFile->move(public_path('uploads/events'), $logoFileName, 'public');
             $data['logo'] = $logoFileName;
         }
@@ -94,12 +99,12 @@ class EventsController extends Controller
 
         if ($event) {
             $event->fill($data)->save();
+
             return redirect()->route('admin.events')->with('alert', ['type' => 'success', 'message' => 'Event updated successfully.']);
         }
 
         Event::create($data);
+
         return redirect()->route('admin.events')->with('alert', ['type' => 'success', 'message' => 'Event created successfully.']);
     }
-
-
 }

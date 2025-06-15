@@ -32,8 +32,7 @@
                     <th>Start Date</th>
                     <th>End Date</th>
                     <th>Status</th>
-                    <th>bibs name</th>
-                    <th>event group</th>
+                    <th>Email Template</th>
                     <th width="50">
                         Action
                     </th>
@@ -63,8 +62,7 @@
                     { data: 'start_date', name: 'start_date' },
                     { data: 'end_date', name: 'end_date' },
                     {data:'status', name: 'status'},
-                    {data:'bibs_name', name: 'bibs_name'},
-                    {data:'event_group', name: 'event_group'},
+                    {data:'email_template_name', name: 'email_template_name', sortable: false},
                     { data: 'action', name: 'action', sortable: false }
                 ]);
             });
