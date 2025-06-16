@@ -39,9 +39,9 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
      */
     Route::get('/events', [EventsController::class, 'index'])->name('admin.events');
     Route::get('/events/{id}/edit', [EventsController::class, 'create'])->name('admin.events.edit');
-    Route::get('/events/add', [EventsController::class, 'create'])->name('admin.events.add');
+    Route::get('/events/create', [EventsController::class, 'create'])->name('admin.events.add');
     Route::post('/events/{id}/edit', [EventsController::class, 'store']);
-    Route::post('/events/add', [EventsController::class, 'store']);
+    Route::post('/events/create', [EventsController::class, 'store']);
 
     /**
      * Regular Event Milestones routes
