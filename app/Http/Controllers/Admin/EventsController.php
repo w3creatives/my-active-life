@@ -90,8 +90,8 @@ final class EventsController extends Controller
 
         if ($request->hasFile('logo')) {
             $logoFile = $request->file('logo');
-            $logoFileName = 'event_'.time().'_'.uniqid().'.'.$logoFile->getC3lientOriginalExtension();
-            $logoFile->move(public_path('uploads/events'), $logoFileName, 'public');
+            $logoFileName = 'event_'.time().'_'.uniqid().'.'.$logoFile->getClientOriginalExtension();
+            $logoFile->storeAs('uploads/events', $logoFileName, 'public');
             $data['logo'] = $logoFileName;
         }
 

@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @method static promotional()
@@ -17,12 +18,16 @@ class Event extends Model
 
     protected $appends = ['logo_url'];
 
+    private string $uploadPath = 'uploads/events/';
+
     public function getLogoUrlAttribute()
     {
-        if(file_exists(public_path('uploads/events/' . $this->attributes['logo']))){
-            return url("uploads/events/" . trim($this->attributes['logo']));
+        if(file_exists(public_path('static/' . $this->attributes['logo']))){
+            return url("static/" . trim($this->attributes['logo']));
         }
-        return url("static/" . trim($this->attributes['logo']));
+
+        $fileurl = $this->uploadPath.trim($this->attributes['logo']);
+        return Storage::url($fileurl);
     }
 
     public function isPastEvent()

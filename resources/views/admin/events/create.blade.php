@@ -16,7 +16,7 @@
                 </div>
                 <div class="card-body">
                     <x-alert.validation :errors=$errors></x-alert.validation>
-                    <form action="" class="needs-validation" method="POST" id="event-form" novalidate>
+                    <form action="" class="needs-validation" method="POST" id="event-form" enctype="multipart/form-data" novalidate>
                         @csrf
                         <div class="row">
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
