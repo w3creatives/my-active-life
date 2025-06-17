@@ -129,14 +129,14 @@ class MilestonesController extends Controller
             if ($request->hasFile('logo')) {
                 $logoFile = $request->file('logo');
                 $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getC3lientOriginalExtension();
-                $logoFile->move(public_path('uploads/milestones'), $logoFileName, 'public');
+                $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
                 $data['logo'] = $logoFileName;
             }
 
             if ($request->hasFile('team_logo')) {
                 $teamLogoFile = $request->file('team_logo');
                 $teamLogoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $teamLogoFile->getClientOriginalExtension();
-                $teamLogoFile->move(public_path('uploads/milestones'), $teamLogoFileName, 'public');
+                $teamLogoFile->storeAs('uploads/milestones', $teamLogoFileName, 'public');
                 $data['team_logo'] = $teamLogoFileName;
             }
 

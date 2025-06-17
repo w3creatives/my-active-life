@@ -4,25 +4,30 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Support\Facades\Storage;
 class EventMilestone extends Model
 {
     use HasFactory;
 
     protected $fillable = ['name','distance','data','description','logo','team_log'];
 
-    public function getLogoAttribute($value){
-        if(!$value){
+    private string $uploadPath = 'uploads/milestones/';
+
+    public function getLogoAttribute(){
+
+        if(!trim($this->attributes['logo'])){
             return null;
         }
-        return url("uploads/milestones/".$value);
+
+        return Storage::url($this->uploadPath.trim($this->attributes['logo']));
     }
 
-    public function getTeamLogoAttribute($value){
-        if(!$value){
+    public function getTeamLogoAttribute(){
+
+        if(!trim($this->attributes['team_logo'])){
             return null;
         }
-        return url("uploads/milestones/".$value);
+        return Storage::url($this->uploadPath.trim($this->attributes['team_logo']));
     }
 
     public function getVideoUrlAttribute(){
