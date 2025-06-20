@@ -23,7 +23,7 @@ class MilestonesController extends Controller
         if ($request->ajax()) {
 
             if (in_array($event->event_type,  ['regular','month'])) {
-                $query = $event->milestones()->select(['id', 'name', 'distance', 'data', 'event_id']);
+                $query = $event->milestones()->select(['id', 'name', 'distance', 'data', 'event_id','logo','team_logo']);
                 $searchableColumns = ['name', 'distance'];
             } else {
                 $query = $activity->milestones()->select(['id', 'name', 'total_points', 'data', 'activity_id']);
