@@ -11,32 +11,16 @@ class Sidebar extends Component
     public  $menuItems;
     public $currentNav;
 
+    public $currentRoute;
     public function __construct()
     {
         list($prefix, $currentNav) = explode('/', request()->path());
 
+        $this->currentRoute = request()->route()->action['as'];
+
         $this->currentNav = $currentNav;
 
-        $this->menuItems = [
-            [
-                'route' => 'admin.users',
-                'icon' => 'tabler-smart-home',
-                'label' => 'Users',
-                'route_group' => 'users',
-            ],
-            [
-                'route' => 'admin.events',
-                'icon' => 'tabler-app-window',
-                'label' => 'Events',
-                'route_group' => 'events',
-            ],
-            [
-                'route' => 'admin.email.builders',
-                'icon' => 'tabler-app-window',
-                'label' => 'Email Templates',
-                'route_group' => 'email-builders',
-            ],
-        ];
+        $this->menuItems = $this->menuItems();
     }
 
     /**
@@ -45,5 +29,48 @@ class Sidebar extends Component
     public function render(): View|Closure|string
     {
         return view('components.element.sidebar');
+    }
+
+    private function menuItems(): array
+    {
+        return [
+            [
+                'icon' => 'tabler-users',
+                'label' => 'Users',
+                'route_group' => 'users',
+                'has_children' => true,
+                'children' => [
+                    [
+                        'route' => 'admin.users',
+                        'label' => 'Users List',
+                        'route_group' => 'users',
+                    ],
+                    [
+                        'route' => 'admin.users.create',
+                        'label' => 'Add New User',
+                        'route_group' => 'users',
+                    ],
+                    [
+                        'route' => 'admin.users.merge-accounts',
+                        'label' => 'Merge Accounts',
+                        'route_group' => 'users',
+                    ],
+                ],
+            ],
+            [
+                'route' => 'admin.events',
+                'icon' => 'tabler-app-window',
+                'label' => 'Events',
+                'route_group' => 'events',
+                'has_children' => false,
+            ],
+            [
+                'route' => 'admin.email.builders',
+                'icon' => 'tabler-app-window',
+                'label' => 'Email Templates',
+                'route_group' => 'email-builders',
+                'has_children' => false,
+            ],
+        ];
     }
 }

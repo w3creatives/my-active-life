@@ -33,6 +33,8 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::get('/users/{id}/edit', [UsersController::class, 'create'])->name('admin.users.edit');
     Route::post('/users/{id}/edit', [UsersController::class, 'store']);
 
+    Route::get('/users/merge-accounts', [UsersController::class, 'mergeAccounts'])->name('admin.users.merge-accounts');
+
 
     /**
      * Events Routes

@@ -31,12 +31,25 @@
 
     <ul class="menu-inner py-1">
         @foreach($menuItems as $menuItem)
-            <li class="menu-item {{ $currentNav == $menuItem['route_group'] ? 'active' : '' }}">
-                <a href="{{ route($menuItem['route']) }}" class="menu-link">
+            <li class="menu-item {{ $currentNav == $menuItem['route_group'] ? 'active open' : '' }}">
+                <a href="{{ $menuItem['has_children']?'javascript::void();':route($menuItem['route']) }}"
+                   class="menu-link {{ $menuItem['has_children']?'menu-toggle':'' }}">
                     <i class="menu-icon icon-base ti {{ $menuItem['icon'] }}"></i>
                     <div data-i18n="{{ $menuItem['label'] }}">{{ $menuItem['label'] }}</div>
                 </a>
+                @if($menuItem['has_children'])
+                    <ul class="menu-sub">
+                        @foreach($menuItem['children'] as $childMenuItem)
+                            <li class="menu-item {{ $currentRoute == $childMenuItem['route'] ? 'active' : '' }}">
+                                <a href="{{ route($childMenuItem['route']) }}" class="menu-link">
+                                    <div data-i18n="{{ $childMenuItem['label'] }}">{{ $childMenuItem['label'] }}</div>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
             </li>
+
         @endforeach
     </ul>
 </aside>
