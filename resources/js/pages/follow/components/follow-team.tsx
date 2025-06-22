@@ -16,8 +16,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useState, useEffect } from 'react';
-import { router } from '@inertiajs/react';
+import axios from 'axios';
 
 interface Team {
   id: number;
@@ -35,45 +36,70 @@ interface Pagination<T> {
   prev_page_url: string | null;
 }
 
-interface Props {
-  teams: Pagination<Team>;
-  filters?: {
-    searchTeam?: string;
-    perPageTeam?: number | string;
+export default function FollowTeam() {
+  const [teams, setTeams] = useState<Pagination<Team> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTeam, setSearchTeam] = useState('');
+  const [perPageTeam, setPerPageTeam] = useState('5');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const fetchTeams = async (page: number = currentPage) => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (searchTeam) params.append('searchTeam', searchTeam);
+      if (perPageTeam) params.append('perPageTeam', perPageTeam);
+      params.append('page', page.toString());
+
+      const response = await axios.get(route('api.follow.available-teams') + '?' + params.toString());
+      setTeams(response.data.teams);
+      setCurrentPage(page);
+    } catch (err) {
+      setError('Failed to load available teams');
+      console.error('Error fetching available teams:', err);
+    } finally {
+      setLoading(false);
+    }
   };
-}
 
-export default function FollowTeam({ teams, filters }: Props) {
-  const [searchTeam, setSearchTeam] = useState(filters?.searchTeam || '');
-  const [perPageTeam, setPerPageTeam] = useState(filters?.perPageTeam?.toString() || '5');
+  useEffect(() => {
+    fetchTeams(1); // Reset to page 1 on initial load
+  }, []);
 
-  // Debounced search + pagination update
+  // Debounced search + pagination update - reset to page 1 when search changes
   useEffect(() => {
     const timeout = setTimeout(() => {
-      router.visit(route('follow'), {
-        data: { searchTeam, perPageTeam },
-        preserveScroll: true,
-        preserveState: true,
-        replace: true,
-        only: ['teams'],
-      });
+      setCurrentPage(1);
+      fetchTeams(1);
     }, 500);
     return () => clearTimeout(timeout);
   }, [searchTeam, perPageTeam]);
 
   const handlePagination = (page: number) => {
-    router.visit(route('follow'), {
-      data: {
-        searchTeam,
-        perPageTeam,
-        teamsPage: page,
-      },
-      preserveScroll: true,
-      preserveState: true,
-      replace: true,
-      only: ['teams'],
-    });
+    fetchTeams(page);
   };
+
+  // Skeleton component for individual team rows
+  const TeamRowSkeleton = () => (
+    <div className="grid grid-cols-5 items-center px-4 py-3 border-b text-sm">
+      <div>
+        <Skeleton className="h-4 w-32" />
+      </div>
+      <div>
+        <Skeleton className="h-4 w-16" />
+      </div>
+      <div>
+        <Skeleton className="h-4 w-8" />
+      </div>
+      <div>
+        <Skeleton className="h-4 w-12" />
+      </div>
+      <div className="text-right">
+        <Skeleton className="h-8 w-16" />
+      </div>
+    </div>
+  );
 
   return (
     <Card>
@@ -125,7 +151,18 @@ export default function FollowTeam({ teams, filters }: Props) {
             <div className="text-right">Action</div>
           </div>
 
-          {teams.data.length === 0 ? (
+          {loading ? (
+            // Show skeleton rows while loading
+            <>
+              <TeamRowSkeleton />
+              <TeamRowSkeleton />
+              <TeamRowSkeleton />
+              <TeamRowSkeleton />
+              <TeamRowSkeleton />
+            </>
+          ) : error ? (
+            <div className="p-8 text-center text-red-500">{error}</div>
+          ) : !teams || teams.data.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">No teams found.</div>
           ) : (
             teams.data.map((team) => (
@@ -148,22 +185,29 @@ export default function FollowTeam({ teams, filters }: Props) {
       </CardContent>
 
       <CardFooter className="justify-end">
-        <div className="flex gap-2">
-          <Button
-            variant="outline-primary"
-            onClick={() => handlePagination(teams.current_page - 1)}
-            disabled={!teams.prev_page_url}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline-primary"
-            onClick={() => handlePagination(teams.current_page + 1)}
-            disabled={!teams.next_page_url}
-          >
-            Next
-          </Button>
-        </div>
+        {loading ? (
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-20" />
+            <Skeleton className="h-10 w-16" />
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handlePagination((teams?.current_page || 1) - 1)}
+              disabled={!teams?.prev_page_url}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handlePagination((teams?.current_page || 1) + 1)}
+              disabled={!teams?.next_page_url}
+            >
+              Next
+            </Button>
+          </div>
+        )}
       </CardFooter>
     </Card>
   );

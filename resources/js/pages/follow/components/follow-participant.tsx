@@ -16,8 +16,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect, useState } from 'react';
-import { router } from '@inertiajs/react';
+import axios from 'axios';
 
 interface User {
   id: number;
@@ -38,56 +39,74 @@ interface Pagination<T> {
   prev_page_url: string | null;
 }
 
-interface Props {
-  users: Pagination<User>;
-  filters?: {
-    searchUser?: string;
-    perPageUser?: number | string;
+export default function FollowParticipant() {
+  const [users, setUsers] = useState<Pagination<User> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchUser, setSearchUser] = useState('');
+  const [perPageUser, setPerPageUser] = useState('5');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const fetchUsers = async (page: number = currentPage) => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (searchUser) params.append('searchUser', searchUser);
+      if (perPageUser) params.append('perPageUser', perPageUser);
+      params.append('page', page.toString());
+
+      const response = await axios.get(route('api.follow.available-users') + '?' + params.toString());
+      setUsers(response.data.users);
+      setCurrentPage(page);
+    } catch (err) {
+      setError('Failed to load available users');
+      console.error('Error fetching available users:', err);
+    } finally {
+      setLoading(false);
+    }
   };
-}
 
-export default function FollowParticipant({ users, filters }: Props) {
-  const [searchUser, setSearchUser] = useState(filters?.searchUser || '');
-  const [perPageUser, setPerPageUser] = useState(filters?.perPageUser?.toString() || '5');
-
-  // Debounced search trigger
-  // useEffect(() => {
-  //   const timeout = setTimeout(() => {
-  //     router.visit(route('follow'), {
-  //       data: { searchUser, perPageUser },
-  //       preserveScroll: true,
-  //       preserveState: true,
-  //       replace: true,
-  //       only: ['users'],
-  //     });
-  //   }, 500);
-  //   return () => clearTimeout(timeout);
-  // }, [searchUser, perPageUser]);
-
-  // Trigger Inertia visit on per-page change
   useEffect(() => {
-    router.visit(route('follow'), {
-      data: { searchUser, perPageUser },
-      preserveScroll: true,
-      preserveState: true,
-      replace: true,
-      only: ['users'],
-    });
-  }, [perPageUser]);
+    fetchUsers(1); // Reset to page 1 on initial load
+  }, []);
+
+  // Debounced search trigger - reset to page 1 when search changes
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setCurrentPage(1);
+      fetchUsers(1);
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [searchUser, perPageUser]);
 
   const handlePagination = (page: number) => {
-    router.visit(route('follow'), {
-      data: {
-        searchUser,
-        perPageUser,
-        usersPage: page,
-      },
-      preserveScroll: true,
-      preserveState: true,
-      replace: true,
-      only: ['users'],
-    });
+    fetchUsers(page);
   };
+
+  // Skeleton component for individual user rows
+  const UserRowSkeleton = () => (
+    <div className="flex flex-wrap lg:items-center p-4 border-b text-sm">
+      <div className="flex items-center gap-3 w-3/4 lg:w-1/5">
+        <Skeleton className="w-10 h-10 rounded-full" />
+        <div className="space-y-1">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-3 w-32" />
+        </div>
+      </div>
+      <div className='w-1/5 lg:w-1/5 flex justify-end lg:justify-start items-center'>
+        <Skeleton className="w-5 h-5" />
+      </div>
+      <div className='w-1/4 lg:w-1/5'>
+        <Skeleton className="h-4 w-16" />
+      </div>
+      <div className='w-1/4 lg:w-1/5'>
+        <Skeleton className="h-4 w-12" />
+      </div>
+      <div className="w-full lg:w-1/5 lg:text-right mt-2 lg:mt-0">
+        <Skeleton className="h-8 w-16" />
+      </div>
+    </div>
+  );
 
   return (
     <Card>
@@ -140,7 +159,21 @@ export default function FollowParticipant({ users, filters }: Props) {
             <div className="md:text-right">Action</div>
           </div>
 
-          {users.data.map((user) => (
+          {loading ? (
+            // Show skeleton rows while loading
+            <>
+              <UserRowSkeleton />
+              <UserRowSkeleton />
+              <UserRowSkeleton />
+              <UserRowSkeleton />
+              <UserRowSkeleton />
+            </>
+          ) : error ? (
+            <div className="p-8 text-center text-red-500">{error}</div>
+          ) : !users || users.data.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">No users found.</div>
+          ) : (
+            users.data.map((user) => (
             <div
               key={user.id}
               className="flex flex-wrap lg:items-center p-4 border-b text-sm"
@@ -167,32 +200,40 @@ export default function FollowParticipant({ users, filters }: Props) {
               <div className='w-1/4 lg:w-1/5'>{user.city}</div>
               <div className='w-1/4 lg:w-1/5'>{user.state}</div>
               <div className="w-full lg:w-1/5 lg:text-right mt-2 lg:mt-0">
-                <Button variant="default" size="sm">
+                <Button variant="yellow" size="sm">
                   {user.following_status_text}
                 </Button>
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
       </CardContent>
 
       <CardFooter className="justify-end">
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => handlePagination(users.current_page - 1)}
-            disabled={!users.prev_page_url}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => handlePagination(users.current_page + 1)}
-            disabled={!users.next_page_url}
-          >
-            Next
-          </Button>
-        </div>
+        {loading ? (
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-20" />
+            <Skeleton className="h-10 w-16" />
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handlePagination((users?.current_page || 1) - 1)}
+              disabled={!users?.prev_page_url}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handlePagination((users?.current_page || 1) + 1)}
+              disabled={!users?.next_page_url}
+            >
+              Next
+            </Button>
+          </div>
+        )}
       </CardFooter>
     </Card>
   );

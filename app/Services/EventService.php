@@ -490,6 +490,9 @@ final class EventService
 
                 return $query;
             })
+            ->join('users', 'event_participations.user_id', '=', 'users.id')
+            ->orderBy('users.display_name', 'asc')
+            ->select('event_participations.*')
             ->simplePaginate(...$paginationArgs)
             ->through(function ($participation) use ($user) {
                 $member = $participation->user;

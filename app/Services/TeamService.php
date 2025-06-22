@@ -99,6 +99,7 @@ final class TeamService
 
                 return $query->where('event_id', $eventId);
             })
+            ->orderBy('name', 'asc')
             ->simplePaginate(...$paginationArgs)
             ->through(function ($team) use ($user, $eventId) {
                 $team->is_team_owner = $team->owner_id === $user->id;
