@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\EventTutorials\GetEventTutorials;
 use App\Actions\Follow\UndoFollowing;
+use App\Actions\Follow\RequestFollow;
 use App\Models\Event;
 use App\Services\EventService;
 use App\Services\MailboxerService;
@@ -40,37 +41,189 @@ final class DashboardController extends Controller
 
     public function tutorials(): Response
     {
+        return Inertia::render('tutorials');
+    }
+
+    /**
+     * Get tutorials data for progressive loading.
+     */
+    public function getTutorialsData(): JsonResponse
+    {
         $tutorials = GetEventTutorials::run(['event_id' => 64]);
 
-        return Inertia::render('tutorials', [
+        return response()->json([
             'tutorials' => $tutorials,
         ]);
     }
 
-    public function follow(Request $request, UserService $userService, TeamService $teamService, EventService $eventService): Response
+    public function follow(Request $request): Response
+    {
+        $filters = array_filter([
+            'searchUser' => $request->input('searchUser') ?: null,
+            'perPageUser' => $request->input('perPageUser', 5) !== 5 ? (int) $request->input('perPageUser', 5) : null,
+            'searchTeam' => $request->input('searchTeam') ?: null,
+            'perPageTeam' => $request->input('perPageTeam', 5) !== 5 ? (int) $request->input('perPageTeam', 5) : null,
+        ]);
+
+        return Inertia::render('follow/index', [
+            'filters' => $filters,
+        ]);
+    }
+
+    /**
+     * Get user followings data.
+     */
+    public function getUserFollowings(UserService $userService): JsonResponse
+    {
+        $user = auth()->user();
+        $userFollowings = $userService->followings($user, 64, 5, 'web')->toArray();
+
+        return response()->json([
+            'userFollowings' => $userFollowings,
+        ]);
+    }
+
+    /**
+     * Get team followings data.
+     */
+    public function getTeamFollowings(TeamService $teamService): JsonResponse
+    {
+        $user = auth()->user();
+        $teamFollowings = $teamService->following($user, 64, 5, 'web')->toArray();
+
+        return response()->json([
+            'teamFollowings' => $teamFollowings,
+        ]);
+    }
+
+    /**
+     * Get available users data.
+     */
+    public function getAvailableUsers(Request $request, EventService $eventService): JsonResponse
     {
         $user = auth()->user();
         $userSearchTerm = $request->input('searchUser', '');
-        $perPageUser = (int) request('perPageUser', 5);
-        $teamSearchTerm = $request->input('searchTeam', '');
-        $perPageTeam = (int) request('perPageTeam', 5);
+        $perPageUser = (int) $request->input('perPageUser', 5);
+        $page = (int) $request->input('page', 1);
 
-        $teamFollowings = $teamService->following($user, 64, 5, 'web')->toArray();
-        $userFollowings = $userService->followings($user, 64, 5, 'web')->toArray();
+        // Set the current page for Laravel pagination
+        request()->merge(['usersPage' => $page]);
+
         $users = $eventService->userParticipations($user, 64, $userSearchTerm, $perPageUser, 'web')->toArray();
+
+        return response()->json([
+            'users' => $users,
+        ]);
+    }
+
+    /**
+     * Get available teams data.
+     */
+    public function getAvailableTeams(Request $request, TeamService $teamService): JsonResponse
+    {
+        $user = auth()->user();
+        $teamSearchTerm = $request->input('searchTeam', '');
+        $perPageTeam = (int) $request->input('perPageTeam', 5);
+        $page = (int) $request->input('page', 1);
+
+        // Set the current page for Laravel pagination
+        request()->merge(['teamsPage' => $page]);
+
         $teams = $teamService->all($user, 64, $teamSearchTerm, 'all', $perPageTeam, 'web')->toArray();
 
-        return Inertia::render('follow/index', [
-            'teamFollowings' => $teamFollowings,
-            'userFollowings' => $userFollowings,
-            'users' => $users,
+        return response()->json([
             'teams' => $teams,
-            'filters' => array_filter([
-                'searchUser' => $userSearchTerm ?: null,
-                'perPageUser' => $perPageUser !== 5 ? $perPageUser : null, // default is 5
-                'searchTeam' => $teamSearchTerm ?: null,
-                'perPageTeam' => $perPageTeam !== 5 ? $perPageTeam : null, // default is 5
-            ]),
+        ]);
+    }
+
+    /**
+     * Get basic user statistics (fast loading).
+     */
+    public function getBasicStats(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Get the current event
+        $event = $user->participations()->with('event')->first()?->event;
+
+        if (! $event) {
+            return response()->json([
+                'stats' => [
+                    'total_miles' => 0,
+                ],
+            ]);
+        }
+
+        // Get total miles (this should be fast)
+        $totalMiles = $user->totalPoints()->where('event_id', $event->id)->first()?->amount ?? 0;
+
+        return response()->json([
+            'stats' => [
+                'total_miles' => $totalMiles,
+            ],
+        ]);
+    }
+
+    /**
+     * Get achievement statistics (slower loading).
+     */
+    public function getAchievements(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Get the current event
+        $event = $user->participations()->with('event')->first()?->event;
+
+        if (! $event) {
+            return response()->json([
+                'achievements' => [
+                    'best_day' => null,
+                    'best_week' => null,
+                    'best_month' => null,
+                ],
+            ]);
+        }
+
+        // Calculate best day (potentially slower query)
+        $bestDay = $user->points()
+            ->selectRaw('SUM(amount) as total, date')
+            ->where('event_id', $event->id)
+            ->groupBy('date')
+            ->orderBy('total', 'desc')
+            ->first();
+
+        // Calculate best week (potentially slower query)
+        $bestWeek = $user->points()
+            ->selectRaw('SUM(amount) as total, YEARWEEK(date, 1) as yearweek')
+            ->where('event_id', $event->id)
+            ->groupBy('yearweek')
+            ->orderBy('total', 'desc')
+            ->first();
+
+        // Calculate best month (potentially slower query)
+        $bestMonth = $user->points()
+            ->selectRaw('SUM(amount) as total, YEAR(date) as year, MONTH(date) as month')
+            ->where('event_id', $event->id)
+            ->groupBy(['year', 'month'])
+            ->orderBy('total', 'desc')
+            ->first();
+
+        return response()->json([
+            'achievements' => [
+                'best_day' => $bestDay ? [
+                    'date' => $bestDay->date,
+                    'miles' => $bestDay->total,
+                ] : null,
+                'best_week' => $bestWeek ? [
+                    'yearweek' => $bestWeek->yearweek,
+                    'miles' => $bestWeek->total,
+                ] : null,
+                'best_month' => $bestMonth ? [
+                    'year' => $bestMonth->year,
+                    'month' => $bestMonth->month,
+                    'miles' => $bestMonth->total,
+                ] : null,
+            ],
         ]);
     }
 
@@ -279,6 +432,68 @@ final class DashboardController extends Controller
     {
         $result = (new UndoFollowing())($request, $request->user());
 
+        // Check if this is an Inertia request
+        if ($request->header('X-Inertia')) {
+            if (!$result['success']) {
+                return redirect()->back()->withErrors(['error' => $result['message']]);
+            }
+
+            return redirect()->back()->with('success', $result['message']);
+        }
+
+        // Check if this is an AJAX request (non-Inertia)
+        if ($request->wantsJson()) {
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message']
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $result['message']
+            ]);
+        }
+
+        // Handle regular form submissions with redirects
+        if (!$result['success']) {
+            return redirect()->back()->with('error', $result['message']);
+        }
+
+        return redirect()->back()->with('success', $result['message']);
+    }
+
+    public function follow_request(Request $request, string $type)
+    {
+        $result = (new RequestFollow())($request, $request->user(), $type);
+
+        // Check if this is an Inertia request
+        if ($request->header('X-Inertia')) {
+            if (!$result['success']) {
+                return redirect()->back()->withErrors(['error' => $result['message']]);
+            }
+
+            return redirect()->back()->with('success', $result['message']);
+        }
+
+        // Check if this is an AJAX request (non-Inertia)
+        if ($request->wantsJson()) {
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message']
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $result['message'],
+                'data' => $result['data']
+            ]);
+        }
+
+        // Handle regular form submissions with redirects
         if (!$result['success']) {
             return redirect()->back()->with('error', $result['message']);
         }

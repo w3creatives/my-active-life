@@ -99,6 +99,7 @@ final class TeamService
 
                 return $query->where('event_id', $eventId);
             })
+            ->orderBy('name', 'asc')
             ->simplePaginate(...$paginationArgs)
             ->through(function ($team) use ($user, $eventId) {
                 $team->is_team_owner = $team->owner_id === $user->id;
@@ -112,6 +113,36 @@ final class TeamService
                     $membershipStatus = 'JoinInProcess';
                 }
                 $team->membership_status = $membershipStatus;
+
+                // Add follow status information
+                $followingTextStatus = $team->public_profile ? 'Follow' : 'Request Follow';
+                $followingStatus = null;
+
+                $following = $user->teamFollowings()->where('event_id', $eventId)->where('team_id', $team->id)->count();
+
+                if ($following) {
+                    $followingTextStatus = 'Following';
+                    $followingStatus = 'following';
+                } else {
+                    if (!$team->public_profile) {
+                        $teamFollowingRequest = $user->teamFollowingRequests()->where(['event_id' => $eventId, 'team_id' => $team->id])->first();
+
+                        if ($teamFollowingRequest && $teamFollowingRequest->status === 'request_to_follow_issued') {
+                            $followingTextStatus = 'Requested follow';
+                            $followingStatus = 'request_to_follow_issued';
+                        } else {
+                            $followingTextStatus = 'Request Follow';
+                            $followingStatus = 'request_to_follow';
+                        }
+                    } else {
+                        $followingTextStatus = 'Follow';
+                        $followingStatus = 'follow';
+                    }
+                }
+
+                $team->following_status_text = $followingTextStatus;
+                $team->following_status = $followingStatus;
+
                 unset($team->requests);
                 unset($team->memberships);
                 unset($team->invites);

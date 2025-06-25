@@ -13,22 +13,16 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-interface Props {
-  userFollowings: any;
-  teamFollowings: any;
-  users: any;
-  teams: any;
-}
-
-export default function FollowPage({userFollowings, teamFollowings, users, teams} : Props) {
+export default function FollowPage() {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Follow" />
       <div className="flex flex-col gap-6 p-4">
-        <FollowingParticipants participants={userFollowings} />
-        <FollowingTeams teams={teamFollowings} />
-        <FollowParticipant users={users} />
-        <FollowTeam teams={teams} />
+        <h1 className="text-4xl font-normal">Follow</h1>
+        <FollowingParticipants />
+        <FollowingTeams />
+        <FollowParticipant />
+        <FollowTeam />
       </div>
     </AppLayout>
   );

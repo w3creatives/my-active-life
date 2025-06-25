@@ -2,7 +2,10 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import axios from 'axios';
 import VideoCard from '@/components/tutorial/video-card';
+import { VideoCardSkeleton, SkeletonGrid } from '@/components/ui/skeleton-components';
+import { Card, CardContent } from '@/components/ui/card';
 
 type TutorialItem = {
   type: string;
@@ -14,11 +17,9 @@ type TutorialItem = {
   url?: string;
 };
 
-type TutorialProps = {
-  tutorials?: {
-    event_id: number;
-    tutorial_text: string;
-  };
+type TutorialData = {
+  event_id: number;
+  tutorial_text: string;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -28,26 +29,44 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-export default function Tutorials({ tutorials }: TutorialProps) {
+export default function Tutorials() {
   const [tutorialItems, setTutorialItems] = useState<TutorialItem[]>([]);
   const [pageTitle, setPageTitle] = useState('Tutorials');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (tutorials && tutorials.tutorial_text) {
+    const fetchTutorials = async () => {
       try {
-        const parsedItems = JSON.parse(tutorials.tutorial_text);
-        setTutorialItems(parsedItems);
+        setLoading(true);
+        const response = await axios.get(route('api.tutorials.data'));
+        const tutorials: TutorialData = response.data.tutorials;
 
-        // Set page title from first heading if available
-        const firstHeading = parsedItems.find(item => item.type === 'heading' && item.level === 1);
-        if (firstHeading) {
-          setPageTitle(firstHeading.content);
+        if (tutorials && tutorials.tutorial_text) {
+          try {
+            const parsedItems = JSON.parse(tutorials.tutorial_text);
+            setTutorialItems(parsedItems);
+
+            // Set page title from first heading if available
+            const firstHeading = parsedItems.find(item => item.type === 'heading' && item.level === 1);
+            if (firstHeading) {
+              setPageTitle(firstHeading.content);
+            }
+          } catch (parseError) {
+            console.error('Error parsing tutorial data:', parseError);
+            setError('Failed to parse tutorial data');
+          }
         }
-      } catch (error) {
-        console.error('Error parsing tutorial data:', error);
+      } catch (err) {
+        setError('Failed to load tutorials');
+        console.error('Error fetching tutorials:', err);
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [tutorials]);
+    };
+
+    fetchTutorials();
+  }, []);
 
   const renderTutorialItem = (item: TutorialItem, index: number) => {
     switch (item.type) {
@@ -72,9 +91,23 @@ export default function Tutorials({ tutorials }: TutorialProps) {
       <div className="flex flex-col gap-6 p-4">
         <h1 className="text-4xl font-normal">{pageTitle}</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {tutorialItems.map((item, index) => renderTutorialItem(item, index))}
-        </div>
+        {loading ? (
+          <SkeletonGrid
+            count={4}
+            columns={2}
+            component={VideoCardSkeleton}
+          />
+        ) : error ? (
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-red-500">{error}</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {tutorialItems.map((item, index) => renderTutorialItem(item, index))}
+          </div>
+        )}
       </div>
     </AppLayout>
   );

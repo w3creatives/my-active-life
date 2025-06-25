@@ -483,13 +483,18 @@ final class EventService
         return EventParticipation::where('event_id', $eventId)
             ->whereHas('user', function ($query) use ($searchTerm) {
                 if ($searchTerm) {
-                    $query->where('first_name', 'LIKE', "{$searchTerm}%")
-                        ->orWhere('last_name', 'LIKE', "{$searchTerm}%")
-                        ->orWhere('display_name', 'LIKE', "{$searchTerm}%");
+                    $query->where(function ($q) use ($searchTerm) {
+                        $q->where('first_name', 'ILIKE', "{$searchTerm}%")
+                          ->orWhere('last_name', 'ILIKE', "{$searchTerm}%")
+                          ->orWhere('display_name', 'ILIKE', "{$searchTerm}%");
+                    });
                 }
 
                 return $query;
             })
+            ->join('users', 'event_participations.user_id', '=', 'users.id')
+            ->orderBy('users.display_name', 'asc')
+            ->select('event_participations.*')
             ->simplePaginate(...$paginationArgs)
             ->through(function ($participation) use ($user) {
                 $member = $participation->user;

@@ -28,6 +28,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/follow', [DashboardController::class, 'follow'])->name('follow');
 
     Route::post('/unfollow/{type}', [DashboardController::class, 'unfollow'])->name('unfollow');
+    Route::post('/follow/{type}', [DashboardController::class, 'follow_request'])->name('follow.request');
 
     // User points routes
     Route::get('/user-points', [DashboardController::class, 'getUserPoints'])->name('user.points');
@@ -37,6 +38,19 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/conversations', [DashboardController::class, 'conversations'])->name('user.conversations');
     Route::get('/conversations/new', [DashboardController::class, 'newConversation'])->name('user.conversations.new');
+
+    // Progressive data loading API routes
+    Route::get('/api/tutorials-data', [DashboardController::class, 'getTutorialsData'])->name('api.tutorials.data');
+
+    // Granular follow page API routes
+    Route::get('/api/follow/user-followings', [DashboardController::class, 'getUserFollowings'])->name('api.follow.user-followings');
+    Route::get('/api/follow/team-followings', [DashboardController::class, 'getTeamFollowings'])->name('api.follow.team-followings');
+    Route::get('/api/follow/available-users', [DashboardController::class, 'getAvailableUsers'])->name('api.follow.available-users');
+    Route::get('/api/follow/available-teams', [DashboardController::class, 'getAvailableTeams'])->name('api.follow.available-teams');
+
+    // Granular stats page API routes
+    Route::get('/api/stats/basic', [DashboardController::class, 'getBasicStats'])->name('api.stats.basic');
+    Route::get('/api/stats/achievements', [DashboardController::class, 'getAchievements'])->name('api.stats.achievements');
 
     // Event selection route (temporary session-based)
     Route::post('/events/select-temp', [DashboardController::class, 'selectTempEvent'])->name('events.select-temp');

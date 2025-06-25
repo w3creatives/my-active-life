@@ -31,6 +31,10 @@ const buttonVariants = cva(
           "bg-red-500 text-white shadow-xs hover:bg-red-500/90 focus-visible:ring-red-500/20 dark:focus-visible:ring-red-500/40",
         'outline-danger': 
           "border border-input border-red-500 bg-background shadow-xs hover:bg-red-500 hover:text-white",
+        yellow:
+          "bg-yellow-500 text-dark shadow-xs hover:bg-yellow-500/90 focus-visible:ring-yellow-500/20 dark:focus-visible:ring-yellow-500/40",
+        'outline-yellow':
+          "",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },

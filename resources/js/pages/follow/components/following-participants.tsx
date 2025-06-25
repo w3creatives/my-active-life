@@ -6,9 +6,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { router } from '@inertiajs/react';
 import { toast } from 'sonner';
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 interface Participant {
   id: number;
@@ -16,16 +18,34 @@ interface Participant {
   total_miles: number;
 }
 
-interface Props {
-  participants: {
-    data: Participant[];
-  };
+interface ParticipantsData {
+  data: Participant[];
 }
 
-export default function FollowingParticipants({ participants }: Props) {
+export default function FollowingParticipants() {
+  const [participants, setParticipants] = useState<ParticipantsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [unfollowingId, setUnfollowingId] = useState<number | null>(null);
 
-  function handleUnfollow(userId: number) {
+  const fetchUserFollowings = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(route('api.follow.user-followings'));
+      setParticipants(response.data.userFollowings);
+    } catch (err) {
+      setError('Failed to load following participants');
+      console.error('Error fetching user followings:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserFollowings();
+  }, []);
+
+  function handleUnfollow(userId: number, displayName: string) {
     setUnfollowingId(userId);
     router.post(
       '/unfollow/user',
@@ -33,7 +53,15 @@ export default function FollowingParticipants({ participants }: Props) {
       {
         preserveScroll: true,
         onSuccess: () => {
-          toast.success('You have successfully unfollowed the user.');
+          // Always show success message and refresh data on successful response
+          toast.success(`You have successfully unfollowed ${displayName}.`);
+          // Refresh the data after successful unfollow
+          fetchUserFollowings();
+        },
+        onError: (errors) => {
+          // Handle validation errors or other errors
+          const errorMessage = errors.error || `Failed to unfollow ${displayName}. Please try again.`;
+          toast.error(errorMessage);
         },
         onFinish: () => {
           setUnfollowingId(null);
@@ -41,6 +69,28 @@ export default function FollowingParticipants({ participants }: Props) {
       }
     );
   }
+
+  // Skeleton component for individual participant rows
+  const ParticipantSkeleton = () => (
+    <div className="flex items-center justify-between border-b pb-4 last:border-b-0">
+      {/* Avatar + Display Name */}
+      <div className="flex items-center gap-3">
+        <Skeleton className="size-10 rounded-full" />
+        <Skeleton className="h-4 w-32" />
+      </div>
+
+      {/* Progress Bar */}
+      <div className="flex-1 mx-6">
+        <Skeleton className="w-full h-2 rounded-full" />
+      </div>
+
+      {/* Miles & Unfollow */}
+      <div className="flex items-center gap-4">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-8 w-20" />
+      </div>
+    </div>
+  );
 
   return (
     <Card>
@@ -52,7 +102,16 @@ export default function FollowingParticipants({ participants }: Props) {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {participants.data.length === 0 ? (
+        {loading ? (
+          // Show skeleton rows while loading
+          <div className="space-y-4">
+            <ParticipantSkeleton />
+            <ParticipantSkeleton />
+            <ParticipantSkeleton />
+          </div>
+        ) : error ? (
+          <div className="text-red-500 text-center">{error}</div>
+        ) : !participants || participants.data.length === 0 ? (
           <div className="text-muted-foreground text-center">
             You are not following anyone. Boo-hoo.
           </div>
@@ -96,7 +155,7 @@ export default function FollowingParticipants({ participants }: Props) {
                   <Button
                     variant="danger"
                     size="sm"
-                    onClick={() => handleUnfollow(person.id)}
+                    onClick={() => handleUnfollow(person.id, person.display_name)}
                     disabled={unfollowingId === person.id}
                   >
                     {unfollowingId === person.id ? 'Unfollowing' : 'Unfollow'}
