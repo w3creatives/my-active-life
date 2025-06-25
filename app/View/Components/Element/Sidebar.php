@@ -16,7 +16,7 @@ class Sidebar extends Component
     {
         list($prefix, $currentNav) = explode('/', request()->path());
 
-        $this->currentRoute = request()->route()->action['as'];
+        $this->currentRoute = request()->route()->action??['as'];
 
         $this->currentNav = $currentNav;
 
@@ -47,7 +47,7 @@ class Sidebar extends Component
                     ],
                     [
                         'route' => 'admin.users.create',
-                        'label' => 'Add New User',
+                        'label' => 'Create New Account',
                         'route_group' => 'users',
                     ],
                     [

@@ -146,4 +146,40 @@ final class UsersController extends Controller
 
         return redirect()->route('admin.users')->with('alert', ['type' => 'success', 'message' => $flashMessage]);
     }
+
+    public function mergeAccounts(Request $request)
+    {
+
+        if ($request->isMethod('POST')) {
+            $request->validate([
+                'primary_account_email' => [
+                    'required',
+                    'email',
+                    Rule::exists('users', 'email')->where(function ($query) {
+                        $query->where('super_admin', false);
+                    }),
+                ],
+                'secondary_account_email' => [
+                    'required',
+                    'email',
+                    'different:primary_account_email',
+                    Rule::exists('users','email')->where(function ($query) {
+                        $query->where('super_admin', false);
+                    }),
+                ],
+            ],[
+                'primary_account_email.exists' => 'The email of primary account doesn\'t exist.',
+                'secondary_account_email.exists' => 'The email of secondary account doesn\'t exist.',
+            ]);
+            return redirect()->route('admin.users');
+            $primaryAccount = User::where('email', $request->get('primary_account_email'))->first();
+            $secondaryAccount = User::where('email', $request->get('secondary_account_email'))->first();
+
+            dd($secondaryAccount->teams()->count(), $secondaryAccount->memberships()->count());
+
+            dd($request->all(), $primaryAccount, $secondaryAccount);
+        }
+
+        return view('admin.users.merge-account');
+    }
 }
