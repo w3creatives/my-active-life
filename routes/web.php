@@ -28,6 +28,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/follow', [DashboardController::class, 'follow'])->name('follow');
 
     Route::post('/unfollow/{type}', [DashboardController::class, 'unfollow'])->name('unfollow');
+    Route::post('/follow/{type}', [DashboardController::class, 'follow_request'])->name('follow.request');
 
     // User points routes
     Route::get('/user-points', [DashboardController::class, 'getUserPoints'])->name('user.points');

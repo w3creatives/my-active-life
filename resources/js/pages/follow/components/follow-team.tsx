@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Search } from 'lucide-react';
+import { Search, Lock, LockOpen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -18,6 +18,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useState, useEffect } from 'react';
+import { router } from '@inertiajs/react';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 interface Team {
@@ -27,6 +29,8 @@ interface Team {
   total_members?: number;
   total_miles?: number;
   membership_status: string | null;
+  following_status_text?: string;
+  following_status?: string;
 }
 
 interface Pagination<T> {
@@ -43,6 +47,7 @@ export default function FollowTeam() {
   const [searchTeam, setSearchTeam] = useState('');
   const [perPageTeam, setPerPageTeam] = useState('5');
   const [currentPage, setCurrentPage] = useState(1);
+  const [followingId, setFollowingId] = useState<number | null>(null);
 
   const fetchTeams = async (page: number = currentPage) => {
     try {
@@ -62,6 +67,37 @@ export default function FollowTeam() {
       setLoading(false);
     }
   };
+
+  function handleFollow(teamId: number, teamName: string, isPublic: boolean) {
+    // Prevent multiple clicks
+    if (followingId === teamId) {
+      return;
+    }
+
+    setFollowingId(teamId);
+    router.post(
+      '/follow/team',
+      { team_id: teamId, event_id: 64 },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          const message = isPublic
+            ? `You are now following ${teamName}.`
+            : `Follow request sent to ${teamName}.`;
+          toast.success(message);
+          // Refresh the data after successful follow
+          fetchTeams();
+        },
+        onError: (errors) => {
+          const errorMessage = errors.error || `Failed to follow ${teamName}. Please try again.`;
+          toast.error(errorMessage);
+        },
+        onFinish: () => {
+          setFollowingId(null);
+        },
+      }
+    );
+  }
 
   useEffect(() => {
     fetchTeams(1); // Reset to page 1 on initial load
@@ -171,12 +207,30 @@ export default function FollowTeam() {
                 className="grid grid-cols-5 items-center px-4 py-3 border-b text-sm"
               >
                 <div>{team.name}</div>
-                <div>{team.public_profile ? 'Public' : 'Private'}</div>
+                <div className="flex items-center">
+                  {team.public_profile ? (
+                    <LockOpen className="text-gray-500 size-5" />
+                  ) : (
+                    <Lock className="text-gray-500 size-5" />
+                  )}
+                </div>
                 <div>{team.total_members ?? '-'}</div>
                 <div>{team.total_miles?.toFixed(1) ?? '-'}</div>
                 <div className="text-right">
-                  {/* Replace with real follow logic */}
-                  <Button variant="default" size="sm">Follow</Button>
+                  {(team.following_status_text === 'Follow' || team.following_status_text === 'Request Follow') ? (
+                    <Button
+                      variant={team.public_profile ? "default" : "yellow"}
+                      size="sm"
+                      onClick={() => handleFollow(team.id, team.name, team.public_profile)}
+                      disabled={followingId === team.id}
+                    >
+                      {followingId === team.id ? 'Following...' : team.following_status_text}
+                    </Button>
+                  ) : (
+                    <Button variant="secondary" size="sm" disabled>
+                      {team.following_status_text || 'Follow'}
+                    </Button>
+                  )}
                 </div>
               </div>
             ))

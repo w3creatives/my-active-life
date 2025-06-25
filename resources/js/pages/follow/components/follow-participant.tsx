@@ -18,6 +18,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect, useState } from 'react';
+import { router } from '@inertiajs/react';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 interface User {
@@ -46,6 +48,7 @@ export default function FollowParticipant() {
   const [searchUser, setSearchUser] = useState('');
   const [perPageUser, setPerPageUser] = useState('5');
   const [currentPage, setCurrentPage] = useState(1);
+  const [followingId, setFollowingId] = useState<number | null>(null);
 
   const fetchUsers = async (page: number = currentPage) => {
     try {
@@ -65,6 +68,37 @@ export default function FollowParticipant() {
       setLoading(false);
     }
   };
+
+  function handleFollow(userId: number, displayName: string, isPublic: boolean) {
+    // Prevent multiple clicks
+    if (followingId === userId) {
+      return;
+    }
+
+    setFollowingId(userId);
+    router.post(
+      '/follow/user',
+      { user_id: userId, event_id: 64 },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          const message = isPublic
+            ? `You are now following ${displayName}.`
+            : `Follow request sent to ${displayName}.`;
+          toast.success(message);
+          // Refresh the data after successful follow
+          fetchUsers();
+        },
+        onError: (errors) => {
+          const errorMessage = errors.error || `Failed to follow ${displayName}. Please try again.`;
+          toast.error(errorMessage);
+        },
+        onFinish: () => {
+          setFollowingId(null);
+        },
+      }
+    );
+  }
 
   useEffect(() => {
     fetchUsers(1); // Reset to page 1 on initial load
@@ -200,9 +234,20 @@ export default function FollowParticipant() {
               <div className='w-1/4 lg:w-1/5'>{user.city}</div>
               <div className='w-1/4 lg:w-1/5'>{user.state}</div>
               <div className="w-full lg:w-1/5 lg:text-right mt-2 lg:mt-0">
-                <Button variant="yellow" size="sm">
-                  {user.following_status_text}
-                </Button>
+                {(user.following_status_text === 'Follow' || user.following_status_text === 'Request Follow') ? (
+                  <Button
+                    variant={user.public_profile ? "default" : "yellow"}
+                    size="sm"
+                    onClick={() => handleFollow(user.id, user.display_name, user.public_profile)}
+                    disabled={followingId === user.id}
+                  >
+                    {followingId === user.id ? 'Following...' : user.following_status_text}
+                  </Button>
+                ) : (
+                  <Button variant="secondary" size="sm" disabled>
+                    {user.following_status_text}
+                  </Button>
+                )}
               </div>
             </div>
           ))

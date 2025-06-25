@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\EventTutorials\GetEventTutorials;
 use App\Actions\Follow\UndoFollowing;
+use App\Actions\Follow\RequestFollow;
 use App\Models\Event;
 use App\Services\EventService;
 use App\Services\MailboxerService;
@@ -452,6 +453,43 @@ final class DashboardController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => $result['message']
+            ]);
+        }
+
+        // Handle regular form submissions with redirects
+        if (!$result['success']) {
+            return redirect()->back()->with('error', $result['message']);
+        }
+
+        return redirect()->back()->with('success', $result['message']);
+    }
+
+    public function follow_request(Request $request, string $type)
+    {
+        $result = (new RequestFollow())($request, $request->user(), $type);
+
+        // Check if this is an Inertia request
+        if ($request->header('X-Inertia')) {
+            if (!$result['success']) {
+                return redirect()->back()->withErrors(['error' => $result['message']]);
+            }
+
+            return redirect()->back()->with('success', $result['message']);
+        }
+
+        // Check if this is an AJAX request (non-Inertia)
+        if ($request->wantsJson()) {
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message']
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $result['message'],
+                'data' => $result['data']
             ]);
         }
 
