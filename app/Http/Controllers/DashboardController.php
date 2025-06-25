@@ -431,8 +431,17 @@ final class DashboardController extends Controller
     {
         $result = (new UndoFollowing())($request, $request->user());
 
-        // Check if this is an AJAX/Inertia request
-        if ($request->wantsJson() || $request->header('X-Inertia')) {
+        // Check if this is an Inertia request
+        if ($request->header('X-Inertia')) {
+            if (!$result['success']) {
+                return redirect()->back()->withErrors(['error' => $result['message']]);
+            }
+
+            return redirect()->back()->with('success', $result['message']);
+        }
+
+        // Check if this is an AJAX request (non-Inertia)
+        if ($request->wantsJson()) {
             if (!$result['success']) {
                 return response()->json([
                     'success' => false,

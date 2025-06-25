@@ -85,7 +85,6 @@ class UndoFollowing
             ];
         }
 
-        // Find the team follow relationship
         $teamFollow = $team->followers()
             ->where('follower_id', $user->id)
             ->where('event_id', $request->event_id)

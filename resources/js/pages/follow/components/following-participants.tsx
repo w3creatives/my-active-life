@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { router } from '@inertiajs/react';
 import { toast } from 'sonner';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 interface Participant {
@@ -53,12 +53,15 @@ export default function FollowingParticipants() {
       {
         preserveScroll: true,
         onSuccess: () => {
+          // Always show success message and refresh data on successful response
           toast.success(`You have successfully unfollowed ${displayName}.`);
           // Refresh the data after successful unfollow
           fetchUserFollowings();
         },
-        onError: () => {
-          toast.error(`Failed to unfollow ${displayName}. Please try again.`);
+        onError: (errors) => {
+          // Handle validation errors or other errors
+          const errorMessage = errors.error || `Failed to unfollow ${displayName}. Please try again.`;
+          toast.error(errorMessage);
         },
         onFinish: () => {
           setUnfollowingId(null);

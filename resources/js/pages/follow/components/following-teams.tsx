@@ -71,13 +71,10 @@ export default function FollowingTeams() {
         preserveScroll: true,
         onSuccess: () => {
           toast.success(`You have successfully unfollowed ${teamName}.`);
-          // Refresh the data after successful unfollow
           fetchTeamFollowings();
         },
         onError: (errors) => {
-          console.error('Unfollow error:', errors);
-          // Check if there's a specific error message
-          const errorMessage = errors.message || errors.error || `Failed to unfollow ${teamName}. Please try again.`;
+          const errorMessage = errors.error || `Failed to unfollow ${teamName}. Please try again.`;
           toast.error(errorMessage);
         },
         onFinish: () => {
@@ -168,10 +165,10 @@ export default function FollowingTeams() {
                   <Button
                     variant="danger"
                     size="sm"
-                    onClick={() => handleUnfollow(id, team.name)}
-                    disabled={unfollowingId === id}
+                    onClick={() => handleUnfollow(team.id, team.name)}
+                    disabled={unfollowingId === team.id}
                   >
-                    {unfollowingId === id ? 'Unfollowing' : 'Unfollow'}
+                    {unfollowingId === team.id ? 'Unfollowing' : 'Unfollow'}
                   </Button>
                 </div>
               </div>
