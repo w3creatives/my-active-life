@@ -432,17 +432,19 @@ final class ProfilesController extends BaseController
                     $distance = $event->total_points;
                 }
 
+                $distance = (float)$distance;
+
                 $totalDays = Carbon::parse($participation->subscription_end_date)->diffInDays(Carbon::parse($event->start_date)->subDay(0));
 
                 $userPoint = $user->points()->selectRaw('SUM(amount) AS total_mile')->where('event_id', $event->id)->where('date', '>=', Carbon::parse($event->start_date)->format('Y-m-d'))->where('date', '<=', Carbon::now()->format('Y-m-d'))->first();
 
                 $userTotalPointDays = 0; // $user->points()->where('event_id',$event->id)->where('date','>=',Carbon::parse($event->start_date)->format('Y-m-d'))->where('date','<=', Carbon::now()->format('Y-m-d'))->groupBy('date')->count();
 
-                $userTotalPoints = $userPoint->total_mile;
+                $userTotalPoints = (float)$userPoint->total_mile;
 
                 $totalDayTillToday = Carbon::now()->diffInDays(Carbon::parse($event->start_date));
 
-                $totalRemainingDays = $totalDays - $totalDayTillToday;
+                $totalRemainingDays = (float)($totalDays - $totalDayTillToday);
 
                 if (! $totalDayTillToday) {
                     $totalDayTillToday = 1;
@@ -452,8 +454,8 @@ final class ProfilesController extends BaseController
                     $totalRemainingDays = 1;
                 }
 
-                $perDayAvgMile = $userTotalPoints / ($totalDayTillToday);
-                $perDayAvgMileRequired = ($distance - $userTotalPoints) / ($totalRemainingDays);
+                $perDayAvgMile = (float)($userTotalPoints / ($totalDayTillToday));
+                $perDayAvgMileRequired = (float)(($distance - $userTotalPoints) / ($totalRemainingDays));
 
                 $completedPercentage = ($userTotalPoints * 100) / $distance;
 
