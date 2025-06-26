@@ -105,11 +105,14 @@ final class EventService
         if (! $rtyGoal) {
             $distance = $event->total_points;
         }
+
+        $distance = (float)$distance;
+
         $userPoint = $user->points()->selectRaw('SUM(amount) AS total_mile')->where('event_id', $event->id)->where('date', '>=', Carbon::parse($event->start_date)->format('Y-m-d'))->where('date', '<=', Carbon::now()->format('Y-m-d'))->first();
 
-        $userTotalPoints = $userPoint->total_mile ? $userPoint->total_mile : 0;
+        $userTotalPoints = $userPoint->total_mile ? (float)$userPoint->total_mile : 0;
 
-        $completedPercentage = ($userTotalPoints * 100) / ($distance ? $distance : 1);
+        $completedPercentage = ((float)$userTotalPoints * 100) / ($distance ? $distance : 1);
 
         $remainingDistance = $distance - $userTotalPoints;
 
