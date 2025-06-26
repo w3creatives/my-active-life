@@ -22,6 +22,9 @@ class Event extends Model
 
     public function getLogoUrlAttribute()
     {
+        if(!isset($this->attributes['logo'])) {
+            return null;
+        }
         if(file_exists(public_path('static/' . $this->attributes['logo']))){
             return url("static/" . trim($this->attributes['logo']));
         }
