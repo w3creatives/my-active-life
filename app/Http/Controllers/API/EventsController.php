@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Cache;
-
+use Illuminate\Support\Str;
 use Exception;
 use Carbon\Carbon;
 use App\Models\{
