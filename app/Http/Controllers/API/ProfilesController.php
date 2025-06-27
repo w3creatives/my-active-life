@@ -583,6 +583,12 @@ final class ProfilesController extends BaseController
         $followRequest = $team->followerRequests()->where(['prospective_follower_id' => $user->id, 'event_id' => $request->event_id])->first();
 
         if ($type === 'undo') {
+            $hasCount = $team->followers()->where(['follower_id' => $user->id, 'event_id' => $request->event_id])->count();
+            if($team->public_profile || $hasCount){
+                $team->followers()->where(['follower_id' => $user->id, 'event_id' => $request->event_id])->delete();
+                $team->followerRequests()->where(['prospective_follower_id'=>$user->id,'event_id' => $request->event_id])->delete();
+                return $this->sendResponse([], 'Follow request undone');
+            }
 
             if (! is_null($followRequest)) {
                 $followRequest->delete();
