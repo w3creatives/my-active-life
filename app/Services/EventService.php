@@ -489,7 +489,8 @@ final class EventService
                     $query->where(function ($q) use ($searchTerm) {
                         $q->where('first_name', 'ILIKE', "{$searchTerm}%")
                           ->orWhere('last_name', 'ILIKE', "{$searchTerm}%")
-                          ->orWhere('display_name', 'ILIKE', "{$searchTerm}%");
+                          ->orWhere('display_name', 'ILIKE', "{$searchTerm}%")
+                            ->orWhere('email', 'ILIKE', "{$searchTerm}%");
                     });
                 }
 
