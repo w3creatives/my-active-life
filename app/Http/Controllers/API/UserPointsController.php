@@ -24,45 +24,49 @@ use Illuminate\Validation\Rule;
 
 class UserPointsController extends BaseController
 {
-    private function milestoneImages($eventId, $distance, $activityId = null, $isCompleted = false)
+    private function milestoneImages($event, $distance, $activityId = null, $isCompleted = false)
     {
 
-        $imageService = app(MilestoneImageService::class);
-        $result = $imageService->getMilestoneImage($eventId, $distance, $activityId);
 
-        if (empty($result)) {
+        if($event->event_type == 'fit_life') {
+            $imageService = app(MilestoneImageService::class);
+            $result = $imageService->getMilestoneImage($event->id, $distance, $activityId);
+
+            if (empty($result)) {
+                return [
+                    'logo_image_url' => null,
+                    'team_logo_image_url' => null,
+                    'calendar_logo_image_url' => null,
+                    'calendar_team_logo_image_url' => null,
+                ];
+            }
+
+            if ($isCompleted) {
+                return [
+                    'logo_image_url' => $result['bib'][1]['url'] ?? null,
+                    'team_logo_image_url' => null,
+                    'calendar_logo_image_url' => $result['calendar'][1]['url'] ?? null,
+                    'calendar_team_logo_image_url' => null,
+                ];
+            }
+
             return [
-                'logo_image_url' => null,
+                'logo_image_url' => $result['bib'][0]['url'] ?? null,
                 'team_logo_image_url' => null,
-                'calendar_logo_image_url' => null,
+                'calendar_logo_image_url' => $result['calendar'][0]['url'] ?? null,
                 'calendar_team_logo_image_url' => null,
             ];
         }
 
-        if ($isCompleted) {
-            return [
-                'logo_image_url' => $result['bib'][1]['url'] ?? null,
-                'team_logo_image_url' => null,
-                'calendar_logo_image_url' => $result['calendar'][1]['url'] ?? null,
-                'calendar_team_logo_image_url' => null,
-            ];
-        }
-
-        return [
-            'logo_image_url' => $result['bib'][0]['url'] ?? null,
-            'team_logo_image_url' => null,
-            'calendar_logo_image_url' => $result['calendar'][0]['url'] ?? null,
-            'calendar_team_logo_image_url' => null,
-        ];
-
-        /** Get Images from Ruby
+        $eventId = $event->id;
+        // Get bib image from Ruby
         $formData = [
-        'event_id' => $eventId,
-        'distance' => $distance
+            'event_id' => $eventId,
+            'distance' => $distance
         ];
 
         if($activityId){
-        $formData['activity_id'] = $activityId;
+            $formData['activity_id'] = $activityId;
         }
 
         $response = Http::get('https://staging-tracker.runtheedge.com/api/v1/event_milestone_images', $formData);
@@ -72,7 +76,6 @@ class UserPointsController extends BaseController
         if(!$data) return [];
 
         return $data[0]['attributes'];
-         */
     }
 
     public function listView(Request $request): JsonResponse
@@ -150,6 +153,7 @@ class UserPointsController extends BaseController
         $points->through(function ($item, $key) use ($event, $user, $points) {
 
             if ($event->event_type == 'fit_life') {
+
                 $milestone = $this->fitLife($user, $event, $item);
 
                 if ($milestone) {
@@ -161,10 +165,11 @@ class UserPointsController extends BaseController
                         $milestone->is_completed = $item->total_mile >= $milestoneTotalPoints;
                     }
 
-                    $milestone->image = $this->milestoneImages($event->id, $milestone->total_points, $milestone->activity_id, $milestone->is_completed);
+                    $milestone->image = $this->milestoneImages($event, $milestone->total_points, $milestone->activity_id, $milestone->is_completed);
                 }
 
                 $item->milestone = $milestone;
+
                 $item->bibs_url = null;
                 return $item;
             }
@@ -193,7 +198,7 @@ class UserPointsController extends BaseController
                     $bibs_url = sprintf('https://bibs.runtheedge.com/?miles=%s-%s', $event->bibs_name, $milestone->distance);
                 }
 
-                $milestone->image = $this->milestoneImages($event->id, $milestone->distance);
+                $milestone->image = $this->milestoneImages($event, $milestone->distance);
             }
             $item->bibs_url = $bibs_url;
             $item->milestone = $milestone;
@@ -388,7 +393,7 @@ class UserPointsController extends BaseController
                     $milestone = $this->fitLife($user, $event, $item);
 
                     if ($milestone) {
-                        $milestone->image = $this->milestoneImages($event->id, $milestone->total_points, $milestone->activity_id);
+                        $milestone->image = $this->milestoneImages($event, $milestone->total_points, $milestone->activity_id);
                     }
 
                     $item->milestone = $milestone;
@@ -410,7 +415,7 @@ class UserPointsController extends BaseController
                 $milestone = $milestone->orderBy('distance', 'DESC')->first();
 
                 if ($milestone) {
-                    $milestone->image = $this->milestoneImages($event->id, $milestone->distance);
+                    $milestone->image = $this->milestoneImages($event, $milestone->distance);
                 }
 
                 $item->milestone = $milestone;
@@ -728,6 +733,7 @@ class UserPointsController extends BaseController
 
             $eventService->createOrUpdateUserPoint($user, $request->event_id, $request->date);
             $eventService->userPointWorkflow($user->id, $request->event_id);
+
             return $this->sendResponse([], 'User Points updated');
         }
 
@@ -775,7 +781,6 @@ class UserPointsController extends BaseController
             $this->questMilestoneAcheivement($user, $request->date, $participation->event_id);
 
             $eventService->createOrUpdateUserPoint($user, $participation->event_id, $request->date);
-
             $eventService->userPointWorkflow($user->id, $participation->event_id);
         }
 
@@ -1130,7 +1135,7 @@ class UserPointsController extends BaseController
                     $this->createPoints($eventService, $request->user(), $date, $distance, $sourceProfile);
                     $processedCount++;
                 } catch (\Exception $e) {
-                    Log::error('Error creating points for Strava activity', [
+                    \Log::error('Error creating points for Strava activity', [
                         'message' => $e->getMessage(),
                         'trace' => $e->getTraceAsString(),
                         'activity' => $activity,
@@ -1146,7 +1151,7 @@ class UserPointsController extends BaseController
                 'Strava activities synced successfully'
             );
         } catch (\Exception $e) {
-            Log::error('Strava sync error', [
+            \Log::error('Strava sync error', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -1172,7 +1177,7 @@ class UserPointsController extends BaseController
             ]);
 
             if (! $response->successful()) {
-                Log::error('Failed to refresh Strava token', [
+                \Log::error('Failed to refresh Strava token', [
                     'status' => $response->status(),
                     'body' => $response->json(),
                 ]);
@@ -1189,7 +1194,7 @@ class UserPointsController extends BaseController
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Exception while refreshing Strava token', [
+            \Log::error('Exception while refreshing Strava token', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -1300,7 +1305,10 @@ class UserPointsController extends BaseController
                     $eventYearlyData['total_miles'] = array_sum(array_column($filledMonths, 'total_miles'));
                     $eventYearlyData['month'] = $filledMonths;
 
-                    array_push($yearlyStats, $eventYearlyData);
+                    $yearlyStats[] = $eventYearlyData;
+                    usort($yearlyStats, function($a, $b) {
+                        return strcmp($a['label'], $b['label']);
+                    });
                 }
             } else {
                 $yearlyStats = $this->generateYearlyStats($monthlyPoints);

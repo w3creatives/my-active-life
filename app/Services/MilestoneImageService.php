@@ -13,8 +13,9 @@ class MilestoneImageService
 
     public function getMilestoneImage(int $eventId, float $distance, ?int $activityId = null): array
     {
-        $event = Event::find($eventId)->first();
+        $event = Event::find($eventId);
         $imagePath = [];
+
 
         if (! $event) {
             return [
@@ -74,17 +75,17 @@ class MilestoneImageService
         // Build the path structure: images/{event_id}/{sponsor-slug}/{category-slug}/{group-slug}/{event_id}_{distance}_{activity_id}.jpg
         $directoryPath = '';
 
-        if ($event->id === 59) {
-            $directoryPath = sprintf(
-                '%s/%s/%s/%s/%s%s',
-                self::BASE_IMAGE_PATH,
-                'the-heros-journey',
-                $sponsorSlug,
-                $categorySlug,
-                $groupSlug,
-                '/the-heros-journey'
-            );
-        }
+        //if ($event->id === 77) {
+        $directoryPath = sprintf(
+            '%s/%s/%s/%s/%s%s',
+            self::BASE_IMAGE_PATH,
+            'the-heros-journey',
+            $sponsorSlug,
+            $categorySlug,
+            $groupSlug,
+            '/the-heros-journey'
+        );
+        //}
 
         $fullPath = public_path($directoryPath);
 
