@@ -57,4 +57,7 @@ return [
         'consumer_secret' => env('GARMIN_CONSUMER_SECRET'),
         'callback_url' => env('GARMIN_CALLBACK_URL'),
     ],
+    'tracker' => [
+        'workflow_url' => env('TRACKER_USER_POINT_WORKFLOW'),
+    ],
 ];

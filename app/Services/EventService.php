@@ -472,8 +472,7 @@ final class EventService
         Http::withQueryParameters([
             'user_id' => $userId,
             'event_id' => $eventId,
-        ])
-            ->post('https://tracker.runtheedge.com/user_points/user_point_workflow');
+        ])->post(config('services.tracker.workflow_url'));
 
     }
 
