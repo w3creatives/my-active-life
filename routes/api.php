@@ -120,7 +120,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('user/rty-mileage-goal/update', [ProfilesController::class, 'rtyMileageGoal']);
     Route::get('user/setting', [ProfilesController::class, 'findSetting']);
 
-    Route::get('quests/activities', [QuestsController::class, 'questActivies']);
+    Route::get('quests/activities', [QuestsController::class, 'questActivities']);
     Route::post('quests/create', [QuestsController::class, 'registration']);
     Route::get('quests', [QuestsController::class, 'all']);
     Route::get('quest/{id}', [QuestsController::class, 'findOne']);
