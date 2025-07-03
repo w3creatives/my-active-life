@@ -42,8 +42,8 @@ Route::group(['prefix' => 'shopify'], function(){
 
 Route::group(['prefix' => 'webhook'], function(){
     Route::get('/user-point-workflow/trigger', [UserPointWorkflowsController::class,'triggerWorkFlow']);
-   Route::post('v1/tracker/fitbit', [TrackersController::class,'fitbitTracker']);
-   Route::get('v1/tracker/fitbit', [TrackersController::class,'fitbitVerify']);
+   //Route::post('v1/tracker/fitbit', [TrackersController::class,'fitbitTracker']);
+   //Route::get('v1/tracker/fitbit', [TrackersController::class,'fitbitVerify']);
    Route::post('hubspot/user/verification', [HubspotsController::class,'verifyUserEmail']);
 
    Route::get('user/activity/distances/tracker', [UserActivitiesController::class,'userDistanceTracker']);
@@ -51,24 +51,26 @@ Route::group(['prefix' => 'webhook'], function(){
    Route::get('event/trigger-celebration-mail', [UserActivitiesController::class,'triggerCelebrationMail']);
 
    #Route::get('tracker/fitbit/user/distances', [TrackersController::class,'fitBitUserDistanceTracker']);
-   Route::get('tracker/fitbit/user/manual/distances', [TrackersController::class,'fitBiUserManualDistanceTracker']);
+   //Route::get('tracker/fitbit/user/manual/distances', [TrackersController::class,'fitBiUserManualDistanceTracker']);
 
-    Route::get('v1/tracker/fitbit/test', [TrackersController::class,'testfitbit']);
+    //Route::get('v1/tracker/fitbit/test', [TrackersController::class,'testfitbit']);
 
     Route::get('/user/hubspot-contact/verify',[OrdersController::class,'userHubspotVerification']);
 
 
-    Route::post('test/v1/tracker/fitbit', [TestTrackersController::class,'fitbitTracker']);
-    Route::get('test/v1/tracker/fitbit', [TestTrackersController::class,'fitbitVerify']);
+    //Route::post('test/v1/tracker/fitbit', [TestTrackersController::class,'fitbitTracker']);
+    //Route::get('test/v1/tracker/fitbit', [TestTrackersController::class,'fitbitVerify']);
     #Route::get('test/tracker/fitbit/user/distances', [TestTrackersController::class,'fitBitUserDistanceTracker']);
-    Route::get('test/tracker/fitbit/user/manual/distances', [TestTrackersController::class,'fitBiUserManualDistanceTracker']);
-    Route::get('test/v1/tracker/fitbit/test', [TestTrackersController::class,'testfitbit']);
+    //Route::get('test/tracker/fitbit/user/manual/distances', [TestTrackersController::class,'fitBiUserManualDistanceTracker']);
+    //Route::get('test/v1/tracker/fitbit/test', [TestTrackersController::class,'testfitbit']);
 
     /**
     * New webhook URLs
     */
     Route::post('tracker/fitbit', [TrackerWebhooksController::class,'webhookAction']);
     Route::get('tracker/fitbit', [TrackerWebhooksController::class,'verifyToken']);
+    Route::post('tracker/garmin', [TrackerWebhooksController::class,'webhookAction']);
+    Route::post('tracker/strava', [TrackerWebhooksController::class,'webhookAction']);
 
 });
 
