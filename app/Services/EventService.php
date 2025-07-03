@@ -438,6 +438,7 @@ final class EventService
             $point['eventId'] = $participation->event_id;
             $this->createOrUpdate($user, $point);
             $this->createOrUpdateUserPoint($user, $participation->event_id, $point['date']);
+            $this->userPointWorkflow($user->id, $participation->event_id);
         }
     }
 

@@ -60,6 +60,8 @@ final class GarminService implements DataSourceInterface
 
     private float $dateDays;
 
+    private string $responseType;
+
     public function __construct()
     {
         $this->consumerKey = config('services.garmin.consumer_key');
@@ -263,9 +265,11 @@ final class GarminService implements DataSourceInterface
         return $this;
     }
 
-    public function activities(): Collection
+    public function activities($responseType = 'data'): Collection
     {
         $data = [];
+
+        $this->responseType = $responseType;
 
         if ($this->queryParams && $this->garminRequestUrl) {
             $items = $this->findActivities();
@@ -276,20 +280,15 @@ final class GarminService implements DataSourceInterface
 
         $startOfDay = $this->startDate->copy()->startOfDay()->timestamp;
 
-        if ($this->dateDays) {
-            // for ($day = 0; $day <= $this->dateDays; $day++) {
+        $endOfDay = $this->dateDays ? Carbon::now()->timestamp : $this->startDate->copy()->endOfDay()->timestamp;
 
-            $endOfDay = Carbon::now()->timestamp;
+        $items = $this->findActivities($startOfDay, $endOfDay);
 
-            $items = $this->findActivities($startOfDay, $endOfDay);
-            $data = array_merge($data, $items);
-            // }
-        } else {
-            $endOfDay = $this->startDate->copy()->endOfDay()->timestamp;
-
-            $items = $this->findActivities($startOfDay, $endOfDay);
-            $data = array_merge($data, $items);
+        if ($this->responseType === 'response') {
+            return collect([$items]);
         }
+
+        $data = array_merge($data, $items);
 
         return $this->formatActivities($data);
     }
@@ -323,6 +322,10 @@ final class GarminService implements DataSourceInterface
             ->get($backfillUrl, $queryParams);
 
         Log::info('Garmin Response: '.$response->body());
+
+        if ($this->responseType === 'response') {
+            return $response;
+        }
 
         if ($response->successful()) {
             $activities = collect($response->json());
@@ -458,6 +461,39 @@ final class GarminService implements DataSourceInterface
         return http_response_code(204);
     }
 
+    /**
+     * Disconnect a user from Garmin
+     *
+     * @param  string  $accessToken  User's access token
+     * @param  string  $accessTokenSecret  User's access token secret
+     * @return bool Success status of disconnection
+     */
+    public function disconnectUser(string $accessToken, string $accessTokenSecret): bool
+    {
+        try {
+            $this->accessToken = $accessToken;
+            $this->accessTokenSecret = $accessTokenSecret;
+
+            // Set up OAuth parameters
+            $this->setOAuthParameters();
+
+            // Create OAuth request for deregistration
+            $url = $this->healthApiUrl.'/user/registration';
+            $response = $this->makeOAuthRequest('DELETE', $url);
+
+            // Check if disconnection was successful
+            if ($response && ($response->getStatusCode() === 200 || $response->getStatusCode() === 204)) {
+                return true;
+            }
+
+            return false;
+        } catch (Exception $e) {
+            Log::error('GarminService: Failed to disconnect user: '.$e->getMessage());
+
+            return false;
+        }
+    }
+
     private function buildParams(int $startTimeInSeconds, int $endTimeInSeconds): array
     {
         return [
@@ -584,38 +620,6 @@ final class GarminService implements DataSourceInterface
     }
 
     /**
-     * Disconnect a user from Garmin
-     *
-     * @param string $accessToken User's access token
-     * @param string $accessTokenSecret User's access token secret
-     * @return bool Success status of disconnection
-     */
-    public function disconnectUser(string $accessToken, string $accessTokenSecret): bool
-    {
-        try {
-            $this->accessToken = $accessToken;
-            $this->accessTokenSecret = $accessTokenSecret;
-
-            // Set up OAuth parameters
-            $this->setOAuthParameters();
-
-            // Create OAuth request for deregistration
-            $url = $this->healthApiUrl . '/user/registration';
-            $response = $this->makeOAuthRequest('DELETE', $url);
-
-            // Check if disconnection was successful
-            if ($response && ($response->getStatusCode() == 200 || $response->getStatusCode() == 204)) {
-                return true;
-            }
-
-            return false;
-        } catch (\Exception $e) {
-            \Log::error('GarminService: Failed to disconnect user: ' . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
      * Set OAuth parameters for authentication
      */
     private function setOAuthParameters(): void
@@ -627,9 +631,9 @@ final class GarminService implements DataSourceInterface
     /**
      * Make an OAuth request to Garmin API
      *
-     * @param string $method HTTP method (GET, POST, DELETE)
-     * @param string $url API endpoint URL
-     * @param array $params Additional parameters
+     * @param  string  $method  HTTP method (GET, POST, DELETE)
+     * @param  string  $url  API endpoint URL
+     * @param  array  $params  Additional parameters
      * @return \Illuminate\Http\Response|null Response object or null on failure
      */
     private function makeOAuthRequest(string $method, string $url, array $params = []): ?\Illuminate\Http\Response
@@ -645,13 +649,13 @@ final class GarminService implements DataSourceInterface
 
         // Generate signature
         $signatureBaseString = $this->generateSignatureBaseString($method, $url, array_merge($oauthParams, $params));
-        $signingKey = $this->consumerSecret . '&' . $this->accessTokenSecret;
+        $signingKey = $this->consumerSecret.'&'.$this->accessTokenSecret;
         $signature = base64_encode(hash_hmac('sha1', $signatureBaseString, $signingKey, true));
         $oauthParams['oauth_signature'] = $signature;
 
         // Create authorization header
-        $authHeader = 'OAuth ' . implode(', ', array_map(function ($key, $value) {
-            return $key . '="' . rawurlencode($value) . '"';
+        $authHeader = 'OAuth '.implode(', ', array_map(function ($key, $value) {
+            return $key.'="'.rawurlencode($value).'"';
         }, array_keys($oauthParams), $oauthParams));
 
         // Make the request
@@ -666,8 +670,9 @@ final class GarminService implements DataSourceInterface
             ]);
 
             return $response;
-        } catch (\Exception $e) {
-            \Log::error('GarminService OAuth request failed: ' . $e->getMessage());
+        } catch (Exception $e) {
+            Log::error('GarminService OAuth request failed: '.$e->getMessage());
+
             return null;
         }
     }
@@ -685,9 +690,9 @@ final class GarminService implements DataSourceInterface
         ksort($encodedParams);
 
         $paramString = implode('&', array_map(function ($key, $value) {
-            return $key . '=' . $value;
+            return $key.'='.$value;
         }, array_keys($encodedParams), $encodedParams));
 
-        return strtoupper($method) . '&' . rawurlencode($url) . '&' . rawurlencode($paramString);
+        return mb_strtoupper($method).'&'.rawurlencode($url).'&'.rawurlencode($paramString);
     }
 }

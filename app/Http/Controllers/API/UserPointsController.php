@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\API;
 
+use App\Interfaces\DataSourceInterface;
 use App\Models\DataSource;
 use App\Models\Event;
 use App\Models\FitLifeActivityRegistration;
@@ -21,67 +24,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
+use Log;
 
-class UserPointsController extends BaseController
+final class UserPointsController extends BaseController
 {
-    private function milestoneImages($event, $distance, $activityId = null, $isCompleted = false)
-    {
-
-
-        if($event->event_type == 'fit_life') {
-            $imageService = app(MilestoneImageService::class);
-            $result = $imageService->getMilestoneImage($event->id, $distance, $activityId);
-
-            if (empty($result)) {
-                return [
-                    'logo_image_url' => null,
-                    'team_logo_image_url' => null,
-                    'calendar_logo_image_url' => null,
-                    'calendar_team_logo_image_url' => null,
-                ];
-            }
-
-            if ($isCompleted) {
-                return [
-                    'logo_image_url' => $result['bib'][1]['url'] ?? null,
-                    'team_logo_image_url' => null,
-                    'calendar_logo_image_url' => $result['calendar'][1]['url'] ?? null,
-                    'calendar_team_logo_image_url' => null,
-                ];
-            }
-
-            return [
-                'logo_image_url' => $result['bib'][0]['url'] ?? null,
-                'team_logo_image_url' => null,
-                'calendar_logo_image_url' => $result['calendar'][0]['url'] ?? null,
-                'calendar_team_logo_image_url' => null,
-            ];
-        }
-
-        $eventId = $event->id;
-        // Get bib image from Ruby
-        $formData = [
-            'event_id' => $eventId,
-            'distance' => $distance
-        ];
-
-        if($activityId){
-            $formData['activity_id'] = $activityId;
-        }
-
-        $response = Http::get('https://staging-tracker.runtheedge.com/api/v1/event_milestone_images', $formData);
-
-        $data = $response->json('data');
-
-        if(!$data) return [];
-
-        return $data[0]['attributes'];
-    }
-
     public function listView(Request $request): JsonResponse
     {
 
-        $isCalendarMode = $request->mode == 'calendar';
+        $isCalendarMode = $request->mode === 'calendar';
 
         $request->validate([
             'mode' => 'required|in:list,calendar',
@@ -152,7 +102,7 @@ class UserPointsController extends BaseController
 
         $points->through(function ($item, $key) use ($event, $user, $points) {
 
-            if ($event->event_type == 'fit_life') {
+            if ($event->event_type === 'fit_life') {
 
                 $milestone = $this->fitLife($user, $event, $item);
 
@@ -171,6 +121,7 @@ class UserPointsController extends BaseController
                 $item->milestone = $milestone;
 
                 $item->bibs_url = null;
+
                 return $item;
             }
 
@@ -215,7 +166,7 @@ class UserPointsController extends BaseController
     public function unittestListView(Request $request): JsonResponse
     {
 
-        $isCalendarMode = $request->mode == 'calendar';
+        $isCalendarMode = $request->mode === 'calendar';
 
         $request->validate([
             'mode' => 'required|in:list,calendar',
@@ -329,7 +280,7 @@ class UserPointsController extends BaseController
     public function testlistView(Request $request): JsonResponse
     {
 
-        $isCalendarMode = $request->mode == 'calendar';
+        $isCalendarMode = $request->mode === 'calendar';
 
         $request->validate([
             'mode' => 'required|in:list,calendar',
@@ -350,7 +301,7 @@ class UserPointsController extends BaseController
 
         $pageNum = $request->page ?? 1;
 
-        $skipMilestone = $request->skip_milestone == true;
+        $skipMilestone = $request->skip_milestone === true;
 
         $cacheName = "team_{$user->id}_{$request->event_id}_{$request->start_date}_{$request->end_date}_{$pageLimit}_$pageNum";
 
@@ -389,7 +340,7 @@ class UserPointsController extends BaseController
 
             $points->through(function ($item, $key) use ($user, $points) {
                 $event = $item->event;
-                if ($event->event_type == 'fit_life') {
+                if ($event->event_type === 'fit_life') {
                     $milestone = $this->fitLife($user, $event, $item);
 
                     if ($milestone) {
@@ -428,20 +379,6 @@ class UserPointsController extends BaseController
 
         // Cache::put($cacheName, compact('points','participation'), now()->addHours(2));
         return $this->sendResponse(compact('points'), 'Response');
-    }
-
-    private function fitLife($user, $event, $item)
-    {
-
-        $fitLife = FitLifeActivityRegistration::where('date', $item->date)->where('user_id', $user->id)->whereHas('activity', function ($query) use ($event) {
-            return $query->where('event_id', $event->id);
-        })->first();
-
-        if (is_null($fitLife) || ! $fitLife->activity) {
-            return null;
-        }
-
-        return $fitLife->activity->milestones()->where('total_points', '<=', $item->total_mile)->orderBy('total_points', 'desc')->first();
     }
 
     public function viewPoint(Request $request): JsonResponse
@@ -673,28 +610,6 @@ class UserPointsController extends BaseController
             'Response');
     }
 
-    private function decodeModalities($sum)
-    {
-        $decoded = [];
-
-        $modalities = [
-            'daily_steps' => 1,
-            'run' => 2,
-            'walk' => 4,
-            'bike' => 8,
-            'swim' => 16,
-            'other' => 32,
-        ];
-
-        foreach ($modalities as $key => $value) {
-            if (($sum & $value) !== 0) {
-                $decoded[] = $key;
-            }
-        }
-
-        return $decoded;
-    }
-
     public function store(Request $request, EventService $eventService, $id = null): JsonResponse
     {
 
@@ -702,7 +617,7 @@ class UserPointsController extends BaseController
 
         $settings = json_decode($user->settings, true);
 
-        $manualEntryEnabled = (isset($settings['manual_entry_populates_all_events']) && $settings['manual_entry_populates_all_events'] == true);
+        $manualEntryEnabled = (isset($settings['manual_entry_populates_all_events']) && $settings['manual_entry_populates_all_events'] === true);
 
         $request->validate([
             'amount' => Rule::requiredIf(! $request->points),
@@ -854,49 +769,8 @@ class UserPointsController extends BaseController
 
         }
         $eventService->userPointWorkflow($user->id, $request->event_id);
+
         return $this->sendResponse([], 'User Points updated');
-    }
-
-    private function questMilestoneAcheivement($user, $date, $eventId)
-    {
-        $totalPoints = $user->points()->where(['date' => $date, 'event_id' => $eventId])->sum('amount');
-
-        $quest = $user->questRegistrations()->where('date', $date)->whereHas('activity', function ($query) use ($eventId) {
-            return $query->where('event_id', $eventId);
-        })->first();
-
-        if (is_null($quest)) {
-            return false;
-        }
-
-        $activity = $quest->activity;
-
-        $milestone = $activity->milestones()->where('total_points', '<=', $totalPoints)->latest('total_points')->first();
-
-        $milestoneIds = $activity->milestones()->where('total_points', '>', $totalPoints)->pluck('id')->toArray();
-
-        if ($milestoneIds) {
-            $quest->milestoneStatuses()->whereIn('milestone_id', $milestoneIds)->where(['user_id' => $user->id])->delete();
-        }
-
-        if ($milestone) {
-            $hasMileStatus = $quest->milestoneStatuses()->where(['milestone_id' => $milestone->id, 'user_id' => $user->id])->count();
-
-            if (! $hasMileStatus) {
-                $quest->milestoneStatuses()->create(['milestone_id' => $milestone->id, 'user_id' => $user->id]);
-            }
-        }
-
-        return true;
-
-        /*DELETE FROM fit_life_activity_milestone_statuses
-      WHERE registration_id = #{registration_id}
-      	AND milestone_id IN(
-      		SELECT
-      			id FROM fit_life_activity_milestones
-      		WHERE
-      			total_points > #{total_points})
-    SQL*/
     }
 
     public function membershipInvites(Request $request): JsonResponse
@@ -954,7 +828,7 @@ class UserPointsController extends BaseController
             return $this->sendError('Team not found', ['error' => 'Team not found']);
         }
 
-        if ($type == 'accept') {
+        if ($type === 'accept') {
 
             $hasMembership = $team->memberships()->where(['event_id' => $request->event_id, 'user_id' => $user->id])->count();
 
@@ -985,13 +859,52 @@ class UserPointsController extends BaseController
             ],
         ]);
 
-        $sourceProfile = $request->user()->profiles()->whereHas('source', function ($query) use ($request) {
-            return $query->where('short_name', $request->data_source);
+        $user = $request->user();
+
+        $sourceSlug = $request->data_source;
+
+        $sourceProfile = $user->profiles()->whereHas('source', function ($query) use ($sourceSlug) {
+            return $query->where('short_name', $sourceSlug);
         })->first();
 
         if (is_null($sourceProfile)) {
             return $this->sendError('ERROR', ['error' => 'Source profile not found']);
         }
+
+        $isGarmin = $sourceSlug === 'garmin';
+
+        $startDate = $request->get('sync_start_date');
+
+        $tracker = app(DataSourceInterface::class);
+
+        $activities = $tracker->get($sourceSlug)
+            ->setSecrets([$sourceProfile->access_token, $sourceProfile->access_token_secret])
+            ->setDate($startDate, Carbon::now()->format('Y-m-d'))
+            ->activities($isGarmin ? 'response' : 'data');
+
+        if ($isGarmin) {
+            $response = $activities->first();
+
+            if ($response->status() === 202) {
+                return $this->sendResponse(['sync_start_date' => $startDate], 'Your data will be processed shortly.');
+            }
+
+            if ($response->status() === 409) {
+                return $this->sendResponse($response->json(), "We've already processed your data.");
+            }
+        }
+
+        if ($activities->count()) {
+            foreach ($activities as $activity) {
+                $activity['dataSourceId'] = $sourceProfile->data_source_id;
+                $eventService->createUserParticipationPoints($user, $activity);
+            }
+        }
+        return $this->sendResponse(['sync_start_date' => $startDate], 'User Points added');
+
+        /**
+         * Deprecated beyond this
+         */
 
         /**
         if($sourceProfile->source->short_name !== 'fitbit'){
@@ -1011,228 +924,6 @@ class UserPointsController extends BaseController
             default:
                 return $this->sendError('ERROR', ['error' => 'Unsupported data source']);
         }
-    }
-
-    private function syncFitbitPoints($sourceProfile, $request, $eventService)
-    {
-        try {
-            $httpClient = new Client([
-                'base_uri' => 'https://api.fitbit.com/1/',
-                'headers' => [
-                    'Authorization' => sprintf('Bearer %s', $sourceProfile->access_token),
-                    'Accept' => 'application/json',
-                ],
-            ]);
-
-            $startDate = $request->get('sync_start_date');
-            $endDate = Carbon::now()->format('Y-m-d');
-
-            $response = $httpClient->get("user/-/activities/distance/date/{$startDate}/{$endDate}.json");
-
-            $dateDistances = json_decode($response->getBody()->getContents(), true)['activities-distance'];
-
-            if (! count($dateDistances)) {
-                return $this->sendError('ERROR', ['error' => 'No data found']);
-            }
-
-            foreach ($dateDistances as $data) {
-                $distance = $data['value'];
-                $date = $data['dateTime'];
-                /*
-                $this->createOrUpdateUserProfilePoint($profile->user,$distance,$date,$profile,'cron','manual');
-                if(!$distance) {
-                    $distance = 0;
-                }
-                */
-                $distance = $distance * 0.621371;
-                try {
-                    $this->createPoints($eventService, $request->user(), $date, $distance, $sourceProfile);
-                } catch (Exception $e) {
-                }
-            }
-
-            return $this->sendResponse(['sync_start_date' => $startDate], 'User Points added');
-        } catch (Exception $e) {
-            return $this->sendError('ERROR', ['error' => 'Unable to handle your request']);
-        }
-    }
-
-    private function syncGarminPoints($sourceProfile, $request, $eventService, $garminService)
-    {
-        try {
-            $startDate = $request->get('sync_start_date');
-            $endDate = Carbon::now()->format('Y-m-d');
-
-            $response = $garminService->processBackfillDailies(
-                $startDate,
-                $endDate,
-                $sourceProfile->access_token,
-                $sourceProfile->access_token_secret
-            );
-
-            if ($response->status() === 202) {
-                return $this->sendResponse(['sync_start_date' => $startDate], 'Your data will be processed shortly.');
-            }
-
-            if ($response->status() === 409) {
-                return $this->sendResponse($response->json(), "We've already processed your data.");
-            }
-        } catch (\Exception $e) {
-            \Log::error('Garmin sync error', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return $this->sendError('ERROR', ['error' => 'Unable to process Garmin sync: '.$e->getMessage()]);
-        }
-    }
-
-    /**
-     * Sync Strava activities and insert them into the database
-     *
-     * @param  object  $sourceProfile  User's Strava profile
-     * @param  Request  $request  The HTTP request
-     * @param  EventService  $eventService  Event service instance
-     * @return JsonResponse
-     */
-    private function syncStravaPoints($sourceProfile, $request, $eventService)
-    {
-        try {
-            $startDate = $request->get('sync_start_date');
-            $endDate = Carbon::now()->format('Y-m-d');
-
-            // Check if token is expired and refresh if needed
-            if (Carbon::parse($sourceProfile->token_expires_at)->lt(Carbon::now())) {
-                $refreshed = $this->refreshStravaToken($sourceProfile);
-                if (! $refreshed) {
-                    return $this->sendError('ERROR', ['error' => 'Failed to refresh Strava access token']);
-                }
-            }
-
-            // Initialize Strava service with the access token
-            $stravaService = new \App\Services\StravaService($sourceProfile->access_token);
-
-            // Get activities from Strava API
-            $activities = $stravaService->getActivities($startDate, $endDate);
-
-            // dd($activities);
-
-            if (empty($activities)) {
-                return $this->sendError('ERROR', ['error' => 'No Strava activities found for the specified date range']);
-            }
-
-            $processedCount = 0;
-
-            // Process each activity
-            foreach ($activities as $activity) {
-                $date = Carbon::parse($activity['start_date_local'])->format('Y-m-d');
-
-                // Convert meters to miles
-                $distance = $activity['distance'] * 0.000621371; // Convert meters to miles
-
-                try {
-                    // Create points for this activity
-                    $this->createPoints($eventService, $request->user(), $date, $distance, $sourceProfile);
-                    $processedCount++;
-                } catch (\Exception $e) {
-                    \Log::error('Error creating points for Strava activity', [
-                        'message' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                        'activity' => $activity,
-                    ]);
-                }
-            }
-
-            return $this->sendResponse(
-                [
-                    'sync_start_date' => $startDate,
-                    'activities_processed' => $processedCount,
-                ],
-                'Strava activities synced successfully'
-            );
-        } catch (\Exception $e) {
-            \Log::error('Strava sync error', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return $this->sendError('ERROR', ['error' => 'Unable to process Strava activities: '.$e->getMessage()]);
-        }
-    }
-
-    /**
-     * Refresh Strava access token
-     *
-     * @param  object  $profile  User's Strava profile
-     * @return bool
-     */
-    private function refreshStravaToken($profile)
-    {
-        try {
-            $response = Http::post('https://www.strava.com/oauth/token', [
-                'client_id' => config('services.strava.client_id'),
-                'client_secret' => config('services.strava.client_secret'),
-                'grant_type' => 'refresh_token',
-                'refresh_token' => $profile->refresh_token,
-            ]);
-
-            if (! $response->successful()) {
-                \Log::error('Failed to refresh Strava token', [
-                    'status' => $response->status(),
-                    'body' => $response->json(),
-                ]);
-
-                return false;
-            }
-
-            $data = $response->json();
-
-            $profile->access_token = $data['access_token'];
-            $profile->refresh_token = $data['refresh_token'];
-            $profile->token_expires_at = Carbon::createFromTimestamp($data['expires_at']);
-            $profile->save();
-
-            return true;
-        } catch (\Exception $e) {
-            \Log::error('Exception while refreshing Strava token', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return false;
-        }
-    }
-
-    private function createPoints($eventService, $user, $date, $distance, $sourceProfile)
-    {
-
-        if (! $distance) {
-            return false;
-        }
-
-        $currentDate = Carbon::now()->format('Y-m-d');
-
-        $participations = $user->participations()->where('subscription_end_date', '>=', $currentDate)->whereHas('event', function ($query) use ($currentDate) {
-            return $query->where('start_date', '<=', $currentDate);
-        })->get();
-
-        foreach ($participations as $participation) {
-
-            $pointdata = ['amount' => $distance, 'date' => $date, 'event_id' => $participation->event_id, 'modality' => 'other', 'data_source_id' => $sourceProfile->data_source_id];
-
-            $userPoint = $user->points()->where(['date' => $date, 'modality' => 'other', 'event_id' => $participation->event_id, 'data_source_id' => $sourceProfile->data_source_id])->first();
-
-            if ($userPoint) {
-                $userPoint->update($pointdata);
-            } else {
-                $user->points()->create($pointdata);
-            }
-
-            $eventService->createOrUpdateUserPoint($user, $participation->event_id, $date);
-            $eventService->userPointWorkflow($user->id, $participation->event_id);
-        }
-
-        return true;
     }
 
     // Add at last
@@ -1306,7 +997,7 @@ class UserPointsController extends BaseController
                     $eventYearlyData['month'] = $filledMonths;
 
                     $yearlyStats[] = $eventYearlyData;
-                    usort($yearlyStats, function($a, $b) {
+                    usort($yearlyStats, function ($a, $b) {
                         return strcmp($a['label'], $b['label']);
                     });
                 }
@@ -1324,80 +1015,6 @@ class UserPointsController extends BaseController
         ];
 
         return $this->sendResponse($response, 'Profile statistics retrieved successfully');
-    }
-
-    private function fillMissingMonths($monthlyPoints): array
-    {
-        if ($monthlyPoints->isEmpty()) {
-            return [];
-        }
-
-        $minDate = Carbon::parse($monthlyPoints->min('date'))->startOfYear();
-        $maxDate = Carbon::parse($monthlyPoints->max('date'))->endOfYear();
-
-        $allDates = [];
-        $currentDate = $minDate->copy();
-
-        while ($currentDate->lte($maxDate)) {
-            $allDates[] = $currentDate->copy();
-            $currentDate->addMonth();
-        }
-
-        $filledPoints = [];
-
-        foreach ($allDates as $date) {
-            $found = false;
-            foreach ($monthlyPoints as $point) {
-                if ($date->isSameMonth(Carbon::parse($point->date))) {
-                    $filledPoints[] = ['month' => $date->format('M'), 'total_miles' => $point->amount];
-                    $found = true;
-                    break;
-                }
-            }
-            if (! $found) {
-                $filledPoints[] = ['month' => $date->format('M'), 'total_miles' => 0];
-            }
-        }
-
-        return $filledPoints;
-    }
-
-    private function generateYearlyStats($monthlyPoints): array
-    {
-        $yearlyData = [];
-        $yearlyTotals = [];
-
-        foreach ($monthlyPoints as $point) {
-            $year = date('Y', strtotime($point->date));
-            $month = date('n', strtotime($point->date)) - 1; // 0-indexed month
-
-            if (! isset($yearlyData[$year])) {
-                $yearlyData[$year] = [
-                    'label' => (int) $year,
-                    'total_miles' => 0,
-                    'month' => [],
-                ];
-            }
-
-            $yearlyData[$year]['month'][] = [
-                'month' => date('M', strtotime($point->date)),
-                'total_miles' => (float) $point->amount,
-            ];
-
-            if (! isset($yearlyTotals[$year])) {
-                $yearlyTotals[$year] = 0;
-            }
-            $yearlyTotals[$year] += (float) $point->amount;
-        }
-
-        $result = [];
-
-        foreach ($yearlyData as $year => $data) {
-            $data['total_miles'] = $yearlyTotals[$year];
-            $result[] = $data;
-        }
-
-        return array_values($result);
     }
 
     // Get the total points for the user for the specified event
@@ -1548,5 +1165,434 @@ class UserPointsController extends BaseController
         return $this->sendResponse([
             'modality_totals' => $modalityTotals,
         ], 'Modality totals retrieved successfully');
+    }
+
+    private function milestoneImages($event, $distance, $activityId = null, $isCompleted = false)
+    {
+
+        if ($event->event_type === 'fit_life') {
+            $imageService = app(MilestoneImageService::class);
+            $result = $imageService->getMilestoneImage($event->id, $distance, $activityId);
+
+            if (empty($result)) {
+                return [
+                    'logo_image_url' => null,
+                    'team_logo_image_url' => null,
+                    'calendar_logo_image_url' => null,
+                    'calendar_team_logo_image_url' => null,
+                ];
+            }
+
+            if ($isCompleted) {
+                return [
+                    'logo_image_url' => $result['bib'][1]['url'] ?? null,
+                    'team_logo_image_url' => null,
+                    'calendar_logo_image_url' => $result['calendar'][1]['url'] ?? null,
+                    'calendar_team_logo_image_url' => null,
+                ];
+            }
+
+            return [
+                'logo_image_url' => $result['bib'][0]['url'] ?? null,
+                'team_logo_image_url' => null,
+                'calendar_logo_image_url' => $result['calendar'][0]['url'] ?? null,
+                'calendar_team_logo_image_url' => null,
+            ];
+        }
+
+        $eventId = $event->id;
+        // Get bib image from Ruby
+        $formData = [
+            'event_id' => $eventId,
+            'distance' => $distance,
+        ];
+
+        if ($activityId) {
+            $formData['activity_id'] = $activityId;
+        }
+
+        $response = Http::get('https://staging-tracker.runtheedge.com/api/v1/event_milestone_images', $formData);
+
+        $data = $response->json('data');
+
+        if (! $data) {
+            return [];
+        }
+
+        return $data[0]['attributes'];
+    }
+
+    private function fitLife($user, $event, $item)
+    {
+
+        $fitLife = FitLifeActivityRegistration::where('date', $item->date)->where('user_id', $user->id)->whereHas('activity', function ($query) use ($event) {
+            return $query->where('event_id', $event->id);
+        })->first();
+
+        if (is_null($fitLife) || ! $fitLife->activity) {
+            return null;
+        }
+
+        return $fitLife->activity->milestones()->where('total_points', '<=', $item->total_mile)->orderBy('total_points', 'desc')->first();
+    }
+
+    private function decodeModalities($sum)
+    {
+        $decoded = [];
+
+        $modalities = [
+            'daily_steps' => 1,
+            'run' => 2,
+            'walk' => 4,
+            'bike' => 8,
+            'swim' => 16,
+            'other' => 32,
+        ];
+
+        foreach ($modalities as $key => $value) {
+            if (($sum & $value) !== 0) {
+                $decoded[] = $key;
+            }
+        }
+
+        return $decoded;
+    }
+
+    private function questMilestoneAcheivement($user, $date, $eventId)
+    {
+        $totalPoints = $user->points()->where(['date' => $date, 'event_id' => $eventId])->sum('amount');
+
+        $quest = $user->questRegistrations()->where('date', $date)->whereHas('activity', function ($query) use ($eventId) {
+            return $query->where('event_id', $eventId);
+        })->first();
+
+        if (is_null($quest)) {
+            return false;
+        }
+
+        $activity = $quest->activity;
+
+        $milestone = $activity->milestones()->where('total_points', '<=', $totalPoints)->latest('total_points')->first();
+
+        $milestoneIds = $activity->milestones()->where('total_points', '>', $totalPoints)->pluck('id')->toArray();
+
+        if ($milestoneIds) {
+            $quest->milestoneStatuses()->whereIn('milestone_id', $milestoneIds)->where(['user_id' => $user->id])->delete();
+        }
+
+        if ($milestone) {
+            $hasMileStatus = $quest->milestoneStatuses()->where(['milestone_id' => $milestone->id, 'user_id' => $user->id])->count();
+
+            if (! $hasMileStatus) {
+                $quest->milestoneStatuses()->create(['milestone_id' => $milestone->id, 'user_id' => $user->id]);
+            }
+        }
+
+        return true;
+
+        /*DELETE FROM fit_life_activity_milestone_statuses
+      WHERE registration_id = #{registration_id}
+      	AND milestone_id IN(
+      		SELECT
+      			id FROM fit_life_activity_milestones
+      		WHERE
+      			total_points > #{total_points})
+    SQL*/
+    }
+
+    private function syncFitbitPoints($sourceProfile, $request, $eventService)
+    {
+        try {
+            $httpClient = new Client([
+                'base_uri' => 'https://api.fitbit.com/1/',
+                'headers' => [
+                    'Authorization' => sprintf('Bearer %s', $sourceProfile->access_token),
+                    'Accept' => 'application/json',
+                ],
+            ]);
+
+            $startDate = $request->get('sync_start_date');
+            $endDate = Carbon::now()->format('Y-m-d');
+
+            $response = $httpClient->get("user/-/activities/distance/date/{$startDate}/{$endDate}.json");
+
+            $dateDistances = json_decode($response->getBody()->getContents(), true)['activities-distance'];
+
+            if (! count($dateDistances)) {
+                return $this->sendError('ERROR', ['error' => 'No data found']);
+            }
+
+            foreach ($dateDistances as $data) {
+                $distance = $data['value'];
+                $date = $data['dateTime'];
+                /*
+                $this->createOrUpdateUserProfilePoint($profile->user,$distance,$date,$profile,'cron','manual');
+                if(!$distance) {
+                    $distance = 0;
+                }
+                */
+                $distance = $distance * 0.621371;
+                try {
+                    $this->createPoints($eventService, $request->user(), $date, $distance, $sourceProfile);
+                } catch (Exception $e) {
+                }
+            }
+
+            return $this->sendResponse(['sync_start_date' => $startDate], 'User Points added');
+        } catch (Exception $e) {
+            return $this->sendError('ERROR', ['error' => 'Unable to handle your request']);
+        }
+    }
+
+    private function syncGarminPoints($sourceProfile, $request, $eventService, $garminService)
+    {
+        try {
+            $startDate = $request->get('sync_start_date');
+            $endDate = Carbon::now()->format('Y-m-d');
+
+            $response = $garminService->processBackfillDailies(
+                $startDate,
+                $endDate,
+                $sourceProfile->access_token,
+                $sourceProfile->access_token_secret
+            );
+
+            if ($response->status() === 202) {
+                return $this->sendResponse(['sync_start_date' => $startDate], 'Your data will be processed shortly.');
+            }
+
+            if ($response->status() === 409) {
+                return $this->sendResponse($response->json(), "We've already processed your data.");
+            }
+        } catch (\Exception $e) {
+            Log::error('Garmin sync error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->sendError('ERROR', ['error' => 'Unable to process Garmin sync: '.$e->getMessage()]);
+        }
+    }
+
+    /**
+     * Sync Strava activities and insert them into the database
+     *
+     * @param  object  $sourceProfile  User's Strava profile
+     * @param  Request  $request  The HTTP request
+     * @param  EventService  $eventService  Event service instance
+     * @return JsonResponse
+     */
+    private function syncStravaPoints($sourceProfile, $request, $eventService)
+    {
+        try {
+            $startDate = $request->get('sync_start_date');
+            $endDate = Carbon::now()->format('Y-m-d');
+
+            // Check if token is expired and refresh if needed
+            if (Carbon::parse($sourceProfile->token_expires_at)->lt(Carbon::now())) {
+                $refreshed = $this->refreshStravaToken($sourceProfile);
+                if (! $refreshed) {
+                    return $this->sendError('ERROR', ['error' => 'Failed to refresh Strava access token']);
+                }
+            }
+
+            // Initialize Strava service with the access token
+            $stravaService = new \App\Services\StravaService($sourceProfile->access_token);
+
+            // Get activities from Strava API
+            $activities = $stravaService->getActivities($startDate, $endDate);
+
+            // dd($activities);
+
+            if (empty($activities)) {
+                return $this->sendError('ERROR', ['error' => 'No Strava activities found for the specified date range']);
+            }
+
+            $processedCount = 0;
+
+            // Process each activity
+            foreach ($activities as $activity) {
+                $date = Carbon::parse($activity['start_date_local'])->format('Y-m-d');
+
+                // Convert meters to miles
+                $distance = $activity['distance'] * 0.000621371; // Convert meters to miles
+
+                try {
+                    // Create points for this activity
+                    $this->createPoints($eventService, $request->user(), $date, $distance, $sourceProfile);
+                    $processedCount++;
+                } catch (\Exception $e) {
+                    Log::error('Error creating points for Strava activity', [
+                        'message' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                        'activity' => $activity,
+                    ]);
+                }
+            }
+
+            return $this->sendResponse(
+                [
+                    'sync_start_date' => $startDate,
+                    'activities_processed' => $processedCount,
+                ],
+                'Strava activities synced successfully'
+            );
+        } catch (\Exception $e) {
+            Log::error('Strava sync error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->sendError('ERROR', ['error' => 'Unable to process Strava activities: '.$e->getMessage()]);
+        }
+    }
+
+    /**
+     * Refresh Strava access token
+     *
+     * @param  object  $profile  User's Strava profile
+     * @return bool
+     */
+    private function refreshStravaToken($profile)
+    {
+        try {
+            $response = Http::post('https://www.strava.com/oauth/token', [
+                'client_id' => config('services.strava.client_id'),
+                'client_secret' => config('services.strava.client_secret'),
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $profile->refresh_token,
+            ]);
+
+            if (! $response->successful()) {
+                Log::error('Failed to refresh Strava token', [
+                    'status' => $response->status(),
+                    'body' => $response->json(),
+                ]);
+
+                return false;
+            }
+
+            $data = $response->json();
+
+            $profile->access_token = $data['access_token'];
+            $profile->refresh_token = $data['refresh_token'];
+            $profile->token_expires_at = Carbon::createFromTimestamp($data['expires_at']);
+            $profile->save();
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Exception while refreshing Strava token', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return false;
+        }
+    }
+
+    private function createPoints($eventService, $user, $date, $distance, $sourceProfile)
+    {
+
+        if (! $distance) {
+            return false;
+        }
+
+        $currentDate = Carbon::now()->format('Y-m-d');
+
+        $participations = $user->participations()->where('subscription_end_date', '>=', $currentDate)->whereHas('event', function ($query) use ($currentDate) {
+            return $query->where('start_date', '<=', $currentDate);
+        })->get();
+
+        foreach ($participations as $participation) {
+
+            $pointdata = ['amount' => $distance, 'date' => $date, 'event_id' => $participation->event_id, 'modality' => 'other', 'data_source_id' => $sourceProfile->data_source_id];
+
+            $userPoint = $user->points()->where(['date' => $date, 'modality' => 'other', 'event_id' => $participation->event_id, 'data_source_id' => $sourceProfile->data_source_id])->first();
+
+            if ($userPoint) {
+                $userPoint->update($pointdata);
+            } else {
+                $user->points()->create($pointdata);
+            }
+
+            $eventService->createOrUpdateUserPoint($user, $participation->event_id, $date);
+            $eventService->userPointWorkflow($user->id, $participation->event_id);
+        }
+
+        return true;
+    }
+
+    private function fillMissingMonths($monthlyPoints): array
+    {
+        if ($monthlyPoints->isEmpty()) {
+            return [];
+        }
+
+        $minDate = Carbon::parse($monthlyPoints->min('date'))->startOfYear();
+        $maxDate = Carbon::parse($monthlyPoints->max('date'))->endOfYear();
+
+        $allDates = [];
+        $currentDate = $minDate->copy();
+
+        while ($currentDate->lte($maxDate)) {
+            $allDates[] = $currentDate->copy();
+            $currentDate->addMonth();
+        }
+
+        $filledPoints = [];
+
+        foreach ($allDates as $date) {
+            $found = false;
+            foreach ($monthlyPoints as $point) {
+                if ($date->isSameMonth(Carbon::parse($point->date))) {
+                    $filledPoints[] = ['month' => $date->format('M'), 'total_miles' => $point->amount];
+                    $found = true;
+                    break;
+                }
+            }
+            if (! $found) {
+                $filledPoints[] = ['month' => $date->format('M'), 'total_miles' => 0];
+            }
+        }
+
+        return $filledPoints;
+    }
+
+    private function generateYearlyStats($monthlyPoints): array
+    {
+        $yearlyData = [];
+        $yearlyTotals = [];
+
+        foreach ($monthlyPoints as $point) {
+            $year = date('Y', strtotime($point->date));
+            $month = date('n', strtotime($point->date)) - 1; // 0-indexed month
+
+            if (! isset($yearlyData[$year])) {
+                $yearlyData[$year] = [
+                    'label' => (int) $year,
+                    'total_miles' => 0,
+                    'month' => [],
+                ];
+            }
+
+            $yearlyData[$year]['month'][] = [
+                'month' => date('M', strtotime($point->date)),
+                'total_miles' => (float) $point->amount,
+            ];
+
+            if (! isset($yearlyTotals[$year])) {
+                $yearlyTotals[$year] = 0;
+            }
+            $yearlyTotals[$year] += (float) $point->amount;
+        }
+
+        $result = [];
+
+        foreach ($yearlyData as $year => $data) {
+            $data['total_miles'] = $yearlyTotals[$year];
+            $result[] = $data;
+        }
+
+        return array_values($result);
     }
 }

@@ -170,7 +170,7 @@ final class FitbitService implements DataSourceInterface
         return $this;
     }
 
-    public function activities(): Collection
+    public function activities($responseType = 'data'): Collection
     {
         $data = [];
 

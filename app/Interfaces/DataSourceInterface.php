@@ -12,7 +12,7 @@ interface DataSourceInterface
 
     public function refreshToken(?string $refreshToken): array;
 
-    public function activities(): Collection;
+    public function activities($responseType = 'data'): Collection;
 
     public function verifyWebhook(string $code): bool|int;
 
