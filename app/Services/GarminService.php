@@ -285,7 +285,7 @@ final class GarminService implements DataSourceInterface
         $items = $this->findActivities($startOfDay, $endOfDay);
 
         if ($this->responseType === 'response') {
-            return collect([$items]);
+            return collect($items);
         }
 
         $data = array_merge($data, $items);
@@ -324,7 +324,7 @@ final class GarminService implements DataSourceInterface
         Log::info('Garmin Response: '.$response->body());
 
         if ($this->responseType === 'response') {
-            return $response;
+            return [$response];
         }
 
         if ($response->successful()) {
