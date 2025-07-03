@@ -109,7 +109,7 @@ final class DashboardController extends Controller
         // Set the current page for Laravel pagination
         request()->merge(['usersPage' => $page]);
 
-        $users = $eventService->userParticipations($user, 64, $userSearchTerm, $perPageUser, 'web')->toArray();
+        $users = $eventService->searchUserParticipationList($user, 64, $userSearchTerm, $perPageUser, 'web')->toArray();
 
         return response()->json([
             'users' => $users,

@@ -477,7 +477,7 @@ final class EventService
 
     }
 
-    public function userParticipations($user, $eventId, $searchTerm = '', $perPage = 100, string $source = 'api')
+    public function searchUserParticipationList($user, $eventId, $searchTerm = '', $perPage = 100, string $source = 'api')
     {
         $paginationArgs = $source === 'web'
             ? [$perPage, ['*'], 'usersPage']
