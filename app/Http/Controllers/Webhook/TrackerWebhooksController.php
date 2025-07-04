@@ -167,10 +167,9 @@ final class TrackerWebhooksController extends Controller
                     foreach ($activities as $activity) {
                         $activity['dataSourceId'] = $notification->dataSourceId;
                         $eventService->createUserParticipationPoints($user, $activity);
-
+                        $this->createOrUpdateUserProfilePoint($user, $activity['raw_distance'], $activity['date'], $notification->sourceProfile);
                         if ($sourceSlug === 'fitbit') {
-                            $this->createOrUpdateUserProfilePoint($user, $activity['raw_distance'], $activity['date'], $notification->sourceProfile);
-                            $sopifyRepository->updateStatus($user->email, true);
+                             $sopifyRepository->updateStatus($user->email, true);
                         }
                     }
                 }
