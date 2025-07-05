@@ -18,6 +18,7 @@ use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 final class EventService
 {
@@ -579,6 +580,10 @@ final class EventService
                 Mail::to($user->email)->send(new MilestoneAchieved($user, $milestone, $event, $emailTemplate));
                 $displayedMilestone->fill(['emailed' => true])->save();
             } catch (Exception $e) {
+                Log::error('Failed to send email', [
+                    'error' => $e->getMessage(),
+                    'user_id' => $user->id,
+                ]);
             }
         }
 
