@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -7,13 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Lab404\Impersonate\Models\Impersonate;
 use Laravel\Passport\HasApiTokens;
 
-use Lab404\Impersonate\Models\Impersonate;
-
-class User extends Authenticatable
+final class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, Impersonate;
+    use HasApiTokens, HasFactory, Impersonate, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -160,10 +161,13 @@ class User extends Authenticatable
         return $this->hasMany(UserFollowRequest::class, 'prospective_follower_id', 'id');
     }
 
+    public function displayedMilestones(): HasMany
+    {
+        return $this->hasMany(DisplayedUserMilestone::class, 'user_id', 'id');
+    }
+
     /**
      * Check if the user is a super admin
-     *
-     * @return bool
      */
     public function isSuperAdmin(): bool
     {

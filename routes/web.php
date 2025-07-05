@@ -15,7 +15,13 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
+Route::get('test-email',function(){
+    $event = \App\Models\Event::find(87);
+    $user = \App\Models\User::find(165219);
+    (new \App\Services\EventService(
+        new \App\Repositories\EventRepository(), new \App\Repositories\UserPointRepository()
+    ))->checkUserCelebrations($user, $event);
+});
 Route::get('/', function () {
     return redirect()->route('dashboard');
 });

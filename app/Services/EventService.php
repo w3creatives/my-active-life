@@ -15,6 +15,8 @@ use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\MilestoneAchieved;
 
 final class EventService
 {
@@ -106,13 +108,13 @@ final class EventService
             $distance = $event->total_points;
         }
 
-        $distance = (float)$distance;
+        $distance = (float) $distance;
 
         $userPoint = $user->points()->selectRaw('SUM(amount) AS total_mile')->where('event_id', $event->id)->where('date', '>=', Carbon::parse($event->start_date)->format('Y-m-d'))->where('date', '<=', Carbon::now()->format('Y-m-d'))->first();
 
-        $userTotalPoints = $userPoint->total_mile ? (float)$userPoint->total_mile : 0;
+        $userTotalPoints = $userPoint->total_mile ? (float) $userPoint->total_mile : 0;
 
-        $completedPercentage = ((float)$userTotalPoints * 100) / ($distance ? $distance : 1);
+        $completedPercentage = ((float) $userTotalPoints * 100) / ($distance ? $distance : 1);
 
         $remainingDistance = $distance - $userTotalPoints;
 
@@ -270,6 +272,8 @@ final class EventService
         }
 
         $this->updateTeamPoint($user, $event, $date);
+
+        $this->checkUserCelebrations($user, $event);
     }
 
     public function updateTeamPoint($user, $event, $date = null)
@@ -488,8 +492,8 @@ final class EventService
                 if ($searchTerm) {
                     $query->where(function ($q) use ($searchTerm) {
                         $q->where('first_name', 'ILIKE', "{$searchTerm}%")
-                          ->orWhere('last_name', 'ILIKE', "{$searchTerm}%")
-                          ->orWhere('display_name', 'ILIKE', "{$searchTerm}%")
+                            ->orWhere('last_name', 'ILIKE', "{$searchTerm}%")
+                            ->orWhere('display_name', 'ILIKE', "{$searchTerm}%")
                             ->orWhere('email', 'ILIKE', "{$searchTerm}%");
                     });
                 }
@@ -534,13 +538,42 @@ final class EventService
                     'display_name' => trim($member->display_name),
                     'first_name' => trim($member->first_name),
                     'last_name' => trim($member->last_name),
-                    'city' => !empty($member->city) ? trim($member->city) : '',
-                    'state' => !empty($member->state) ? trim($member->state) : '',
+                    'city' => ! empty($member->city) ? trim($member->city) : '',
+                    'state' => ! empty($member->state) ? trim($member->state) : '',
                     'public_profile' => $participation->public_profile,
                     'following_status_text' => $followingTextStatus,
                     'following_status' => $followingStatus,
                 ];
             });
+    }
+
+    public function checkUserCelebrations($user, $event)
+    {
+        if(!in_array($event->event_type,['regular','month'])){
+            return false;
+        }
+
+        $userTotalPoint = $user->totalPoints()->where(['event_id' => $event->id])->first();
+
+        if (is_null($userTotalPoint)) {
+            return false;
+        }
+
+        $milestone = $event->milestones()->where('distance', '<=', $userTotalPoint->amount)->orderBy('distance', 'DESC')->first();
+
+        if (is_null($milestone)) {
+            return false;
+        }
+
+        $displayedMilestone = $user->displayedMilestones()->where(['event_milestone_id' => $milestone->id, 'individual' => true])->first();
+
+        if (is_null($displayedMilestone)) {
+            $displayedMilestone = $user->displayedMilestones()->create(['event_milestone_id' => $milestone->id, 'individual' => true, 'emailed' => false]);
+        }
+
+        Mail::to($user->email)->send(new MilestoneAchieved($user, $milestone, $event));
+
+        return true;
     }
 
     private function calculateUserTotal($user, $event, $startDate, $endDate)
