@@ -194,7 +194,7 @@ class OrdersController extends Controller
         $dataStartFrom = Carbon::parse($request->get('date_start','2025-01-04'));
 
         $orders = ShopifyOrder::where('created_at','<=',$currentTime)
-        ->where('order_number','>',267460)
+        ->where('order_number','>',274051)
         ->where('created_at','>',$dataStartFrom)->whereNull('hubspot_status')->get();
         
         if(!$orders->count()) {

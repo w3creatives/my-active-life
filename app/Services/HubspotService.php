@@ -122,8 +122,8 @@ class HubspotService
             case "AMGAUXXL":
             case "AMGAUXXL":
                 return "Amerithon Challenge";
-                break;
-            case "2025-March-Streaker":
+		break;
+	    case "2025-March-Streaker":
                 return "2025 March Streaker";
                 break;
             case "2025-April-Streaker":
@@ -131,12 +131,16 @@ class HubspotService
                 break;
             case "2025-May-Streaker":
                 return "2025 May Streaker";
-                break;
-            case "2025-2pack-Streaker":
+		break;
+	    case "2025-2pack-Streaker":
                 return "2025 April Streaker;2025 May Streaker";
                 break;
             case "2025-Streaker Bundle":
                 return "2025 March Streaker;2025 April Streaker;2025 May Streaker";
+		break;
+	    case "HeroGIA":
+	    case "HeroBasic":
+                return "Hero June 2025";
                 break;
         }
         return null;

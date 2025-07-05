@@ -35,8 +35,8 @@ class SopifyRepository
             'product_type'  => $lineItem['product_type'],
             'product_tags'  => $lineItem['product_tags'],
             'meta_fields'   => $lineItem['meta_fields'],
-            'hubspot_status' => null
-        ]);
+	    'hubspot_status' => null 
+	]);
     }
     
     public function updateStatus($email, $isTracker = false, $columnStatus = true){
@@ -70,25 +70,25 @@ class SopifyRepository
         foreach($items as $item) {
             $item->fill([$column => $columnStatus]);
             
-            $orderIds[$item->order_number] = $item->order_id;
+            $orderIds[$item->order_id] = $item->order_id;
         }
         
         if(!$columnStatus) {
             return false;
         }
         
-        foreach($orderIds as $orderNumber => $orderId) {
-            $trackerCompletedCount = ShopifyOrder::where('order_number',$orderNumber)->where('tracker_status', true)->count();
-            $hubspotCompletedCount = ShopifyOrder::where('order_number',$orderNumber)->where('hubspot_status', true)->count();
+        foreach($orderIds as $orderId) {
+            $trackerCompletedCount = ShopifyOrder::where('order_id',$orderId)->where('tracker_status', true)->count();
+            $hubspotCompletedCount = ShopifyOrder::where('order_id',$orderId)->where('hubspot_status', true)->count();
             
-            $totalCount = ShopifyOrder::where('order_number',$orderNumber)->count();
+            $totalCount = ShopifyOrder::where('order_id',$orderId)->count();
             
             if($totalCount == $trackerCompletedCount) {
-                ShopifyWebhookEvent::where('order_number',$orderNumber)->update(['tracker_status' => true]);
+                ShopifyWebhookEvent::where('order_id',$orderId)->update(['tracker_status' => true]);
             }
             
             if($totalCount == $hubspotCompletedCount) {
-                  ShopifyWebhookEvent::where('order_number',$orderNumber)->update(['hubspot_status' => true]);
+                  ShopifyWebhookEvent::where('order_id',$orderId)->update(['hubspot_status' => true]);
             }
         }  
     }

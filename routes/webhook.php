@@ -17,7 +17,8 @@ use App\Http\Controllers\Webhook\{
     WebhooksController,
     OrdersController,
     TrackerWebhooksController,
-    UserPointWorkflowsController
+    UserPointWorkflowsController,
+    RubyCronController,
 };
 
 Route::group(['prefix' => 'tracker'], function(){
@@ -76,3 +77,5 @@ Route::group(['prefix' => 'webhook'], function(){
 
 Route::get('/shopify/orders', [OrdersController::class,'orderList']);
 Route::post('/shopify/orders', [OrdersController::class,'orderList']);
+//Check if we need this controller - This is copied from RTE-V1 and is meant for Streaker Series Event
+Route::get('ruby/process-user-points/{event_id}',[RubyCronController::class, 'processUserPointsFromRuby']);
