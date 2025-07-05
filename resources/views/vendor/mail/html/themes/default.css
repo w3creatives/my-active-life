@@ -306,3 +306,6 @@ img {
 .break-all {
     word-break: break-all;
 }
+.ql-align-center{
+    text-align: center;
+}

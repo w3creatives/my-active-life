@@ -14,6 +14,7 @@ use App\Repositories\UserPointRepository;
 use App\Traits\UserEventParticipationTrait;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -573,8 +574,12 @@ final class EventService
 
         $emailTemplate = $milestone->emailTemplate ? $milestone->emailTemplate : $event->emailTemplate;
 
-        if ($emailTemplate) {
-            Mail::to($user->email)->send(new MilestoneAchieved($user, $milestone, $event, $emailTemplate));
+        if ($emailTemplate && ! $displayedMilestone->emailed) {
+            try {
+                Mail::to($user->email)->send(new MilestoneAchieved($user, $milestone, $event, $emailTemplate));
+                $displayedMilestone->fill(['emailed' => true])->save();
+            } catch (Exception $e) {
+            }
         }
 
         return true;
