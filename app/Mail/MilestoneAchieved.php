@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Str;
 
 final class MilestoneAchieved extends Mailable
 {
@@ -17,7 +18,7 @@ final class MilestoneAchieved extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(public $user, public $milestone, public $event) {}
+    public function __construct(public $user, public $milestone, public $event, public $emailTemplate) {}
 
     /**
      * Get the message envelope.
@@ -25,7 +26,7 @@ final class MilestoneAchieved extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Milestone Achieved',
+            subject: $this->emailTemplate->subject,
         );
     }
 
@@ -36,6 +37,12 @@ final class MilestoneAchieved extends Mailable
     {
         return new Content(
             markdown: 'mail.milstones.achieved',
+            with: [
+                'content' => Str::of($this->emailTemplate->content)
+                    ->replace('{{MILESTONE_NAME}}', $this->milestone->name)
+                    ->replace('{{MILESTONE_DISTANCE}}', $this->milestone->distance)
+                    ->replace('{{MILESTONE_IMAGE}}', sprintf('<img src="%s" alt="">', $this->milestone->logo ? $this->milestone->logo : '')),
+            ],
         );
     }
 

@@ -128,7 +128,7 @@ class MilestonesController extends Controller
 
             if ($request->hasFile('logo')) {
                 $logoFile = $request->file('logo');
-                $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getC3lientOriginalExtension();
+                $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
                 $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
                 $data['logo'] = $logoFileName;
             }

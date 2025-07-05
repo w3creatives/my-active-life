@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Mail\MilestoneAchieved;
 use App\Models\Event;
 use App\Models\EventParticipation;
 use App\Models\Team;
@@ -14,9 +15,8 @@ use App\Traits\UserEventParticipationTrait;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\MilestoneAchieved;
+use Illuminate\Support\Str;
 
 final class EventService
 {
@@ -547,9 +547,9 @@ final class EventService
             });
     }
 
-    public function checkUserCelebrations($user, $event)
+    public function checkUserCelebrations($user, $event): bool
     {
-        if(!in_array($event->event_type,['regular','month'])){
+        if (! in_array($event->event_type, ['regular', 'month'])) {
             return false;
         }
 
@@ -571,7 +571,11 @@ final class EventService
             $displayedMilestone = $user->displayedMilestones()->create(['event_milestone_id' => $milestone->id, 'individual' => true, 'emailed' => false]);
         }
 
-        Mail::to($user->email)->send(new MilestoneAchieved($user, $milestone, $event));
+        $emailTemplate = $milestone->emailTemplate ? $milestone->emailTemplate : $event->emailTemplate;
+
+        if ($emailTemplate) {
+            Mail::to($user->email)->send(new MilestoneAchieved($user, $milestone, $event, $emailTemplate));
+        }
 
         return true;
     }
