@@ -18,7 +18,7 @@ final class MilestoneAchieved extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(public $user, public $milestone, public $event, public $emailTemplate) {}
+    public function __construct(public $user, public $milestone, public $event, public $emailTemplate, public $team = null) {}
 
     /**
      * Get the message envelope.
@@ -26,7 +26,9 @@ final class MilestoneAchieved extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: $this->emailTemplate->subject,
+            subject: Str::of($this->emailTemplate->subject)
+                ->replace('{{EVENT_NAME}}', $this->event->name)
+                ->replace('{{ACHIEVEMENT_TYPE}}', $this->team ? 'Team' : 'Individual')->toString(),
         );
     }
 
@@ -41,7 +43,9 @@ final class MilestoneAchieved extends Mailable
                 'content' => Str::of($this->emailTemplate->content)
                     ->replace('{{MILESTONE_NAME}}', $this->milestone->name)
                     ->replace('{{MILESTONE_DISTANCE}}', $this->milestone->distance)
-                    ->replace('{{MILESTONE_IMAGE}}', sprintf('<img src="%s" alt="">', $this->milestone->logo ? $this->milestone->logo : '')),
+                    ->replace('{{MILESTONE_IMAGE}}', sprintf('<img src="%s" alt="">', $this->milestone->logo ? $this->milestone->logo : ''))
+                    ->replace('{{USER_OR_TEAM_NAME}}', $this->team ? $this->team->name : $this->user->full_name)
+                    ->replace('{{USER_OR_TEAM_INFO}}', $this->team ? 'You and your team' : 'You'),
             ],
         );
     }

@@ -61,6 +61,11 @@ final class User extends Authenticatable
         return $zones[$match[1]];
     }
 
+    public function getFullNameAttribute()
+    {
+        return implode(' ', [$this->attributes['first_name'], $this->attributes['last_name']]);
+    }
+
     public function memberships(): HasMany
     {
         return $this->hasMany(TeamMembership::class);

@@ -16,9 +16,9 @@ use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Exception;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 
 final class EventService
 {
@@ -415,6 +415,17 @@ final class EventService
             $team->achievements()->where('achievement', 'best_day')->where('event_id', $event->id)->delete();
             $team->achievements()->create(['achievement' => 'best_day', 'event_id' => $event->id, 'accomplishment' => $bestDay->amount, 'date' => $bestDay->date]);
         }
+
+        $teamMembers = $team->memberships()->get();
+
+        if (! $teamMembers->count()) {
+            return false;
+        }
+
+        foreach ($teamMembers as $teamMember) {
+            $this->checkUserCelebrations($teamMember->user, $event, $team);
+        }
+
     }
 
     public function deleteSourceSyncedMile($user, $dataSourceId)
@@ -475,7 +486,10 @@ final class EventService
     {
 
         // https://tracker.runtheedge.com/user_points/user_point_workflow?user_id=279&event_id=64
-
+        return;
+        /**
+         * @Depreacted since new version
+         */
         Http::withQueryParameters([
             'user_id' => $userId,
             'event_id' => $eventId,
@@ -549,45 +563,68 @@ final class EventService
             });
     }
 
-    public function checkUserCelebrations($user, $event): bool
+    public function checkUserCelebrations($user, $event, $team = null): bool
     {
         if (! in_array($event->event_type, ['regular', 'month'])) {
             return false;
         }
 
-        $userTotalPoint = $user->totalPoints()->where(['event_id' => $event->id])->first();
+        if ($team) {
+            $totalPoint = $team->totalPoints()->where(['event_id' => $event->id])->first();
+        } else {
+            $totalPoint = $user->totalPoints()->where(['event_id' => $event->id])->first();
+        }
 
-        if (is_null($userTotalPoint)) {
+        if (is_null($totalPoint)) {
             return false;
         }
 
-        $milestone = $event->milestones()->where('distance', '<=', $userTotalPoint->amount)->orderBy('distance', 'DESC')->first();
+        $milestone = $event->milestones()->where('distance', '<=', $totalPoint->amount)->orderBy('distance', 'DESC')->first();
 
         if (is_null($milestone)) {
             return false;
         }
 
-        $displayedMilestone = $user->displayedMilestones()->where(['event_milestone_id' => $milestone->id, 'individual' => true])->first();
+        return $this->sendMilestoneCelebrations($user, $event, $milestone, $team);
 
-        if (is_null($displayedMilestone)) {
-            $displayedMilestone = $user->displayedMilestones()->create(['event_milestone_id' => $milestone->id, 'individual' => true, 'emailed' => false]);
-        }
+    }
 
+    private function sendMilestoneCelebrations($user, $event, $milestone, $team = null): bool
+    {
         $emailTemplate = $milestone->emailTemplate ? $milestone->emailTemplate : $event->emailTemplate;
 
-        if ($emailTemplate && ! $displayedMilestone->emailed) {
-            try {
-                Mail::to($user->email)->send(new MilestoneAchieved($user, $milestone, $event, $emailTemplate));
-                $displayedMilestone->fill(['emailed' => true])->save();
-            } catch (Exception $e) {
-                Log::error('Failed to send email', [
-                    'error' => $e->getMessage(),
-                    'user_id' => $user->id,
-                ]);
-            }
+        $isIndividual = is_null($team);
+
+        $displayedMilestone = $user->displayedMilestones()->where(['event_milestone_id' => $milestone->id, 'individual' => $isIndividual])->first();
+
+        if (is_null($displayedMilestone)) {
+            $displayedMilestone = $user->displayedMilestones()->create(['event_milestone_id' => $milestone->id, 'individual' => $isIndividual, 'emailed' => false]);
         }
 
-        return true;
+        if (! $emailTemplate) {
+            Log::error('Email template not found for event ' . $event->id);
+            return false;
+        }
+
+        if ($displayedMilestone->emailed) {
+            Log::error(sprintf('Milestone has already been emailed to %s', $displayedMilestone->id));
+
+            return false;
+        }
+
+        try {
+            Mail::to($user->email)->send(new MilestoneAchieved($user, $milestone, $event, $emailTemplate,$team));
+            $displayedMilestone->fill(['emailed' => true])->save();
+            Log::info('Email sent to ' . $user->email);
+            return true;
+        } catch (Exception $e) {
+            Log::error('Failed to send email', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+            ]);
+
+            return false;
+        }
     }
 
     private function calculateUserTotal($user, $event, $startDate, $endDate)
