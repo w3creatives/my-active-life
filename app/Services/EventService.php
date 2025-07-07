@@ -275,7 +275,7 @@ final class EventService
 
         $this->updateTeamPoint($user, $event, $date);
 
-        $this->checkUserCelebrations($user, $event);
+        $this->checkUserCelebrations($user, $event, $date);
     }
 
     public function updateTeamPoint($user, $event, $date = null)
@@ -423,7 +423,7 @@ final class EventService
         }
 
         foreach ($teamMembers as $teamMember) {
-            $this->checkUserCelebrations($teamMember->user, $event, $team);
+            $this->checkUserCelebrations($teamMember->user, $event, $date, $team);
         }
 
     }
@@ -563,46 +563,86 @@ final class EventService
             });
     }
 
-    public function checkUserCelebrations($user, $event, $team = null): bool
+    public function checkUserCelebrations($user, $event, $date, $team = null): bool
     {
-        if (! in_array($event->event_type, ['regular', 'month'])) {
+        if (! in_array($event->event_type, ['regular', 'month', 'fit_life'])) {
             return false;
         }
 
-        if ($team) {
-            $totalPoint = $team->totalPoints()->where(['event_id' => $event->id])->first();
-        } else {
-            $totalPoint = $user->totalPoints()->where(['event_id' => $event->id])->first();
+        if (in_array($event->event_type, ['regular', 'month'])) {
+            if ($team) {
+                $totalPoint = $team->totalPoints()->where(['event_id' => $event->id])->first();
+            } else {
+                $totalPoint = $user->totalPoints()->where(['event_id' => $event->id])->first();
+            }
+
+            if (is_null($totalPoint)) {
+                return false;
+            }
+
+            $milestone = $event->milestones()->where('distance', '<=', $totalPoint->amount)->orderBy('distance', 'DESC')->first();
+
+            if (is_null($milestone)) {
+                return false;
+            }
+            $isIndividual = is_null($team);
+
+            $displayedMilestone = $user->displayedMilestones()->where(['event_milestone_id' => $milestone->id, 'individual' => $isIndividual])->first();
+
+            if (is_null($displayedMilestone)) {
+                $displayedMilestone = $user->displayedMilestones()->create(['event_milestone_id' => $milestone->id, 'individual' => $isIndividual, 'emailed' => false]);
+            }
+
+            return $this->sendMilestoneCelebrations($user, $event, $milestone, $displayedMilestone, $team);
         }
 
-        if (is_null($totalPoint)) {
-            return false;
+        if ($event->event_type === 'fit_life' && is_null($team)) {
+            $totalPoint = $user->points()->where(['event_id' => $event->id, 'date' => $date])->sum('amount');
+
+            if (is_null($totalPoint)) {
+                return false;
+            }
+
+            $registration = $user->fitLifeRegistrations()->where(['date' => $date])->first();
+
+            if (is_null($registration)) {
+                return false;
+            }
+
+            $activity = $registration->activity;
+
+            $milestone = $activity->milestones()
+                ->where('total_points', '<=', $totalPoint->amount)
+                ->where('total_points', '>', 0)
+                ->orderBy('total_points', 'DESC')->first();
+
+            if (is_null($milestone)) {
+                return false;
+            }
+
+            $milestone->distance = $milestone->total_points;
+            $milestone->logo = '';
+
+            $displayedMilestone = $registration->milestoneStatuses()->where(['user_id' => $user->id, 'milestone_id' => $milestone->id])->first();
+
+            if (is_null($displayedMilestone)) {
+                $displayedMilestone = $registration->milestoneStatuses()->create(['milestone_id' => $milestone->id, 'emailed' => false, 'user_id' => $user->id]);
+            }
+
+            return $this->sendMilestoneCelebrations($user, $event, $milestone, $displayedMilestone);
+
         }
 
-        $milestone = $event->milestones()->where('distance', '<=', $totalPoint->amount)->orderBy('distance', 'DESC')->first();
-
-        if (is_null($milestone)) {
-            return false;
-        }
-
-        return $this->sendMilestoneCelebrations($user, $event, $milestone, $team);
-
+        return true;
     }
 
-    private function sendMilestoneCelebrations($user, $event, $milestone, $team = null): bool
+    private function sendMilestoneCelebrations($user, $event, $milestone, $displayedMilestone, $team = null): bool
     {
         $emailTemplate = $milestone->emailTemplate ? $milestone->emailTemplate : $event->emailTemplate;
 
-        $isIndividual = is_null($team);
-
-        $displayedMilestone = $user->displayedMilestones()->where(['event_milestone_id' => $milestone->id, 'individual' => $isIndividual])->first();
-
-        if (is_null($displayedMilestone)) {
-            $displayedMilestone = $user->displayedMilestones()->create(['event_milestone_id' => $milestone->id, 'individual' => $isIndividual, 'emailed' => false]);
-        }
-
         if (! $emailTemplate) {
-            Log::error('Email template not found for event ' . $event->id);
+            Log::error('Email template not found for event '.$event->id);
+
             return false;
         }
 
@@ -613,9 +653,10 @@ final class EventService
         }
 
         try {
-            Mail::to($user->email)->send(new MilestoneAchieved($user, $milestone, $event, $emailTemplate,$team));
+            Mail::to($user->email)->send(new MilestoneAchieved($user, $milestone, $event, $emailTemplate, $team));
             $displayedMilestone->fill(['emailed' => true])->save();
-            Log::info('Email sent to ' . $user->email);
+            Log::info('Email sent to '.$user->email);
+
             return true;
         } catch (Exception $e) {
             Log::error('Failed to send email', [
