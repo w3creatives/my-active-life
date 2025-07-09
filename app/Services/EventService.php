@@ -12,6 +12,7 @@ use App\Models\UserPoint;
 use App\Repositories\EventRepository;
 use App\Repositories\UserPointRepository;
 use App\Traits\UserEventParticipationTrait;
+use App\Traits\UserStreakManagerTrait;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Exception;
@@ -23,6 +24,11 @@ use Illuminate\Support\Str;
 final class EventService
 {
     use UserEventParticipationTrait;
+    use UserStreakManagerTrait;
+
+    protected $event;
+
+    protected $user;
 
     public function __construct(
         protected EventRepository $eventRepository,
@@ -634,6 +640,11 @@ final class EventService
         }
 
         return true;
+    }
+
+    public function userStreaks($user, $event): bool
+    {
+        return $this->processUserStreaks($user, $event);
     }
 
     private function sendMilestoneCelebrations($user, $event, $milestone, $displayedMilestone, $team = null): bool

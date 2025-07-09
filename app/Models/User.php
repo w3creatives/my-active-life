@@ -171,6 +171,16 @@ final class User extends Authenticatable
         return $this->hasMany(DisplayedUserMilestone::class, 'user_id', 'id');
     }
 
+    public function userStreaks(): HasMany
+    {
+        return $this->hasMany(UserStreak::class);
+    }
+
+    public function displayedStreaks(): HasMany
+    {
+        return $this->hasMany(DisplayedUserStreak::class);
+    }
+
     /**
      * Check if the user is a super admin
      */

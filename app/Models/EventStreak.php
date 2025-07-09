@@ -13,4 +13,5 @@ class EventStreak extends Model
 
         return $data['min_distance'] ?? null;
     }
+
 }

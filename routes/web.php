@@ -15,11 +15,18 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-Route::get('test-email',function(){
-    $event = \App\Models\Event::find(87);
-    $user = \App\Models\User::find(165219);
-    (new \App\Services\EventService(
-        new \App\Repositories\EventRepository(), new \App\Repositories\UserPointRepository()
+Route::get('test-email', function () {
+    $event = App\Models\Event::find(89);
+    $user = App\Models\User::find(165220);
+    $test = (new \App\Services\EventService(new \App\Repositories\EventRepository, new \App\Repositories\UserPointRepository))->userStreaks($user, $event);
+dd($test);
+    // $userStreak
+
+
+
+    dd($user->userStreaks()->where('event_id', $event->id)->first(), $event->streaks()->first());
+    (new App\Services\EventService(
+        new App\Repositories\EventRepository(), new App\Repositories\UserPointRepository()
     ))->checkUserCelebrations($user, $event);
 });
 Route::get('/', function () {
