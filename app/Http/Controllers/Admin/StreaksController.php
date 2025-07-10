@@ -89,6 +89,20 @@ final class StreaksController extends Controller
         $data['data'] = json_encode(['min_distance' => $request->min_distance]);
         $data['email_template_id'] = $request->get('email_template_id', null);
 
+        if ($request->hasFile('logo')) {
+            $logoFile = $request->file('logo');
+            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
+            $logoFile->storeAs('uploads/streaks', $logoFileName, 'public');
+            $data['logo'] = $logoFileName;
+        }
+
+        if ($request->hasFile('team_logo')) {
+            $teamLogoFile = $request->file('team_logo');
+            $teamLogoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $teamLogoFile->getClientOriginalExtension();
+            $teamLogoFile->storeAs('uploads/streaks', $teamLogoFileName, 'public');
+            $data['team_logo'] = $teamLogoFileName;
+        }
+
         if ($streak) {
             $streak->fill($data)->save();
 

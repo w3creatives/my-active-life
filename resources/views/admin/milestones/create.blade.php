@@ -53,24 +53,23 @@
                                     <textarea name="description" id="description"
                                               class="form-control">{{ $eventMilestone->description ?? '' }}</textarea>
                                 </div>
-                                <div class="mb-4 col-xl-6 col-sm-12 col-md-6">
-                                    <label for="logo" class="form-label">Logo</label>
-                                    <input type="file" id="logo" name="logo" data-preview=".logo-preview"
-                                           class="form-control choose-file">
-                                    <div class="logo-preview d-none mt-3">
-                                        <img src="" class="img-fluid img" style="height: 100px;" />
-                                    </div>
-                                </div>
-                                <div class="mb-4 col-xl-6 col-sm-12 col-md-6">
-                                    <label for="team_logo" class="form-label">Team Logo</label>
-                                    <input type="file" id="team_logo" data-preview=".team-logo-preview"
-                                           name="team_logo" class="form-control choose-file">
-                                    <div class="team-logo-preview d-none mt-3">
-                                        <img src="" class="img-fluid img" style="height: 100px;" />
-                                    </div>
-                                </div>
-
                             @endif
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="logo" class="form-label">Logo</label>
+                                <input type="file" id="logo" name="logo" data-preview=".logo-preview"
+                                       class="form-control choose-file">
+                                <div class="logo-preview {{ isset($eventMilestone->logo) && $eventMilestone->logo?'':'d-none' }} mt-3">
+                                    <img src="{{ $eventMilestone->logo??'' }}" class="img-fluid img" style="height: 100px;" />
+                                </div>
+                            </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="team_logo" class="form-label">Team Logo</label>
+                                <input type="file" id="team_logo" data-preview=".team-logo-preview"
+                                       name="team_logo" class="form-control choose-file">
+                                <div class="team-logo-preview {{ isset($eventMilestone->team_logo) && $eventMilestone->team_logo?'':'d-none' }} mt-3">
+                                    <img src="{{ $eventMilestone->team_logo??'' }}" class="img-fluid img" style="height: 100px;" />
+                                </div>
+                            </div>
 
                         </div>
                         <div class="d-flex justify-content-between mt-3">

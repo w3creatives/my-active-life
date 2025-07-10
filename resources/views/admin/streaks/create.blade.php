@@ -46,7 +46,24 @@
                                     @endforeach
                                 </select>
                             </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="logo" class="form-label">Logo</label>
+                                <input type="file" id="logo" name="logo" data-preview=".logo-preview"
+                                       class="form-control choose-file">
+                                <div class="logo-preview {{ isset($eventStreak->logo) && $eventStreak->logo?'':'d-none' }} mt-3">
+                                    <img src="{{ $eventStreak->logo??'' }}" alt="" class="img-fluid img" style="height: 100px;" />
+                                </div>
+                            </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="team_logo" class="form-label">Team Logo</label>
+                                <input type="file" id="team_logo" data-preview=".team-logo-preview"
+                                       name="team_logo" class="form-control choose-file">
+                                <div class="team-logo-preview {{ isset($eventStreak->team_logo) && $eventStreak->team_logo?'':'d-none' }} mt-3">
+                                    <img src="{{ $eventStreak->team_logo??'' }}" class="img-fluid img" style="height: 100px;" />
+                                </div>
+                            </div>
                         </div>
+
                         <div class="d-flex justify-content-between mt-3">
 
                             <button type="submit" class="btn btn-primary">{{ $eventStreak? 'Update' : 'Add' }}

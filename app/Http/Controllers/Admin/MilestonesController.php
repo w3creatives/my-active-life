@@ -124,21 +124,21 @@ class MilestonesController extends Controller
 
         $data['email_template_id'] = $request->get('email_template_id', null);
 
+        if ($request->hasFile('logo')) {
+            $logoFile = $request->file('logo');
+            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
+            $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
+            $data['logo'] = $logoFileName;
+        }
+
+        if ($request->hasFile('team_logo')) {
+            $teamLogoFile = $request->file('team_logo');
+            $teamLogoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $teamLogoFile->getClientOriginalExtension();
+            $teamLogoFile->storeAs('uploads/milestones', $teamLogoFileName, 'public');
+            $data['team_logo'] = $teamLogoFileName;
+        }
+
         if (in_array($event->event_type,['regular','month'])) {
-
-            if ($request->hasFile('logo')) {
-                $logoFile = $request->file('logo');
-                $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
-                $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
-                $data['logo'] = $logoFileName;
-            }
-
-            if ($request->hasFile('team_logo')) {
-                $teamLogoFile = $request->file('team_logo');
-                $teamLogoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $teamLogoFile->getClientOriginalExtension();
-                $teamLogoFile->storeAs('uploads/milestones', $teamLogoFileName, 'public');
-                $data['team_logo'] = $teamLogoFileName;
-            }
 
             $eventMilestone = $event->milestones()->find($milestoneId);
 
