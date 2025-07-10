@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Mail\MilestoneAchieved;
+use App\Mail\StreakAchieved;
 use App\Models\Event;
 use App\Models\EventParticipation;
 use App\Models\Team;
@@ -280,6 +281,8 @@ final class EventService
         }
 
         $this->updateTeamPoint($user, $event, $date);
+
+        $this->userStreaks($user, $event);
 
         $this->checkUserCelebrations($user, $event, $date);
     }
@@ -602,6 +605,10 @@ final class EventService
             return $this->sendMilestoneCelebrations($user, $event, $milestone, $displayedMilestone, $team);
         }
 
+        if ($event->event_type === 'promotional') {
+            // return $this->sendMilestoneCelebrations($user, $event, $milestone, $displayedMilestone, $team);
+        }
+
         if ($event->event_type === 'fit_life' && is_null($team)) {
             $totalPoint = $user->points()->where(['event_id' => $event->id, 'date' => $date])->sum('amount');
 
@@ -642,9 +649,29 @@ final class EventService
         return true;
     }
 
-    public function userStreaks($user, $event): bool
+    public function userStreaks($user, $event)
     {
-        return $this->processUserStreaks($user, $event);
+        $completedStreaks = $this->processUserStreaks($user, $event);
+
+        if (! $completedStreaks) {
+            return false;
+        }
+
+        foreach ($completedStreaks as $completedStreak) {
+            if ($completedStreak->emailed) {
+                continue;
+            }
+
+            $streak = $completedStreak->streak;
+
+            $emailTemplate = $streak->emailTemplate ? $streak->emailTemplate : $event->emailTemplate;
+            try {
+                Mail::to($user->email)->send(new StreakAchieved($user, $event, $streak, $emailTemplate, $completedStreak->accomplished_date));
+                $completedStreak->fill(['emailed' => true])->save();
+            } catch (Exception $e) {
+                Log::error($e->getMessage());
+            }
+        }
     }
 
     private function sendMilestoneCelebrations($user, $event, $milestone, $displayedMilestone, $team = null): bool
