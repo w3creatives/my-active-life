@@ -550,6 +550,12 @@ class TeamsController extends BaseController
 
         $user = $request->user();
 
+        $event = Event::find($request->event_id);
+
+        if ($event->event_type === 'promotional') {
+            return $this->sendError('Team can not be added for promotional events.', ['error'=>'Team can not be added for promotional events']);
+        }
+
         $team = $user->teams()->find($id);
 
         if($id && !$team){
