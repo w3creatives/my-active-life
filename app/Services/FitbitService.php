@@ -250,11 +250,11 @@ final class FitbitService implements DataSourceInterface
             $distances = collect($response->json('summary')['distances']);
 
             $totalDistance = $distances->filter(function ($distance) {
-                return $distance['activity'] == 'total';
+                return $distance['activity'] === 'total';
             })->sum('distance');
 
             $loggedDistance = $distances->filter(function ($distance) {
-                return $distance['activity'] == 'loggedActivities';
+                return $distance['activity'] === 'loggedActivities';
             })->sum('distance');
 
             $otherDistance = $totalDistance - $loggedDistance;
@@ -273,8 +273,8 @@ final class FitbitService implements DataSourceInterface
             return compact('date', 'distance', 'modality', 'raw_distance');
         });
 
-        if($otherDistance) {
-            $activities = $activities->push(['date' => $date, 'distance' => $otherDistance  * 0.621371,'modality' => 'other', 'raw_distance' => $otherDistance]);
+        if ($otherDistance) {
+            $activities = $activities->push(['date' => $date, 'distance' => $otherDistance * 0.621371, 'modality' => 'other', 'raw_distance' => $otherDistance]);
         }
 
         // TODO: Figure out how daily steps distance will be calculated.
@@ -302,8 +302,8 @@ final class FitbitService implements DataSourceInterface
             'Walk' => 'walk',
             'Bike', 'Bicycling' => 'bike',
             'Swim' => 'swim',
-            'Hike' => 'other',
-            default => 'daily_steps',
+            // 'Hike' => 'other',
+            default => 'other',
         };
     }
 }

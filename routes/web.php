@@ -16,6 +16,28 @@ use Illuminate\Support\Facades\Route;
 |
 */
 Route::get('test-email', function () {
+
+    $accessToken = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkNLRzIiLCJzdWIiOiJDOU5KWUwiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyYWN0IHJzZXQgcndlaSBycHJvIHJudXQgcnNsZSIsImV4cCI6MTc1MjI3NzEwMSwiaWF0IjoxNzUyMjQ4MzAxfQ.kdO3BvLuOCT75PzMAGTUblwZJhNYu4Um5faX3Xyghj8";
+
+    $httpClient = new \GuzzleHttp\Client([
+        'base_uri' => 'https://api.fitbit.com/1/',
+        'headers' => [
+            'Authorization' => sprintf('Bearer %s', $accessToken),
+            'Accept' => 'application/json',
+        ],
+    ]);
+
+    $date = "2025-03-09";
+
+    $response = $httpClient->get("user/-/activities/date/{$date}.json");
+
+    $result = json_decode($response->getBody()->getContents(), true);
+
+    $data = $result['activities'];
+    $distances = $result['summary']['distances'];
+
+    dd($data,$distances);
+
     $event = App\Models\Event::find(89);
     $user = App\Models\User::find(165220);
     $test = (new \App\Services\EventService(new \App\Repositories\EventRepository, new \App\Repositories\UserPointRepository))->userStreaks($user, $event);

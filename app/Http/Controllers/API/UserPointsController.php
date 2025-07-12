@@ -17,6 +17,7 @@ use App\Services\EventService;
 use App\Services\GarminService;
 use App\Services\MilestoneImageService;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Closure;
 use GuzzleHttp\Client;
 use Illuminate\Http\JsonResponse;
@@ -900,6 +901,7 @@ final class UserPointsController extends BaseController
                 $eventService->createUserParticipationPoints($user, $activity);
             }
         }
+
         return $this->sendResponse(['sync_start_date' => $startDate], 'User Points added');
 
         /**
@@ -1303,6 +1305,7 @@ final class UserPointsController extends BaseController
     private function syncFitbitPoints($sourceProfile, $request, $eventService)
     {
         try {
+            /*
             $httpClient = new Client([
                 'base_uri' => 'https://api.fitbit.com/1/',
                 'headers' => [
@@ -1310,9 +1313,33 @@ final class UserPointsController extends BaseController
                     'Accept' => 'application/json',
                 ],
             ]);
-
+*/
             $startDate = $request->get('sync_start_date');
             $endDate = Carbon::now()->format('Y-m-d');
+
+            $startDate = CarbonImmutable::parse($startDate);
+            $endDate = $endDate ? CarbonImmutable::parse($endDate) : $startDate;
+            $dateDays = $startDate->diffInDays($endDate, true);
+
+            for ($day = 0; $day <= $dateDays; $day++) {
+                $totalDistance = 0;
+
+                $activities = $this->findActivities($sourceProfile->access_token, $startDate->addDays($day)->format('Y-m-d'));
+
+                if(!$activities) {
+                    continue;
+                }
+
+                foreach($activities as $activity) {
+                    $this->createPoints($eventService, $request->user(), $activity['date'], $activity['distance'], $sourceProfile, $activity['modality']);
+                }
+            }
+
+            return $this->sendResponse(['sync_start_date' => $startDate], 'User Points added');
+
+            /**
+             * Deprecated
+             */
 
             $response = $httpClient->get("user/-/activities/distance/date/{$startDate}/{$endDate}.json");
 
@@ -1490,7 +1517,7 @@ final class UserPointsController extends BaseController
         }
     }
 
-    private function createPoints($eventService, $user, $date, $distance, $sourceProfile)
+    private function createPoints($eventService, $user, $date, $distance, $sourceProfile, $modality='other')
     {
 
         if (! $distance) {
@@ -1505,9 +1532,9 @@ final class UserPointsController extends BaseController
 
         foreach ($participations as $participation) {
 
-            $pointdata = ['amount' => $distance, 'date' => $date, 'event_id' => $participation->event_id, 'modality' => 'other', 'data_source_id' => $sourceProfile->data_source_id];
+            $pointdata = ['amount' => $distance, 'date' => $date, 'event_id' => $participation->event_id, 'modality' => $modality, 'data_source_id' => $sourceProfile->data_source_id];
 
-            $userPoint = $user->points()->where(['date' => $date, 'modality' => 'other', 'event_id' => $participation->event_id, 'data_source_id' => $sourceProfile->data_source_id])->first();
+            $userPoint = $user->points()->where(['date' => $date, 'modality' => $modality, 'event_id' => $participation->event_id, 'data_source_id' => $sourceProfile->data_source_id])->first();
 
             if ($userPoint) {
                 $userPoint->update($pointdata);
@@ -1594,5 +1621,75 @@ final class UserPointsController extends BaseController
         }
 
         return array_values($result);
+    }
+
+    private function findActivities($accessToken, $date): array
+    {
+        $httpClient = new Client([
+            'base_uri' => 'https://api.fitbit.com/1/',
+            'headers' => [
+                'Authorization' => sprintf('Bearer %s', $accessToken),
+                'Accept' => 'application/json',
+            ],
+        ]);
+
+        $response = $httpClient->get("user/-/activities/date/{$date}.json");
+
+        $result = json_decode($response->getBody()->getContents(), true);
+
+        $activities = collect($result['activities']);
+        $distances = collect($result['summary']['distances']);
+
+        $totalDistance = $distances->filter(function ($distance) {
+            return $distance['activity'] === 'total';
+        })->sum('distance');
+
+        $loggedDistance = $distances->filter(function ($distance) {
+            return $distance['activity'] === 'loggedActivities';
+        })->sum('distance');
+
+        $otherDistance = $totalDistance - $loggedDistance;
+
+        $fitbitMileConversion = 0.621371;
+
+        $activities = $activities->map(function ($item) use ($fitbitMileConversion) {
+            $modality = $this->modality($item['name']);
+            $date = $item['startDate'];
+            $distance = $item['distance'] * $fitbitMileConversion;
+            $raw_distance = $item['distance'];
+
+            return compact('date', 'distance', 'modality', 'raw_distance');
+        });
+
+        if ($otherDistance > 0) {
+            $activities = $activities->push(['date' => $date, 'distance' => $otherDistance * $fitbitMileConversion, 'modality' => 'other', 'raw_distance' => $otherDistance]);
+        }
+
+        $items = $activities->reduce(function ($data, $item) {
+            if (! isset($data[$item['modality']])) {
+                $data[$item['modality']] = $item;
+
+                return $data;
+            }
+
+            $data[$item['modality']]['distance'] += $item['distance'];
+            $data[$item['modality']]['raw_distance'] += $item['raw_distance'];
+
+            return $data;
+        }, []);
+
+        return collect($items)->values()->toArray();
+    }
+
+    private function modality(string $modality): string
+    {
+        return match ($modality) {
+            'Run' => 'run',
+            'Walk' => 'walk',
+            'Bike', 'Bicycling' => 'bike',
+            'Swim' => 'swim',
+            'Hike' => 'other',
+            default => 'daily_steps',
+        };
     }
 }
