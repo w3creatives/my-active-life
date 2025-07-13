@@ -93,6 +93,11 @@ class Event extends Model
         return $this->hasMany(EventParticipation::class,'event_id','id');
     }
 
+    public function tutorials()
+    {
+        return $this->hasMany(EventTutorial::class,'event_id','id');
+    }
+
     public function hasUserParticipation($user, $count = true, $field=null){
 
         if(!$user) {

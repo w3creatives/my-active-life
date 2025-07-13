@@ -2,18 +2,16 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\ActivitiesController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EmailBuildersController;
+use App\Http\Controllers\Admin\EventsController;
+use App\Http\Controllers\Admin\ImpersonateController;
+use App\Http\Controllers\Admin\MilestonesController;
+use App\Http\Controllers\Admin\StreaksController;
+use App\Http\Controllers\Admin\UsersController;
+use App\Http\Controllers\Admin\EventTutorialsController;
 use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\Admin\{
-    ActivitiesController,
-    DashboardController,
-    MilestonesController,
-    UsersController,
-    EventsController,
-    ImpersonateController,
-    StreaksController,
-    EmailBuildersController,
-};
 
 Route::impersonate();
 
@@ -81,6 +79,11 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::post('/events/{id}/streaks/{streakId}/edit', [StreaksController::class, 'store']);
     Route::delete('/events/{id}/streaks/{streakId}/delete', [StreaksController::class, 'destroy'])->name('admin.events.streaks.delete');
 
+    /**
+     * Event Tutorials
+     */
+    Route::get('/events/{eventId}/tutorials', [EventTutorialsController::class, 'create'])->name('admin.events.tutorials');
+    Route::post('/events/{eventId}/tutorials', [EventTutorialsController::class, 'store']);
     /**
      * Email Builder routes
      */

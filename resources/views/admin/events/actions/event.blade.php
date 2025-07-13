@@ -19,6 +19,8 @@
                             class="icon-base ti tabler-target mb-2"></i> Streaks</a>
                     @break
             @endswitch
+            <a href="{{ route('admin.events.tutorials', $event->id) }}" class="dropdown-item waves-effect"><i
+                    class="icon-base ti tabler-book mb-2"></i> Tutorials</a>
         </div>
     </div>
 </div>

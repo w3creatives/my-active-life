@@ -145,6 +145,7 @@
                         <div class="d-flex justify-content-between mt-3">
                             <button type="submit" class="btn btn-primary">{{ $event?'Update':'Add'}} Event</button>
                             @if($event)
+                                <div class="w-20 d-flex justify-content-between">
                                 @switch($event->event_type)
                                     @case('regular')
                                     @case('month')
@@ -159,6 +160,9 @@
                                         <a href="{{ route('admin.events.streaks', $event->id) }}" class="btn btn-dark">Streaks</a>
                                         @break
                                 @endswitch
+                                    <a href="{{ route('admin.events.tutorials', $event->id) }}"
+                                       class="btn btn-info m-l-10">Tutorials</a>
+                                </div>
                             @endif
                         </div>
                     </form>
