@@ -51,7 +51,7 @@ final class EventTutorialsController extends Controller
 
         $eventTutorial = $event->tutorials()->first();
 
-        $tutorials = $eventTutorial->content ? $eventTutorial->content : collect([]);
+        $tutorials = $eventTutorial->content ??collect([]);
 
         return view('admin.events.tutorials.create', compact('event', 'tutorialTypes', 'tutorials'));
     }
