@@ -84,6 +84,7 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
      */
     Route::get('/events/{eventId}/tutorials', [EventTutorialsController::class, 'create'])->name('admin.events.tutorials');
     Route::post('/events/{eventId}/tutorials', [EventTutorialsController::class, 'store']);
+    Route::delete('/events/{eventId}/tutorials/{id}', [EventTutorialsController::class, 'destroy'])->name('admin.events.tutorials.delete');
     /**
      * Email Builder routes
      */

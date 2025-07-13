@@ -51,9 +51,9 @@ final class EventTutorialsController extends Controller
 
         $eventTutorial = $event->tutorials()->first();
 
-        $tutorials = $eventTutorial->content ??collect([]);
+        $tutorials = $eventTutorial->content ?? collect([]);
 
-        return view('admin.events.tutorials.create', compact('event', 'tutorialTypes', 'tutorials'));
+        return view('admin.events.tutorials.create', compact('event', 'tutorialTypes', 'tutorials', 'eventTutorial'));
     }
 
     public function store(Request $request)
@@ -64,6 +64,12 @@ final class EventTutorialsController extends Controller
         $eventTutorial = $event->tutorials()->first();
 
         $items = [];
+
+        $tutorials = $request->except('_token');
+
+        if (! $tutorials) {
+            return redirect()->route('admin.events.tutorials', $event->id)->with('alert', ['type' => 'danger', 'message' => 'Tutorial cannot be added.']);
+        }
 
         foreach ($request->get('type') as $key => $type) {
 
@@ -99,8 +105,12 @@ final class EventTutorialsController extends Controller
         return redirect()->route('admin.events.tutorials', $event->id)->with('alert', ['type' => 'success', 'message' => 'Event Tutorial created successfully']);
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request)
     {
-        //
+        $event = Event::findOrFail($request->route()->parameter('eventId'));
+
+        $event->tutorials()->where(['id' => $request->route()->parameter('id')])->delete();
+
+        return redirect()->route('admin.events.tutorials', $event->id)->with('alert', ['type' => 'success', 'message' => 'Event Tutorial deleted successfully']);
     }
 }

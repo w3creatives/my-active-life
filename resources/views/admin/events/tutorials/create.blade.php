@@ -10,8 +10,20 @@
                     <div class="card-action-element">
                         <ul class="list-inline mb-0">
                             <li class="list-inline-item">
-                                <a href="{{ route('admin.events.edit', $event->id) }}" class="btn btn-label-primary">Edit Event</a>
+                                <a href="{{ route('admin.events.edit', $event->id) }}" class="btn btn-label-primary">Edit
+                                    Event</a>
                             </li>
+                            @if($eventTutorial)
+                                <li class="list-inline-item">
+                                    <form method="POST" id="delete-tutorial-form" action="{{ route('admin.events.tutorials.delete',[$event->id, $eventTutorial->id]) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                    </form>
+                                    <button class="btn btn-label-danger delete-tutorial">Delete
+                                        Tutorial
+                                    </button>
+                                </li>
+                            @endif
                         </ul>
                     </div>
                 </div>
@@ -70,6 +82,26 @@
                     let tutorialItem = $(this).parents('.divider').parent().parent();
 
                     Swal.fire({
+                        title: 'Are you sure want to remove this item?',
+                        // text: 'It will remove item from the list',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, remove it!',
+                        customClass: {
+                            confirmButton: 'btn btn-danger',
+                            cancelButton: 'btn btn-label-secondary'
+                        },
+                        buttonsStyling: false
+                    }).then(function(result) {
+                        if (result.value) {
+                            tutorialItem.remove();
+                        }
+                    });
+                });
+
+                $('.delete-tutorial').click(function(e) {
+                    e.preventDefault();
+                    Swal.fire({
                         title: 'Are you sure?',
                         text: 'You won\'t be able to revert this!',
                         icon: 'warning',
@@ -82,10 +114,9 @@
                         buttonsStyling: false
                     }).then(function(result) {
                         if (result.value) {
-                            tutorialItem.remove();
+                            $('#delete-tutorial-form').submit();
                         }
                     });
-
                 });
 
                 $(document).on('change', '.input-group-selection', function(e) {
