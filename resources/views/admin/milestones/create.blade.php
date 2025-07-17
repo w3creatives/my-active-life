@@ -63,6 +63,15 @@
                                 </div>
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="calendar_logo" class="form-label">Calendar Logo</label>
+                                <input type="file" id="calendar_logo" data-preview=".calendar-logo-preview"
+                                       name="calendar_logo" class="form-control choose-file">
+                                <div class="calendar-logo-preview {{ isset($eventMilestone->calendar_logo) && $eventMilestone->calendar_logo?'':'d-none' }} mt-3">
+                                    <img src="{{ $eventMilestone->calendar_logo??'' }}" class="img-fluid img" style="height: 100px;" />
+                                </div>
+                            </div>
+                            @if($isRegularEvent)
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="team_logo" class="form-label">Team Logo</label>
                                 <input type="file" id="team_logo" data-preview=".team-logo-preview"
                                        name="team_logo" class="form-control choose-file">
@@ -70,6 +79,24 @@
                                     <img src="{{ $eventMilestone->team_logo??'' }}" class="img-fluid img" style="height: 100px;" />
                                 </div>
                             </div>
+                            @else
+                                <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                    <label for="logo_bw" class="form-label">BW Logo</label>
+                                    <input type="file" id="logo_bw" name="bw_logo" data-preview=".logo_bw-preview"
+                                           class="form-control choose-file">
+                                    <div class="logo_bw-preview {{ isset($eventMilestone->logo_bw) && $eventMilestone->logo_bw?'':'d-none' }} mt-3">
+                                        <img src="{{ $eventMilestone->logo_bw??'' }}" class="img-fluid img" style="height: 100px;" />
+                                    </div>
+                                </div>
+                                <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                    <label for="calendar_bw_logo" class="form-label">BW Calendar Logo</label>
+                                    <input type="file" id="bw_calendar_logo" data-preview=".calendar_bw-logo-preview"
+                                           name="calendar_bw_logo" class="form-control choose-file">
+                                    <div class="calendar_bw-logo-preview {{ isset($eventMilestone->calendar_bw_logo) && $eventMilestone->calendar_bw_logo?'':'d-none' }} mt-3">
+                                        <img src="{{ $eventMilestone->calendar_bw_logo??'' }}" class="img-fluid img" style="height: 100px;" />
+                                    </div>
+                                </div>
+                            @endif
 
                         </div>
                         <div class="d-flex justify-content-between mt-3">

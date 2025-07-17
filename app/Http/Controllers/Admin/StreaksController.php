@@ -96,11 +96,11 @@ final class StreaksController extends Controller
             $data['logo'] = $logoFileName;
         }
 
-        if ($request->hasFile('team_logo')) {
-            $teamLogoFile = $request->file('team_logo');
+        if ($request->hasFile('calendar_logo')) {
+            $teamLogoFile = $request->file('calendar_logo');
             $teamLogoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $teamLogoFile->getClientOriginalExtension();
             $teamLogoFile->storeAs('uploads/streaks', $teamLogoFileName, 'public');
-            $data['team_logo'] = $teamLogoFileName;
+            $data['calendar_logo'] = $teamLogoFileName;
         }
 
         if ($streak) {

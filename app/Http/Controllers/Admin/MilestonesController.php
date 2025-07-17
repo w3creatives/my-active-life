@@ -22,8 +22,8 @@ class MilestonesController extends Controller
 
         if ($request->ajax()) {
 
-            if (in_array($event->event_type,  ['regular','month'])) {
-                $query = $event->milestones()->select(['id', 'name', 'distance', 'data', 'event_id','logo','team_logo']);
+            if (in_array($event->event_type, ['regular', 'month'])) {
+                $query = $event->milestones()->select(['id', 'name', 'distance', 'data', 'event_id', 'logo', 'team_logo']);
                 $searchableColumns = ['name', 'distance'];
             } else {
                 $query = $activity->milestones()->select(['id', 'name', 'total_points', 'data', 'activity_id']);
@@ -37,7 +37,7 @@ class MilestonesController extends Controller
                 $data = [
                     'id' => $item->id,
                     'name' => $item->name,
-                    'distance' => isset($item->distance)?$item->distance:$item->total_points,
+                    'distance' => isset($item->distance) ? $item->distance : $item->total_points,
                     'data' => $item->video_url ?? '',
                     'action' => [
                         view('admin.milestones.actions.milestone', compact('item', 'event'))->render(),
@@ -59,9 +59,9 @@ class MilestonesController extends Controller
                 'recordsFiltered' => $itemCount,
                 'data' => $items,
             ]);
-       }
+        }
 
-        return view('admin.milestones.list', compact('event','activity'));
+        return view('admin.milestones.list', compact('event', 'activity'));
     }
 
     public function create(Request $request)
@@ -73,14 +73,16 @@ class MilestonesController extends Controller
 
         $event = Event::findOrFail($eventId);
 
-        $isRegularEvent = in_array($event->event_type,['regular','month']);
+        $isRegularEvent = in_array($event->event_type, ['regular', 'month']);
 
-        if($isRegularEvent){
+        if ($isRegularEvent) {
             $eventMilestone = $event->milestones()->find($milestoneId);
         } else {
             $activity = $event->fitActivities()->find($activityId);
             $eventMilestone = $activity->milestones()->find($milestoneId);
-            $eventMilestone->distance = $eventMilestone->total_points;
+            if ($eventMilestone) {
+                $eventMilestone->distance = $eventMilestone->total_points ?? null;
+            }
         }
 
         if ($request->ajax()) {
@@ -99,7 +101,7 @@ class MilestonesController extends Controller
 
         $selectedEmailTemplate = ($eventMilestone && $eventMilestone->email_template_id) ? $eventMilestone->email_template_id : $event->email_template_id;
 
-        return view('admin.milestones.create', compact('event', 'eventMilestone', 'isRegularEvent', 'backUrl','emailTemplates','selectedEmailTemplate'));
+        return view('admin.milestones.create', compact('event', 'eventMilestone', 'isRegularEvent', 'backUrl', 'emailTemplates', 'selectedEmailTemplate'));
     }
 
     public function store(Request $request)
@@ -130,6 +132,24 @@ class MilestonesController extends Controller
             $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
             $data['logo'] = $logoFileName;
         }
+        if ($request->hasFile('bw_logo')) {
+            $logoFile = $request->file('bw_logo');
+            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
+            $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
+            $data['bw_logo'] = $logoFileName;
+        }
+        if ($request->hasFile('calendar_logo')) {
+            $logoFile = $request->file('calendar_logo');
+            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
+            $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
+            $data['calendar_logo'] = $logoFileName;
+        }
+        if ($request->hasFile('bw_calendar_logo')) {
+            $logoFile = $request->file('bw_calendar_logo');
+            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
+            $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
+            $data['bw_calendar_logo'] = $logoFileName;
+        }
 
         if ($request->hasFile('team_logo')) {
             $teamLogoFile = $request->file('team_logo');
@@ -138,7 +158,7 @@ class MilestonesController extends Controller
             $data['team_logo'] = $teamLogoFileName;
         }
 
-        if (in_array($event->event_type,['regular','month'])) {
+        if (in_array($event->event_type, ['regular', 'month'])) {
 
             $eventMilestone = $event->milestones()->find($milestoneId);
 

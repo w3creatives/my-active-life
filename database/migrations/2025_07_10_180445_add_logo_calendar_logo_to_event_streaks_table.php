@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('fit_life_activity_milestones', function (Blueprint $table) {
+        Schema::table('event_streaks', function (Blueprint $table) {
             $table->string('logo')->nullable();
-            $table->string('team_logo')->nullable();
+            $table->string('calendar_logo')->nullable();
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('fit_life_activity_milestones', function (Blueprint $table) {
+        Schema::table('event_streaks', function (Blueprint $table) {
             //
         });
     }

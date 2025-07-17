@@ -54,12 +54,13 @@
                                     <img src="{{ $eventStreak->logo??'' }}" alt="" class="img-fluid img" style="height: 100px;" />
                                 </div>
                             </div>
+
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
-                                <label for="team_logo" class="form-label">Team Logo</label>
-                                <input type="file" id="team_logo" data-preview=".team-logo-preview"
-                                       name="team_logo" class="form-control choose-file">
-                                <div class="team-logo-preview {{ isset($eventStreak->team_logo) && $eventStreak->team_logo?'':'d-none' }} mt-3">
-                                    <img src="{{ $eventStreak->team_logo??'' }}" class="img-fluid img" style="height: 100px;" />
+                                <label for="calendar_logo" class="form-label">Calendar Logo</label>
+                                <input type="file" id="calendar_logo" data-preview=".calendar-logo-preview"
+                                       name="calendar_logo" class="form-control choose-file">
+                                <div class="calendar-logo-preview {{ isset($eventStreak->calendar_logo) && $eventStreak->calendar_logo?'':'d-none' }} mt-3">
+                                    <img src="{{ $eventStreak->calendar_logo??'' }}" class="img-fluid img" style="height: 100px;" />
                                 </div>
                             </div>
                         </div>
