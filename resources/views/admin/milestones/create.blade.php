@@ -71,14 +71,22 @@
                                 </div>
                             </div>
                             @if($isRegularEvent)
-                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
-                                <label for="team_logo" class="form-label">Team Logo</label>
-                                <input type="file" id="team_logo" data-preview=".team-logo-preview"
-                                       name="team_logo" class="form-control choose-file">
-                                <div class="team-logo-preview {{ isset($eventMilestone->team_logo) && $eventMilestone->team_logo?'':'d-none' }} mt-3">
-                                    <img src="{{ $eventMilestone->team_logo??'' }}" class="img-fluid img" style="height: 100px;" />
+                                <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                    <label for="team_logo" class="form-label">Team Logo</label>
+                                    <input type="file" id="team_logo" data-preview=".team-logo-preview"
+                                           name="team_logo" class="form-control choose-file">
+                                    <div class="team-logo-preview {{ isset($eventMilestone->team_logo) && $eventMilestone->team_logo?'':'d-none' }} mt-3">
+                                        <img src="{{ $eventMilestone->team_logo??'' }}" class="img-fluid img" style="height: 100px;" />
+                                    </div>
                                 </div>
-                            </div>
+                                <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                    <label for="calendar_team_logo" class="form-label">Calendar Team Logo</label>
+                                    <input type="file" id="calendar_team_logo" data-preview=".calendar-team-logo-preview"
+                                           name="calendar_team_logo" class="form-control choose-file">
+                                    <div class="calendar-team-logo-preview {{ isset($eventMilestone->calendar_team_logo) && $eventMilestone->calendar_team_logo?'':'d-none' }} mt-3">
+                                        <img src="{{ $eventMilestone->calendar_team_logo??'' }}" class="img-fluid img" style="height: 100px;" />
+                                    </div>
+                                </div>
                             @else
                                 <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                     <label for="logo_bw" class="form-label">BW Logo</label>

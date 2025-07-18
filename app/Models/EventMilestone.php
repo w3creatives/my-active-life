@@ -12,13 +12,10 @@ final class EventMilestone extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'distance', 'data', 'description', 'logo', 'team_log'];
-
+    protected $fillable = ['name', 'distance', 'data', 'description', 'logo', 'team_logo', 'calendar_logo', 'calendar_team_logo', 'email_template_id'];
     private string $uploadPath = 'uploads/milestones/';
-
-    public function getLogoAttribute()
+    public function getLogoAttribute(): ?string
     {
-
         if (! $this->attributes['logo']) {
             return null;
         }
@@ -26,7 +23,7 @@ final class EventMilestone extends Model
         return asset(Storage::url($this->uploadPath.trim($this->attributes['logo'])));
     }
 
-    public function getTeamLogoAttribute()
+    public function getTeamLogoAttribute(): ?string
     {
 
         if (! $this->attributes['team_logo']) {
@@ -34,6 +31,26 @@ final class EventMilestone extends Model
         }
 
         return asset(Storage::url($this->uploadPath.trim($this->attributes['team_logo'])));
+    }
+
+    public function getCalendarLogoAttribute(): ?string
+    {
+
+        if (! $this->attributes['calendar_logo']) {
+            return null;
+        }
+
+        return asset(Storage::url($this->uploadPath.trim($this->attributes['calendar_logo'])));
+    }
+
+    public function getCalendarTeamLogoAttribute(): ?string
+    {
+
+        if (! $this->attributes['calendar_team_logo']) {
+            return null;
+        }
+
+        return asset(Storage::url($this->uploadPath.trim($this->attributes['calendar_team_logo'])));
     }
 
     public function getVideoUrlAttribute()
@@ -46,5 +63,15 @@ final class EventMilestone extends Model
     public function emailTemplate()
     {
         return $this->belongsTo(EmailTemplate::class, 'email_template_id', 'id');
+    }
+
+    public function images(): array
+    {
+        return [
+            'logo_image_url' => $this->logo,
+            'team_logo_image_url' => $this->team_logo,
+            'calendar_logo_image_url' => $this->calendar_logo,
+            'calendar_team_logo_image_url' => $this->calendar_team_logo,
+        ];
     }
 }

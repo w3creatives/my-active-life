@@ -103,6 +103,24 @@ final class UserPointsController extends BaseController
 
         $points->through(function ($item, $key) use ($event, $user, $points) {
 
+            if ($event->event_type === 'promotional') {
+                $userStreak = $user->userStreaks()->where('event_id', $item->id)->where('date', $item->date)->first();
+
+                if (is_null($userStreak) || ! $userStreak->streak) {
+                    $item->milestone = null;
+
+                    return $item;
+                }
+
+                $milestone = $userStreak->streak;
+
+                $milestone->image = $milestone->images();
+
+                $item->milestone = $milestone;
+
+                return $item;
+            }
+
             if ($event->event_type === 'fit_life') {
 
                 $milestone = $this->fitLife($user, $event, $item);
@@ -115,8 +133,11 @@ final class UserPointsController extends BaseController
                     if ($milestoneTotalPoints > 0) {
                         $milestone->is_completed = $item->total_mile >= $milestoneTotalPoints;
                     }
-
-                    $milestone->image = $this->milestoneImages($event, $milestone->total_points, $milestone->activity_id, $milestone->is_completed);
+                    $milestone->image = $milestone->images($milestone->is_completed);
+                    /**
+                     * Deprecated since new version
+                     */
+                    // $milestone->image = $this->milestoneImages($event, $milestone->total_points, $milestone->activity_id, $milestone->is_completed);
                 }
 
                 $item->milestone = $milestone;
@@ -128,10 +149,9 @@ final class UserPointsController extends BaseController
 
             $prevItem = $points->get($key - 1);
 
-            $milestone = $event->milestones()->selectRaw('name,description,distance,data');
+            $milestone = $event->milestones()->selectRaw('name,description,distance,data,logo, team_logo, calendar_logo, calendar_team_logo');
 
             if ($prevItem) {
-                $prevItem->cumulative_mile;
                 $milestone = $milestone->where('distance', '<=', $item->cumulative_mile)->where('distance', '>', $prevItem->cumulative_mile);
             } else {
                 $milestone = $milestone->where('distance', '<=', $item->cumulative_mile);
@@ -150,10 +170,15 @@ final class UserPointsController extends BaseController
                     $bibs_url = sprintf('https://bibs.runtheedge.com/?miles=%s-%s', $event->bibs_name, $milestone->distance);
                 }
 
-                $milestone->image = $this->milestoneImages($event, $milestone->distance);
+                $milestone->image = $milestone->images();
+
+                /**
+                 * Deprecated since new version
+                 */
+                // $milestone->image = $this->milestoneImages($event, $milestone->distance);
             }
             $item->bibs_url = $bibs_url;
-            $item->milestone = $milestone;
+            $item->milestone = collect($milestone)->except(['logo', 'team_logo', 'calendar_logo', 'calendar_team_logo']);
 
             // https://staging-tracker.runtheedge.com/api/v1/event_milestone_images?event_id=2&distance=2832
 
@@ -909,9 +934,9 @@ final class UserPointsController extends BaseController
          */
 
         /**
-        if($sourceProfile->source->short_name !== 'fitbit'){
-        return $this->sendError('ERROR', ['error'=>'Only Fitbit is supported for now']);
-        }
+         * if($sourceProfile->source->short_name !== 'fitbit'){
+         * return $this->sendError('ERROR', ['error'=>'Only Fitbit is supported for now']);
+         * }
          */
         switch ($request->data_source) {
             case 'fitbit':
@@ -1326,11 +1351,11 @@ final class UserPointsController extends BaseController
 
                 $activities = $this->findActivities($sourceProfile->access_token, $startDate->addDays($day)->format('Y-m-d'));
 
-                if(!$activities) {
+                if (! $activities) {
                     continue;
                 }
 
-                foreach($activities as $activity) {
+                foreach ($activities as $activity) {
                     $this->createPoints($eventService, $request->user(), $activity['date'], $activity['distance'], $sourceProfile, $activity['modality']);
                 }
             }
@@ -1340,7 +1365,6 @@ final class UserPointsController extends BaseController
             /**
              * Deprecated
              */
-
             $response = $httpClient->get("user/-/activities/distance/date/{$startDate}/{$endDate}.json");
 
             $dateDistances = json_decode($response->getBody()->getContents(), true)['activities-distance'];
@@ -1517,7 +1541,7 @@ final class UserPointsController extends BaseController
         }
     }
 
-    private function createPoints($eventService, $user, $date, $distance, $sourceProfile, $modality='other')
+    private function createPoints($eventService, $user, $date, $distance, $sourceProfile, $modality = 'other')
     {
 
         if (! $distance) {

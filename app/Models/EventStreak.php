@@ -31,18 +31,28 @@ final class EventStreak extends Model
         return asset(Storage::url($this->uploadPath.trim($this->attributes['logo'])));
     }
 
-    public function getTeamLogoAttribute(): ?string
+    public function getCalendarLogoAttribute(): ?string
     {
 
-        if (! $this->attributes['team_logo']) {
+        if (! $this->attributes['calendar_logo']) {
             return null;
         }
 
-        return asset(Storage::url($this->uploadPath.trim($this->attributes['team_logo'])));
+        return asset(Storage::url($this->uploadPath.trim($this->attributes['calendar_logo'])));
     }
 
     public function emailTemplate(): BelongsTo
     {
         return $this->belongsTo(EmailTemplate::class, 'email_template_id', 'id');
+    }
+
+    public function images(): array
+    {
+        return [
+            'logo_image_url' => $this->logo,
+            'team_logo_image_url' => null,
+            'calendar_logo_image_url' => $this->calendar_logo,
+            'calendar_team_logo_image_url' => null,
+        ];
     }
 }

@@ -1,15 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\EmailTemplate;
 use App\Models\Event;
-use App\Models\EventMilestone;
 use App\Utilities\DataTable;
 use Illuminate\Http\Request;
 
-class MilestonesController extends Controller
+final class MilestonesController extends Controller
 {
     public function index(Request $request, DataTable $dataTable)
     {
@@ -30,7 +31,7 @@ class MilestonesController extends Controller
                 $searchableColumns = ['name', 'total_points'];
             }
 
-            list($itemCount, $items) = $dataTable->setSearchableColumns($searchableColumns)->query($request, $query)->response();
+            [$itemCount, $items] = $dataTable->setSearchableColumns($searchableColumns)->query($request, $query)->response();
 
             $items = $items->map(function ($item) use ($event) {
 
@@ -44,7 +45,7 @@ class MilestonesController extends Controller
                     ],
                 ];
 
-                if ($event->event_type == 'regular') {
+                if ($event->event_type === 'regular') {
                     $data['logo'] = view('admin.milestones.logo', compact('item'))->render();
                 } else {
                     $data['logo'] = 'N/A';
@@ -87,7 +88,7 @@ class MilestonesController extends Controller
 
         if ($request->ajax()) {
             return [
-                'html' => view('admin.milestones.add', compact('event', 'eventMilestone'))->render()
+                'html' => view('admin.milestones.add', compact('event', 'eventMilestone'))->render(),
             ];
         }
 
@@ -115,7 +116,7 @@ class MilestonesController extends Controller
             'name' => 'required',
             'distance' => 'required|numeric',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'team_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'team_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data = $request->only(['name', 'distance', 'description']);
@@ -128,34 +129,40 @@ class MilestonesController extends Controller
 
         if ($request->hasFile('logo')) {
             $logoFile = $request->file('logo');
-            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
+            $logoFileName = $event->id.'_'.time().'_'.uniqid().'.'.$logoFile->getClientOriginalExtension();
             $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
             $data['logo'] = $logoFileName;
         }
         if ($request->hasFile('bw_logo')) {
             $logoFile = $request->file('bw_logo');
-            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
+            $logoFileName = $event->id.'_'.time().'_'.uniqid().'.'.$logoFile->getClientOriginalExtension();
             $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
             $data['bw_logo'] = $logoFileName;
         }
         if ($request->hasFile('calendar_logo')) {
             $logoFile = $request->file('calendar_logo');
-            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
+            $logoFileName = $event->id.'_'.time().'_'.uniqid().'.'.$logoFile->getClientOriginalExtension();
             $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
             $data['calendar_logo'] = $logoFileName;
         }
         if ($request->hasFile('bw_calendar_logo')) {
             $logoFile = $request->file('bw_calendar_logo');
-            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
+            $logoFileName = $event->id.'_'.time().'_'.uniqid().'.'.$logoFile->getClientOriginalExtension();
             $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
             $data['bw_calendar_logo'] = $logoFileName;
         }
 
         if ($request->hasFile('team_logo')) {
             $teamLogoFile = $request->file('team_logo');
-            $teamLogoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $teamLogoFile->getClientOriginalExtension();
+            $teamLogoFileName = $event->id.'_'.time().'_'.uniqid().'.'.$teamLogoFile->getClientOriginalExtension();
             $teamLogoFile->storeAs('uploads/milestones', $teamLogoFileName, 'public');
             $data['team_logo'] = $teamLogoFileName;
+        }
+        if ($request->hasFile('calendar_team_logo')) {
+            $teamLogoFile = $request->file('calendar_team_logo');
+            $teamLogoFileName = $event->id.'_'.time().'_'.uniqid().'.'.$teamLogoFile->getClientOriginalExtension();
+            $teamLogoFile->storeAs('uploads/milestones', $teamLogoFileName, 'public');
+            $data['calendar_team_logo'] = $teamLogoFileName;
         }
 
         if (in_array($event->event_type, ['regular', 'month'])) {
