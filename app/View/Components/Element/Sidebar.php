@@ -1,22 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\View\Components\Element;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
+use JetBrains\PhpStorm\NoReturn;
 
-class Sidebar extends Component
+final class Sidebar extends Component
 {
-    public  $menuItems;
-    public $currentNav;
+    public array $menuItems;
 
-    public $currentRoute;
+    public string $currentNav;
+
+    public string $currentRoute;
+
+    #[NoReturn]
     public function __construct()
     {
-        list($prefix, $currentNav) = explode('/', request()->path());
+        [$prefix, $currentNav] = explode('/', request()->path());
 
-        $this->currentRoute = request()->route()->action??['as'];
+        $routeAction = request()->route()->action;
+
+        $this->currentRoute = $routeAction['as'] ?? '';
 
         $this->currentNav = $currentNav;
 
@@ -70,6 +78,24 @@ class Sidebar extends Component
                 'label' => 'Email Templates',
                 'route_group' => 'email-builders',
                 'has_children' => false,
+            ],
+            [
+                'icon' => 'tabler-chart-infographic',
+                'label' => 'Reports',
+                'route_group' => 'reports',
+                'has_children' => true,
+                'children' => [
+                    [
+                        'route' => 'admin.reports.users',
+                        'label' => 'Users Report',
+                        'route_group' => 'reports',
+                    ],
+                    [
+                        'route' => 'admin.users.create',
+                        'label' => 'Events Report',
+                        'route_group' => 'reports',
+                    ],
+                ],
             ],
         ];
     }
