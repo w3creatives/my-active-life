@@ -6,8 +6,9 @@ use App\Http\Controllers\Admin\ActivitiesController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmailBuildersController;
 use App\Http\Controllers\Admin\EventsController;
-use App\Http\Controllers\Admin\ImpersonateController;
+use App\fddHttp\Controllers\Admin\ImpersonateController;
 use App\Http\Controllers\Admin\MilestonesController;
+use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\StreaksController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Admin\EventTutorialsController;
@@ -35,7 +36,7 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::post('/users/merge-accounts', [UsersController::class, 'mergeAccounts']);
 
     /**
-     * Events Routes
+     `  * Events Routes
      */
     Route::get('/events', [EventsController::class, 'index'])->name('admin.events');
     Route::get('/events/{id}/edit', [EventsController::class, 'create'])->name('admin.events.edit');
@@ -93,6 +94,10 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::get('/email-builders/{id}/edit', [EmailBuildersController::class, 'create'])->name('admin.email.builders.edit');
     Route::post('/email-builders/{id}/edit', [EmailBuildersController::class, 'store']);
     Route::get('/email-builders', [EmailBuildersController::class, 'index'])->name('admin.email.builders');
-
     Route::delete('/email-builders/{id}/delete', [EmailBuildersController::class, 'destroy'])->name('admin.email.builders.destroy');
+
+    /**
+     * Reports routes
+     */
+    Route::get('reports/users', [ReportsController::class, 'users'])->name('admin.reports.users');
 });

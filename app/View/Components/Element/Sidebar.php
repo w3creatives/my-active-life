@@ -67,7 +67,7 @@ final class Sidebar extends Component
             ],
             [
                 'route' => 'admin.events',
-                'icon' => 'tabler-app-window',
+                'icon' => 'tabler-shield',
                 'label' => 'Events',
                 'route_group' => 'events',
                 'has_children' => false,
@@ -87,12 +87,7 @@ final class Sidebar extends Component
                 'children' => [
                     [
                         'route' => 'admin.reports.users',
-                        'label' => 'Users Report',
-                        'route_group' => 'reports',
-                    ],
-                    [
-                        'route' => 'admin.users.create',
-                        'label' => 'Events Report',
+                        'label' => 'Users',
                         'route_group' => 'reports',
                     ],
                 ],

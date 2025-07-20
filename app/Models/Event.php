@@ -1,16 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Facades\Storage;
 
-/**
- * @method static promotional()
- */
-class Event extends Model
+final class Event extends Model
 {
     use HasFactory;
 
@@ -20,20 +22,21 @@ class Event extends Model
 
     private string $uploadPath = 'uploads/events/';
 
-    public function getLogoUrlAttribute()
+    public function getLogoUrlAttribute(): string|\Illuminate\Contracts\Routing\UrlGenerator|null
     {
-        if(!isset($this->attributes['logo'])) {
+        if (! isset($this->attributes['logo'])) {
             return null;
         }
-        if(file_exists(public_path('static/' . $this->attributes['logo']))){
-            return url("static/" . trim($this->attributes['logo']));
+        if (file_exists(public_path('static/'.$this->attributes['logo']))) {
+            return url('static/'.trim($this->attributes['logo']));
         }
 
         $fileurl = $this->uploadPath.trim($this->attributes['logo']);
+
         return Storage::url($fileurl);
     }
 
-    public function isPastEvent()
+    public function isPastEvent(): bool
     {
         return Carbon::parse($this->end_date)->isPast();
     }
@@ -43,7 +46,8 @@ class Event extends Model
         return $query->where('event_type', $type);
     }
 
-    public function scopePromotional($query){
+    public function scopePromotional($query)
+    {
         return $query->where('event_type', 'promotional');
     }
 
@@ -51,68 +55,78 @@ class Event extends Model
     {
         return $query->where('end_date', '>=', date('Y-m-d'));
     }
-    public  function scopeAllowedTypes($query)
+
+    public function scopeInactive($query)
     {
-        return $query->whereIn('event_type', ['fit_life','regular','promotional','month']);
+        return $query->where('end_date', '<', Carbon::now());
     }
-    public function organization()
+
+    public function scopeAllowedTypes($query)
+    {
+        return $query->whereIn('event_type', ['fit_life', 'regular', 'promotional', 'month']);
+    }
+
+    public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
     }
 
-    public function milestones()
+    public function milestones(): HasMany
     {
         return $this->hasMany(EventMilestone::class);
     }
 
-    public function teams()
+    public function teams(): HasMany
     {
         return $this->hasMany(Team::class);
     }
 
-    public function fitActivities()
+    public function fitActivities(): HasMany
     {
         return $this->hasMany(FitLifeActivity::class);
     }
 
-    public function streaks()
+    public function streaks(): HasMany
     {
         return $this->hasMany(EventStreak::class);
     }
 
-    public function fitLifeRegistrations()
+    public function fitLifeRegistrations(): HasManyThrough
     {
-        return $this->hasManyThrough(FitLifeActivityRegistration::class, FitLifeActivity::class,'event_id','activity_id');
+        return $this->hasManyThrough(FitLifeActivityRegistration::class, FitLifeActivity::class, 'event_id', 'activity_id');
     }
 
-    public function emailTemplate(){
-        return $this->belongsTo(EmailTemplate::class,'email_template_id','id');
-    }
-    public function participations()
+    public function emailTemplate(): BelongsTo
     {
-        return $this->hasMany(EventParticipation::class,'event_id','id');
+        return $this->belongsTo(EmailTemplate::class, 'email_template_id', 'id');
     }
 
-    public function tutorials()
+    public function participations(): HasMany
     {
-        return $this->hasMany(EventTutorial::class,'event_id','id');
+        return $this->hasMany(EventParticipation::class, 'event_id', 'id');
     }
 
-    public function hasUserParticipation($user, $count = true, $field=null){
+    public function tutorials(): HasMany
+    {
+        return $this->hasMany(EventTutorial::class, 'event_id', 'id');
+    }
 
-        if(!$user) {
+    public function hasUserParticipation($user, $count = true, $field = null)
+    {
+
+        if (! $user) {
             return false;
         }
 
-        $participation = $this->participations()->where('user_id',$user->id);
+        $participation = $this->participations()->where('user_id', $user->id);
 
-        if($count){
+        if ($count) {
             return $participation->count();
         }
 
         $participation = $participation->first();
 
-        if(!$participation){
+        if (! $participation) {
             return false;
         }
 
