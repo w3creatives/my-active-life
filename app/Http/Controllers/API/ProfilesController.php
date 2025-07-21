@@ -164,7 +164,9 @@ final class ProfilesController extends BaseController
             ]
         );
 
-        $user->profiles()->create($request->only(['data_source_id', 'access_token', 'refresh_token', 'token_expires_at', 'access_token_secret']));
+        $sourceProfileData = $request->only(['data_source_id', 'access_token', 'refresh_token', 'token_expires_at', 'access_token_secret']);
+        $sourceProfileData['sync_mode'] = 'mobile';
+        $user->profiles()->create($sourceProfileData);
 
         return $this->sendResponse([], 'Data source saved');
     }
