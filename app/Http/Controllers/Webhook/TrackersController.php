@@ -528,12 +528,18 @@ dd(json_decode($response, true));*/
         $fitbitMileConversion = 0.621371;
 
         $activities = $activities->map(function ($item) use($fitbitMileConversion){
+            try{
             $modality = $this->modality($item['name']);
             $date = $item['startDate'];
             $distance = $item['distance'] * $fitbitMileConversion;
             $raw_distance = $item['distance'];
 
             return compact('date', 'distance', 'modality', 'raw_distance');
+            } catch(\Exception $e) {
+                \Log::debug("Fitbit Activity Error : ", ['item' => $item,'error' => $e->getMessage()]);
+            }
+        })->reject(function ($item) {
+            return $item === null;
         });
 
 

@@ -265,12 +265,18 @@ final class FitbitService implements DataSourceInterface
         }
 
         $activities = $activities->map(function ($item) {
+            try{
             $modality = $this->modality($item['name']);
             $date = $item['startDate'];
             $distance = $item['distance'] * 0.621371;
             $raw_distance = $item['distance'];
 
             return compact('date', 'distance', 'modality', 'raw_distance');
+            } catch(\Exception $e) {
+                \Log::debug("Fitbit Activity Error : ", ['item' => $item,'error' => $e->getMessage()]);
+            }
+        })->reject(function ($item) {
+            return $item === null;
         });
 
         if ($otherDistance) {
