@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\EventService;
 use App\Services\TeamService;
 use App\Services\UserService;
+use App\Services\DeviceService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -166,12 +167,13 @@ final class ProfilesController extends BaseController
 
         $sourceProfileData = $request->only(['data_source_id', 'access_token', 'refresh_token', 'token_expires_at', 'access_token_secret']);
         $sourceProfileData['sync_mode'] = 'mobile';
-        $user->profiles()->create($sourceProfileData);
+        $profile = $user->profiles()->create($sourceProfileData);
+        $user->logSourceConnected(['data_source_id' => $profile->data_source_id, 'action_source' => 'mobile']);
 
         return $this->sendResponse([], 'Data source saved');
     }
 
-    public function destroy(Request $request, EventService $eventService): JsonResponse
+    public function destroy(Request $request, EventService $eventService, DeviceService $deviceService): JsonResponse
     {
         $user = $request->user();
 
@@ -182,16 +184,24 @@ final class ProfilesController extends BaseController
             'synced_mile_action' => 'required|in:preserve,delete',
         ]);
 
-
-        if ($request->synced_mile_action === 'delete') {
-            $eventService->deleteSourceSyncedMile($user, $request->data_source_id);
-        }
-
         $profile = $user->profiles()->where('data_source_id', $request->data_source_id)->first();
 
         if (! $profile) {
             return $this->sendError('ERROR', ['error' => 'Data source is not connected']);
         }
+
+        $hasRevoked = $deviceService->revoke($profile);
+
+        if($hasRevoked == false)
+        {
+            return $this->sendResponse([], 'Data source could not be disconnected, please try again');
+        }
+
+        if ($request->synced_mile_action === 'delete') {
+            $eventService->deleteSourceSyncedMile($user, $profile->data_source_id);
+        }
+
+        $user->logSourceDisconnected(['data_source_id' => $profile->data_source_id, 'action_source' => 'mobile']);
 
         $profile->delete();
 

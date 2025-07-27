@@ -17,43 +17,15 @@ use Illuminate\Support\Facades\Route;
 */
 Route::get('test-user-token', function (\Illuminate\Http\Request $request) {
 
-    $data = json_decode('[
-        {
+    $user = \App\Models\User::first();
 
-            "name": "Walk",
-            "distances": 1.41185,
-            "startDate": "2025-07-05"
-        },
-        {
-            "named": "Run",
-            "distance": 1.41185,
-            "startDate": "2025-07-05"
-        }
-    ]',true);
+    $user->logSourceConnected(['data_source_id' => 2]);
+    $user->logSourceDisconnected(['data_source_id' => 2]);
 
-    $activities = collect($data);
-
-    $fitbitMileConversion = 1;
-
-    $activities = $activities->map(function ($item) use ($fitbitMileConversion) {
-        try {
-            $modality = $item['name'];//$this->modality($item['name']);
-            $date = $item['startDate'];
-            $distance = $item['distance'] * $fitbitMileConversion;
-            $raw_distance = $item['distance'];
-
-            return compact('date', 'distance', 'modality', 'raw_distance');
-        } catch(\Exception $e) {}
-    })->reject(function ($item) {
-        return $item === null;
-    });
-
-    dd($activities);
-
-    $user = \App\Models\User::find($request->get('userId'));
-    return ['token' => $user->createToken('MyApp')->accessToken];
+    //return ['token' => $user->createToken('MyApp')->accessToken];
 });
 Route::get('test-email', function () {
+
 
     $accessToken = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkNLRzIiLCJzdWIiOiJDOU5KWUwiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyYWN0IHJzZXQgcndlaSBycHJvIHJudXQgcnNsZSIsImV4cCI6MTc1MjI3NzEwMSwiaWF0IjoxNzUyMjQ4MzAxfQ.kdO3BvLuOCT75PzMAGTUblwZJhNYu4Um5faX3Xyghj8";
 

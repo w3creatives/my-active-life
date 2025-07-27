@@ -8,6 +8,7 @@ use App\Interfaces\DataSourceInterface;
 use App\Services\FitbitService;
 use App\Services\GarminService;
 use App\Services\StravaService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -38,6 +39,10 @@ final class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        /**
+         * Disable drop tables artisan commands
+         */
+        DB::prohibitDestructiveCommands(true);
     }
 
     /**

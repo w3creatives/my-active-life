@@ -106,6 +106,11 @@ final class User extends Authenticatable
         return $this->hasMany(DataSourceProfile::class);
     }
 
+    public function profileLogs(): HasMany
+    {
+        return $this->hasMany(DataSourceProfileLog::class);
+    }
+
     public function invites(): HasMany
     {
         return $this->hasMany(TeamMembershipInvite::class, 'prospective_member_id', 'id');
@@ -187,5 +192,17 @@ final class User extends Authenticatable
     public function isSuperAdmin(): bool
     {
         return (bool) $this->super_admin;
+    }
+
+    public function logSourceConnected($data): void
+    {
+        $data['action'] = 'CONNECTED';
+        $this->profileLogs()->create($data);
+    }
+
+    public function logSourceDisconnected($data): void
+    {
+        $data['action'] = 'DISCONNECTED';
+        $this->profileLogs()->create($data);
     }
 }
