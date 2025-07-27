@@ -100,4 +100,8 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
      * Reports routes
      */
     Route::get('reports/users', [ReportsController::class, 'users'])->name('admin.reports.users');
+    Route::get('reports/users/events/{type}', [ReportsController::class, 'events'])->name('admin.reports.events');
+    Route::get('reports/users/datasources', [ReportsController::class, 'dataSources'])->name('admin.reports.datasources');
+
+    Route::get('reports/source/point-tracker', [ReportsController::class, 'pointTracker'])->name('admin.reports.point-tracker');
 });

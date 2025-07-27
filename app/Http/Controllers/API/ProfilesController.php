@@ -182,6 +182,7 @@ final class ProfilesController extends BaseController
             'synced_mile_action' => 'required|in:preserve,delete',
         ]);
 
+
         if ($request->synced_mile_action === 'delete') {
             $eventService->deleteSourceSyncedMile($user, $request->data_source_id);
         }

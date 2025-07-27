@@ -9,7 +9,10 @@
             </div>
         </div>
         <div class="card-datatable text-nowrap">
-            <table class="datatables-ajax table table-bordered">
+            <table class="datatables-ajax table table-bordered report-table"
+                   data-ajax-url="{{ route('admin.reports.datasources') }}"
+                   id="{{ $table['id'] }}"
+                   data-columns='[{"data": "id", "name": "id"},{"data": "name", "name": "name"},{"data": "logo", "name": "logo"},{"data": "description", "name": "description"},{"data": "users_count", "name": "users_count", "sortable": false}]'>
                 <thead>
                 <tr>
                     <th>ID</th>
@@ -21,29 +24,6 @@
                 </thead>
                 <tbody>
 
-                @foreach($table['items'] as $item)
-                    <tr>
-                        <td>
-                            <div>
-
-                            {{ $item->id }}
-                            </div>
-                        </td>
-
-                        <td>
-                            {{ $item->name }}
-                        </td>
-                        <td>
-                            <img src="{{ $item->image_url }}" alt="{{ $item->name }}" style="vertical-align: middle; height: 5vh; object-fit: contain; border-radius: 5px;"/>
-                        </td>
-                        <td>
-                            {{ $item->description }}
-                        </td>
-                        <td>
-                            {{ $item->users_count }}
-                        </td>
-                    </tr>
-                @endforeach
                 </tbody>
             </table>
         </div>

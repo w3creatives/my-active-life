@@ -24,4 +24,29 @@
            @include('admin.reports.tables.'.$table['table'],compact('table'))
        @endforeach
     </div>
+    @push('stylesheets')
+        <link rel="stylesheet"
+              href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}" />
+        <link rel="stylesheet"
+              href="{{ asset('assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}" />
+        <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css') }}" />
+    @endpush
+
+    @push('scripts')
+        <script
+            src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
+        <script
+            src="{{ asset('js/common/custom.datatable.js') }}"></script>
+        <script type="text/javascript">
+            $(function() {
+
+                $('.report-table').each(function(){
+                    let tableId = $(this).attr('id');
+                    let columns = JSON.parse($(this).attr('data-columns'));
+
+                    customDatatable.initDatatable(`#${tableId}`,columns);
+                });
+            });
+        </script>
+    @endpush
 </x-admin-layout>

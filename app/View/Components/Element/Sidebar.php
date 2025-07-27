@@ -90,6 +90,11 @@ final class Sidebar extends Component
                         'label' => 'Users',
                         'route_group' => 'reports',
                     ],
+                    [
+                        'route' => 'admin.reports.point-tracker',
+                        'label' => 'Data Sources Tracker',
+                        'route_group' => 'reports',
+                    ],
                 ],
             ],
         ];

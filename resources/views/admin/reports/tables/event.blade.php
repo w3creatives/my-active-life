@@ -9,7 +9,7 @@
             </div>
         </div>
         <div class="card-datatable text-nowrap">
-            <table class="datatables-ajax table table-bordered">
+            <table class="datatables-ajax table table-bordered report-table" data-ajax-url="{{ route('admin.reports.events',$table['type']) }}" id="{{ $table['id'] }}" data-columns='[{ "data":"id", "name":"id" },{ "data":"name", "name":"name" },{ "data":"event_type_text", "name":"event_type_text" },{ "data":"start_date", "name":"start_date" },{ "data":"end_date", "name":"end_date" },{ "data":"participations_count","name":"participations_count","sortable":false}]'>
                 <thead>
                 <tr>
                     <th>ID</th>
@@ -21,16 +21,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach($table['items'] as $item)
-                    <tr>
-                        <td>{{ $item->id }}</td>
-                        <td>{{ $item->name }}</td>
-                        <td>{{ ucwords(str_replace('_',' ',$item->event_type)) }}</td>
-                        <td>{{ $item->start_date }}</td>
-                        <td>{{ $item->end_date }}</td>
-                        <td>{{ $item->participations_count }}</td>
-                    </tr>
-                @endforeach
+
                 </tbody>
             </table>
         </div>
