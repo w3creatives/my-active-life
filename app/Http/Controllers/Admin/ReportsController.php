@@ -70,11 +70,11 @@ final class ReportsController extends Controller
         if ($request->ajax()) {
 
             $query = DatasourcePointTracker::query()
-                ->selectRaw('id,data_source_id as source,date,total_point')
-                ->join('dat')
-            ;
+                ->selectRaw('datasource_point_trackers.*, data_sources.name as source')
+                ->join('data_sources', 'data_sources.id', '=', 'datasource_point_trackers.data_source_id');
 
-            [$itemCount, $items] = $dataTable->setSearchableColumns(['id', 'total_point'])->query($request, $query)->response();
+
+            [$itemCount, $items] = $dataTable->setSearchableColumns(['id', 'total_point','source'])->query($request, $query)->response();
 
             return response()->json([
                 'draw' => $request->get('draw'),
