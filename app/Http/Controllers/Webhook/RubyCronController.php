@@ -1,5 +1,8 @@
 <?php
-
+/**
+ * @Deprecated
+ * I will be removed once changes are migrated
+ */
 declare(strict_types=1);
 
 namespace App\Http\Controllers\Webhook;

@@ -17,6 +17,13 @@ use Illuminate\Support\Facades\Route;
 */
 Route::get('test-user-token', function (\Illuminate\Http\Request $request) {
 
+    $a = null;
+    $b = 2;
+
+    $item = $c??$a??$b;
+
+    dd($item);
+
     $user = \App\Models\User::first();
 
     $user->logSourceConnected(['data_source_id' => 2]);

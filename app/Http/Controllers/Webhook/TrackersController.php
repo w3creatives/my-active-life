@@ -23,6 +23,7 @@ use App\Models\{
     Event
 };
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 
 class TrackersController extends Controller
 {
@@ -108,7 +109,9 @@ class TrackersController extends Controller
                 //$response = $httpClient->get("user/-/activities/distance/date/{$date}/1d.json");
 
             } catch(Exception $e){
-                $this->fitbitRefreshToken($sourceProfile);
+                if($e->getCode() != 429){
+                    $this->fitbitRefreshToken($sourceProfile);
+                }
                 Log::stack(['single'])->debug("Fitbit Subscription - {$notification['subscriptionId']} - access token not found",['e'=>$e->getMessage()]);
                 continue;
             }
@@ -159,17 +162,14 @@ class TrackersController extends Controller
             return false;
         }
 
-        $currentDate = Carbon::now()->format('Y-m-d');
-
         if($eventId) {
-            $participations = $user->participations()->where('event_id', $eventId)->where('subscription_end_date','>=',$date)->whereHas('event', function($query) use($date){
-                return $query->where('start_date','<=', $date);
-            })->get();
+            $participations = $user->participations()->where('event_id', $eventId)
+                ->where('subscription_end_date', '>=', $date)->where('subscription_start_date', '<=', $date)
+                ->get();
 
         } else {
-            $participations = $user->participations()->where('subscription_end_date','>=',$date)->whereHas('event', function($query) use($date){
-                return $query->where('start_date','<=', $date);
-            })->get();
+            $participations = $user->participations()
+                ->where('subscription_end_date', '>=', $date)->where('subscription_start_date', '<=', $date)->get();
         }
 
         if(!$participations->count()) {
@@ -183,6 +183,7 @@ class TrackersController extends Controller
             $userPoint = $user->points()->where(['date' => $date,'modality' => $modality,'event_id' => $participation->event_id,'data_source_id' => $sourceProfile->data_source_id])->first();
 
             if($userPoint) {
+                $pointdata['updated_at'] = Carbon::now();
                 $userPoint->update($pointdata);
             } else{
                 $user->points()->create($pointdata);
@@ -303,7 +304,9 @@ class TrackersController extends Controller
                 $this->createPoints($eventService, $profile->user, $date, $distance, $profile);
     */
             } catch(Exception $e){
-                $this->fitbitRefreshToken($profile);
+                if($e->getCode() != 429){
+                    $this->fitbitRefreshToken($profile);
+                }
                 //dd($profile);
 
                 Log::stack(['single'])->debug("Fitbit Distance ERROR",['message' => $e->getMessage()]);
@@ -409,7 +412,7 @@ dd(json_decode($response, true));*/
             return response()->json(['message'=>'Profile not found'],403);
         }
 
-        $startDate = $request->get('sync_start_date');
+        $startDate = Carbon::now()->startOfMonth()->format('Y-m-d'); //$request->get('sync_start_date');
         $eventId = $request->get('event_id');
 
         if($eventId){
@@ -441,6 +444,48 @@ dd(json_decode($response, true));*/
 
 
         try{
+            Log::stack(['single'])->debug("fitBiUserManualDistanceTracker",['message' => 'Initiated', 'userId' => $profile->user_id]);
+            $startDate = CarbonImmutable::parse($startDate);
+            $endDate = $endDate ? CarbonImmutable::parse($endDate) : $startDate;
+            $dateDays = $startDate->diffInDays($endDate, true);
+
+            Log::stack(['single'])->debug("fitBiUserManualDistanceTracker",['message' => 'Dates', 'userId' => $profile->user_id,'startDate' => $startDate,'endDate' => $endDate]);
+
+            for ($day = 0; $day <= $dateDays; $day++) {
+
+                $totalDistance = 0;
+
+                $date = $startDate->addDays($day)->format('Y-m-d');
+
+                $activities = $this->findActivities($accessToken, $date);
+
+                if(!$activities) {
+                    Log::stack(['single'])->debug("fitBiUserManualDistanceTracker",['message' => 'SKIPPING No activity found', 'userId' => $profile->user_id,'date' => $date]);
+
+                    continue;
+                }
+
+                Log::stack(['single'])->debug("fitBiUserManualDistanceTracker",['message' => 'Activities', 'userId' => $profile->user_id,'count' => count($activities)]);
+
+                foreach($activities as $activity) {
+                    $totalDistance += $activity['raw_distance'];
+
+                    $this->createPoints($eventService, $profile->user, $activity['date'], $activity['distance'], $profile,$eventId,$activity['modality']);
+                    Log::stack(['single'])->debug("fitBiUserManualDistanceTracker",['message' => 'Fetched', 'userId' => $profile->user_id,'activity'=>$activity]);
+                }
+
+                $this->createOrUpdateUserProfilePoint($profile->user,$totalDistance,$date,$profile,'cron','manual');
+
+
+            }
+
+
+            return response()->json(['sync_start_date' => $startDate],200);
+
+            /**
+             * Deprecated
+             */
+
             $httpClient = new Client([
                 'base_uri' => 'https://api.fitbit.com/1/',
                 'headers' => [
@@ -510,39 +555,39 @@ dd(json_decode($response, true));*/
         $activities = collect($result['activities']);
         $distances = collect($result['summary']['distances']);
 
-        $totalDistance = $distances->filter(function ($distance) {
-            return $distance['activity'] == 'total';
-        })->sum('distance');
+        $oneDayresponse = $httpClient->get("user/-/activities/distance/date/{$date}/1d.json");
 
-        $loggedDistance = $distances->filter(function ($distance) {
-            return $distance['activity'] == 'loggedActivities';
-        })->sum('distance');
+        $oneDayResult = json_decode($oneDayresponse->getBody()->getContents(), true);
 
-        $otherDistance = $totalDistance - $loggedDistance;
+        $totalDistance = $oneDayResult['activities-distance'][0]['value']??0;
+
+
+
 
         Log::stack(['single'])->debug("Fitbit Activities with Modality",[$activities]);
 
-        Log::stack(['single'])->debug("Fitbit Activities with Modality",compact('loggedDistance','totalDistance','otherDistance'));
 
 
         $fitbitMileConversion = 0.621371;
 
         $activities = $activities->map(function ($item) use($fitbitMileConversion){
             try{
-            $modality = $this->modality($item['name']);
-            $date = $item['startDate'];
-            $distance = $item['distance'] * $fitbitMileConversion;
-            $raw_distance = $item['distance'];
+                $modality = $this->modality($item['name']);
+                $date = $item['startDate'];
+                $distance = $item['distance'] * $fitbitMileConversion;
+                $raw_distance = $item['distance'];
 
-            return compact('date', 'distance', 'modality', 'raw_distance');
+                return compact('date', 'distance', 'modality', 'raw_distance');
             } catch(\Exception $e) {
-                \Log::debug("Fitbit Activity Error : ", ['item' => $item,'error' => $e->getMessage()]);
+                \Log::debug("Fitbit Activity Error - Webhook: ", ['item' => $item,'error' => $e->getMessage()]);
             }
         })->reject(function ($item) {
             return $item === null;
         });
 
+        $otherDistance = $totalDistance - $activities->sum('raw_distance');
 
+        Log::stack(['single'])->debug("Fitbit Activities with Modality",compact('totalDistance','otherDistance'));
 
         if($otherDistance > 0) {
             $activities = $activities->push(['date' => $date, 'distance' => $otherDistance  * $fitbitMileConversion,'modality' => 'other', 'raw_distance' => $otherDistance]);
@@ -574,7 +619,7 @@ dd(json_decode($response, true));*/
             'Bike', 'Bicycling' => 'bike',
             'Swim' => 'swim',
             'Hike' => 'other',
-            default => 'daily_steps',
+            default => 'other',
         };
     }
 }

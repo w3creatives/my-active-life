@@ -7,14 +7,18 @@ namespace App\Services;
 use App\Interfaces\DataSourceInterface;
 use App\Models\User;
 use App\Traits\CalculateDaysTrait;
+use App\Traits\DeviceLoggerTrait;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 final class FitbitService implements DataSourceInterface
 {
     use CalculateDaysTrait;
+    use DeviceLoggerTrait;
 
     private string $apiUrl;
 
@@ -31,6 +35,8 @@ final class FitbitService implements DataSourceInterface
     private string $authTokenUrl = 'https://api.fitbit.com/oauth2/token';
 
     private string $activityBaseUrl = 'https://api.fitbit.com/1/';
+
+    private string $deregisterUrl = 'https://api.fitbit.com/oauth2/revoke';
 
     private string $fitbitWebhookVerificationCode;
 
@@ -239,6 +245,23 @@ final class FitbitService implements DataSourceInterface
         return [];
     }
 
+    public function deregister($profile): bool
+    {
+        $accessToken = $profile->access_token;
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Basic '.base64_encode($this->clientId.':'.$this->clientSecret),
+            'Content-Type' => 'application/x-www-form-urlencoded',
+        ])->asForm()
+            ->post($this->deregisterUrl, [
+                'token' => $accessToken,
+            ]);
+
+        $this->logger($profile, 'Fitbit Revoked', $response);
+
+        return $response->successful();
+    }
+
     private function findActivities($date): array
     {
         $response = Http::baseUrl($this->activityBaseUrl)
@@ -247,39 +270,52 @@ final class FitbitService implements DataSourceInterface
 
         if ($response->successful()) {
             $activities = collect($response->json('activities'));
-            $distances = collect($response->json('summary')['distances']);
 
+            /**
+             * @Deprecated
+             * total was incorrect and causing issue with other modality points
+            $distances = collect($response->json('summary')['distances']);
             $totalDistance = $distances->filter(function ($distance) {
                 return $distance['activity'] === 'total';
             })->sum('distance');
+             */
+            $dayResponse = Http::baseUrl($this->activityBaseUrl)
+                ->withToken($this->accessToken)
+                ->get("user/-/activities/distance/date/{$date}/1d.json");
 
+            $totalDistance = $dayResponse->json('activities-distance')[0]['value'] ?? 0;
+
+            /**
+             * @Deprecated
             $loggedDistance = $distances->filter(function ($distance) {
                 return $distance['activity'] === 'loggedActivities';
             })->sum('distance');
 
             $otherDistance = $totalDistance - $loggedDistance;
-
+             */
         } else {
             $activities = collect([]);
-            $otherDistance = 0;
+            $totalDistance = 0;
         }
 
         $activities = $activities->map(function ($item) {
-            try{
-            $modality = $this->modality($item['name']);
-            $date = $item['startDate'];
-            $distance = $item['distance'] * 0.621371;
-            $raw_distance = $item['distance'];
+            try {
+                $modality = $this->modality($item['name']);
+                $date = $item['startDate'];
+                $distance = $item['distance'] * 0.621371;
+                $raw_distance = $item['distance'];
 
-            return compact('date', 'distance', 'modality', 'raw_distance');
-            } catch(\Exception $e) {
-                \Log::debug("Fitbit Activity Error : ", ['item' => $item,'error' => $e->getMessage()]);
+                return compact('date', 'distance', 'modality', 'raw_distance');
+            } catch (Exception $e) {
+                Log::debug('Fitbit Activity Error : ', ['item' => $item, 'error' => $e->getMessage()]);
             }
         })->reject(function ($item) {
             return $item === null;
         });
 
-        if ($otherDistance) {
+        $otherDistance = $totalDistance - $activities->sum('raw_distance');
+
+        if ($otherDistance > 0) {
             $activities = $activities->push(['date' => $date, 'distance' => $otherDistance * 0.621371, 'modality' => 'other', 'raw_distance' => $otherDistance]);
         }
 

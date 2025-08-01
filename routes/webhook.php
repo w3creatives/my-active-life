@@ -1,81 +1,84 @@
 <?php
+
 declare(strict_types=1);
 
+use App\Http\Controllers\Webhook\FitbitAuthController;
+use App\Http\Controllers\Webhook\GarminAuthController;
+use App\Http\Controllers\Webhook\HubspotsController;
+use App\Http\Controllers\Webhook\OrdersController;
+use App\Http\Controllers\Webhook\RubyCronController;
+use App\Http\Controllers\Webhook\TestTrackersController;
+use App\Http\Controllers\Webhook\TrackerLoginsController;
+use App\Http\Controllers\Webhook\TrackersController;
+use App\Http\Controllers\Webhook\TrackerWebhooksController;
+use App\Http\Controllers\Webhook\UserActivitiesController;
+use App\Http\Controllers\Webhook\UserPointWorkflowsController;
+use App\Http\Controllers\Webhook\WebhooksController;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\{
-    TrackerLoginsController,
-    FitbitAuthController,
-    GarminAuthController
-};
-
-use App\Http\Controllers\Webhook\{
-    TrackersController,
-    TestTrackersController,
-    HubspotsController,
-    UserActivitiesController,
-    WebhooksController,
-    OrdersController,
-    TrackerWebhooksController,
-    UserPointWorkflowsController,
-    RubyCronController,
-};
-
-Route::group(['prefix' => 'tracker'], function(){
-    Route::get('oauth/strava', [TrackerLoginsController::class,'redirectToAuthUrl'])->name('strava.oauth');
-    Route::get('login',[TrackerLoginsController::class, 'index'])->name('tracker.login');
-    Route::get('logout',[TrackerLoginsController::class, 'index'])->name('tracker.logut');
-    Route::get('user/activities',[TrackerLoginsController::class, 'userActivities'])->name('tracker.user.activities');
-    Route::get('strava/callback',[TrackerLoginsController::class, 'stravaCallback']);
+Route::group(['prefix' => 'tracker'], function () {
+    Route::get('oauth/strava', [TrackerLoginsController::class, 'redirectToAuthUrl'])->name('strava.oauth');
+    Route::get('login', [TrackerLoginsController::class, 'index'])->name('tracker.login');
+    Route::get('logout', [TrackerLoginsController::class, 'index'])->name('tracker.logut');
+    Route::get('user/activities', [TrackerLoginsController::class, 'userActivities'])->name('tracker.user.activities');
+    Route::get('strava/callback', [TrackerLoginsController::class, 'stravaCallback']);
 
     Route::get('/fitbit/auth/{state?}', [FitbitAuthController::class, 'redirectToFitbit'])->name('fitbit.auth');
     Route::get('/oauth/fitbit/{state?}', [FitbitAuthController::class, 'redirectToFitbit'])->name('fitbit.oauth');
     Route::get('/fitbit/callback', [FitbitAuthController::class, 'handleCallback'])->name('fitbit.callback');
     Route::get('/fitbit/refresh', [FitbitAuthController::class, 'refreshToken'])->name('fitbit.refresh');
     Route::get('/oauth/garmin/{state?}', [GarminAuthController::class, 'redirectToGarmin'])->name('garmin.oauth');
-    Route::get('garmin/callback',[GarminAuthController::class, 'handleCallback'])->name('garmin.callback');
+    Route::get('garmin/callback', [GarminAuthController::class, 'handleCallback'])->name('garmin.callback');
+
 });
 
-Route::group(['prefix' => 'shopify'], function(){
+Route::group(['prefix' => 'shopify'], function () {
     Route::post('/webhooks/orders', [WebhooksController::class, 'handleOrderCreation']);
     Route::get('/cron/orders', [OrdersController::class, 'getOrders']);
 });
 
-Route::group(['prefix' => 'webhook'], function(){
-    Route::get('/user-point-workflow/trigger', [UserPointWorkflowsController::class,'triggerWorkFlow']);
-   //Route::post('v1/tracker/fitbit', [TrackersController::class,'fitbitTracker']);
-   //Route::get('v1/tracker/fitbit', [TrackersController::class,'fitbitVerify']);
-   Route::post('hubspot/user/verification', [HubspotsController::class,'verifyUserEmail']);
+Route::group(['prefix' => 'webhook'], function () {
+    Route::get('/user-point-workflow/trigger', [UserPointWorkflowsController::class, 'triggerWorkFlow']);
+    // Route::post('v1/tracker/fitbit', [TrackersController::class,'fitbitTracker']);
+    // Route::get('v1/tracker/fitbit', [TrackersController::class,'fitbitVerify']);
+    Route::post('hubspot/user/verification', [HubspotsController::class, 'verifyUserEmail']);
 
-   Route::get('user/activity/distances/tracker', [UserActivitiesController::class,'userDistanceTracker']);
+    Route::get('user/activity/distances/tracker', [UserActivitiesController::class, 'userDistanceTracker']);
 
-   Route::get('event/trigger-celebration-mail', [UserActivitiesController::class,'triggerCelebrationMail']);
+    Route::get('event/trigger-celebration-mail', [UserActivitiesController::class, 'triggerCelebrationMail']);
 
-   #Route::get('tracker/fitbit/user/distances', [TrackersController::class,'fitBitUserDistanceTracker']);
-   //Route::get('tracker/fitbit/user/manual/distances', [TrackersController::class,'fitBiUserManualDistanceTracker']);
+    // Route::get('tracker/fitbit/user/distances', [TrackersController::class,'fitBitUserDistanceTracker']);
+    // Route::get('tracker/fitbit/user/manual/distances', [TrackersController::class,'fitBiUserManualDistanceTracker']);
 
-    //Route::get('v1/tracker/fitbit/test', [TrackersController::class,'testfitbit']);
+    // Route::get('v1/tracker/fitbit/test', [TrackersController::class,'testfitbit']);
 
-    Route::get('/user/hubspot-contact/verify',[OrdersController::class,'userHubspotVerification']);
-
-
-    //Route::post('test/v1/tracker/fitbit', [TestTrackersController::class,'fitbitTracker']);
-    //Route::get('test/v1/tracker/fitbit', [TestTrackersController::class,'fitbitVerify']);
-    #Route::get('test/tracker/fitbit/user/distances', [TestTrackersController::class,'fitBitUserDistanceTracker']);
-    //Route::get('test/tracker/fitbit/user/manual/distances', [TestTrackersController::class,'fitBiUserManualDistanceTracker']);
-    //Route::get('test/v1/tracker/fitbit/test', [TestTrackersController::class,'testfitbit']);
+    Route::get('/user/hubspot-contact/verify', [OrdersController::class, 'userHubspotVerification']);
 
     /**
-    * New webhook URLs
-    */
-    Route::post('tracker/fitbit', [TrackerWebhooksController::class,'webhookAction']);
-    Route::get('tracker/fitbit', [TrackerWebhooksController::class,'verifyToken']);
-    Route::post('tracker/garmin', [TrackerWebhooksController::class,'webhookAction']);
-    Route::post('tracker/strava', [TrackerWebhooksController::class,'webhookAction']);
+     * @Deprecated I will be removed once changes are migrated
+     * Device Degregistration
+     */
+    Route::post('tracker/garmin/pings', [GarminAuthController::class, 'handleWebhook']);
+    Route::any('tracker/strava/pings',[TrackerLoginsController::class, 'handleWebhook'])->name('webhook.strava');
+    Route::post('tracker/garmin/deregistrations', [GarminAuthController::class, 'handleGarminDeregistrations']);
+
+    // Route::post('test/v1/tracker/fitbit', [TestTrackersController::class,'fitbitTracker']);
+    // Route::get('test/v1/tracker/fitbit', [TestTrackersController::class,'fitbitVerify']);
+    // Route::get('test/tracker/fitbit/user/distances', [TestTrackersController::class,'fitBitUserDistanceTracker']);
+    // Route::get('test/tracker/fitbit/user/manual/distances', [TestTrackersController::class,'fitBiUserManualDistanceTracker']);
+    // Route::get('test/v1/tracker/fitbit/test', [TestTrackersController::class,'testfitbit']);
+
+    /**
+     * New webhook URLs
+     */
+    Route::post('tracker/fitbit', [TrackerWebhooksController::class, 'webhookAction']);
+    Route::get('tracker/fitbit', [TrackerWebhooksController::class, 'verifyToken']);
+    Route::post('tracker/garmin', [TrackerWebhooksController::class, 'webhookAction']);
+    Route::post('tracker/strava', [TrackerWebhooksController::class, 'webhookAction']);
 
 });
 
-Route::get('/shopify/orders', [OrdersController::class,'orderList']);
-Route::post('/shopify/orders', [OrdersController::class,'orderList']);
-//Check if we need this controller - This is copied from RTE-V1 and is meant for Streaker Series Event
-Route::get('ruby/process-user-points/{event_id}',[RubyCronController::class, 'processUserPointsFromRuby']);
+Route::get('/shopify/orders', [OrdersController::class, 'orderList']);
+Route::post('/shopify/orders', [OrdersController::class, 'orderList']);
+// Check if we need this controller - This is copied from RTE-V1 and is meant for Streaker Series Event
+Route::get('ruby/process-user-points/{event_id}', [RubyCronController::class, 'processUserPointsFromRuby']);
