@@ -6,7 +6,7 @@ use App\Http\Controllers\Admin\ActivitiesController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmailBuildersController;
 use App\Http\Controllers\Admin\EventsController;
-use App\fddHttp\Controllers\Admin\ImpersonateController;
+use App\Http\Controllers\Admin\ImpersonateController;
 use App\Http\Controllers\Admin\MilestonesController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\StreaksController;
