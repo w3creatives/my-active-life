@@ -5,6 +5,7 @@
  */
 namespace App\Http\Controllers\Webhook;
 
+use App\Http\Controllers\Controller;
 use App\Services\EventService;
 use App\Services\GarminService;
 use Illuminate\Http\Request;
