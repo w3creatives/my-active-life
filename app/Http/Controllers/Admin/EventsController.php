@@ -33,7 +33,7 @@ final class EventsController extends Controller
                 $event->status = $event->open ? 'Open' : 'Closed';
                 $event->bibs_name = $event->bibs_name ?? '--';
                 $event->event_group = $event->event_group ?? '--';
-                $event->email_template_name = $event->emailTemplate->name??'--';
+                $event->email_template_name = $event->emailTemplate->name ?? '--';
                 $event->action = [
                     view('admin.events.actions.event', compact('event'))->render(),
                 ];
@@ -99,12 +99,19 @@ final class EventsController extends Controller
 
         if ($event) {
             $event->fill($data)->save();
-
-            return redirect()->route('admin.events')->with('alert', ['type' => 'success', 'message' => 'Event updated successfully.']);
+            $message = 'Event updated successfully.';
+        } else {
+            $event = Event::create($data);
+            $message = 'Event created successfully.';
         }
 
-        Event::create($data);
+        [$routeName, $hasCount] = $event->event_misc_route;
 
-        return redirect()->route('admin.events')->with('alert', ['type' => 'success', 'message' => 'Event created successfully.']);
+        if (! $hasCount) {
+            return redirect()->route($routeName, $event->id)->with('alert', ['type' => 'success', 'message' => $message]);
+
+        }
+
+        return redirect()->route('admin.events')->with('alert', ['type' => 'success', 'message' => $message]);
     }
 }

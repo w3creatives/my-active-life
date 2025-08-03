@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,18 +23,42 @@ final class Event extends Model
 
     private string $uploadPath = 'uploads/events/';
 
-    public function getLogoUrlAttribute(): string|\Illuminate\Contracts\Routing\UrlGenerator|null
+    public function getLogoUrlAttribute(): string|UrlGenerator|null
     {
-        if (! isset($this->attributes['logo'])) {
+        if (!isset($this->attributes['logo'])) {
             return null;
         }
-        if (file_exists(public_path('static/'.$this->attributes['logo']))) {
-            return url('static/'.trim($this->attributes['logo']));
+        if (file_exists(public_path('static/' . $this->attributes['logo']))) {
+            return url('static/' . trim($this->attributes['logo']));
         }
 
-        $fileurl = $this->uploadPath.trim($this->attributes['logo']);
+        $fileurl = $this->uploadPath . trim($this->attributes['logo']);
 
         return Storage::url($fileurl);
+    }
+
+    public function getEventMiscRouteAttribute(): array
+    {
+        switch ($this->event_type) {
+            case 'regular':
+            case 'month':
+                $routeName = 'admin.events.milestones';
+                $hasCount = $this->milestones()->count();
+                break;
+            case 'fit_life':
+                $routeName = 'admin.events.activities';
+                $hasCount = $this->fitActivities()->count();
+                break;
+            case 'promotional':
+                $routeName = 'admin.events.streaks';
+                $hasCount = $this->streaks()->count();
+                break;
+            default:
+                return [null, null];
+                break;
+        }
+
+        return [$routeName, $hasCount];
     }
 
     public function isPastEvent(): bool
@@ -114,7 +139,7 @@ final class Event extends Model
     public function hasUserParticipation($user, $count = true, $field = null)
     {
 
-        if (! $user) {
+        if (!$user) {
             return false;
         }
 
@@ -126,7 +151,7 @@ final class Event extends Model
 
         $participation = $participation->first();
 
-        if (! $participation) {
+        if (!$participation) {
             return false;
         }
 
