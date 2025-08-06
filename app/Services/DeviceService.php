@@ -17,7 +17,7 @@ final class DeviceService
     {
         switch ($profile->source->short_name) {
             case 'fitbit':
-                return $this->revokeFitbit($profile);
+                return $this->revokeFitbit($propfile);
                 break;
             case 'garmin':
                 return $this->revokeGarmin($profile);
