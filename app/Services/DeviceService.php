@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -57,6 +59,16 @@ final class DeviceService
 
         $this->logger($profile, 'Fitbit Revoked', $response);
 
+        if ($response->unauthorized()) {
+            $responseProfile = $this->fitbitRefreshToken($profile);
+
+            if (! $responseProfile) {
+                return true;
+            }
+
+            return $this->revokeFitbit($responseProfile);
+        }
+
         return $response->successful();
     }
 
@@ -69,6 +81,16 @@ final class DeviceService
         ])->post('https://www.strava.com/oauth/deauthorize');
 
         $this->logger($profile, 'Strava Revoked', $response);
+
+        if ($response->unauthorized()) {
+            $responseProfile = $this->refreshStravaToken($profile);
+
+            if (! $responseProfile) {
+                return true;
+            }
+
+            return $this->revokeStrava($responseProfile);
+        }
 
         return $response->successful();
     }
@@ -102,7 +124,14 @@ final class DeviceService
 
         $this->logger($profile, 'Garmin Revoked', $response);
 
-        return $response->successful();
+        if ($response->body()) {
+
+            if (! $response->successful()) {
+                return $response->unauthorized();
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -122,5 +151,73 @@ final class DeviceService
         $signing_key = rawurlencode($consumerSecret).'&'.rawurlencode($token_secret);
 
         return base64_encode(hash_hmac('sha1', $base_string, $signing_key, true));
+    }
+
+    private function fitbitRefreshToken($profile)
+    {
+
+        $clientId = config('services.fitbit.client_id');
+        $clientSecret = config('services.fitbit.client_secret');
+
+        $response = Http::asForm()
+            ->withHeaders([
+                'Authorization' => 'Basic '.base64_encode($clientId.':'.$clientSecret),
+            ])
+            ->post('https://api.fitbit.com/oauth2/token', [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $profile->refresh_token,
+            ]);
+
+        $data = json_decode($response->body(), true);
+
+        $this->logger($profile, 'Strava refreshFitbitToken', $response);
+
+        if (isset($data['access_token'])) {
+            $profileData = collect($data)->only(['access_token', 'refresh_token'])->toArray();
+            $profileData['token_expires_at'] = Carbon::now()->addSeconds($data['expires_in'])->format('Y-m-d H:i:s');
+
+            $profile->fill($profileData)->save();
+            $profile->refresh();
+
+            $this->logger($profile, 'Strava refreshFitbitToken update', $response);
+
+            return $profile;
+        }
+
+        return false;
+    }
+
+    private function refreshStravaToken($profile)
+    {
+        try {
+            $response = Http::post('https://www.strava.com/oauth/token', [
+                'client_id' => config('services.strava.client_id'),
+                'client_secret' => config('services.strava.client_secret'),
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $profile->refresh_token,
+            ]);
+
+            if (! $response->successful()) {
+                $this->logger($profile, 'Strava refreshStravaToken', $response);
+
+                return false;
+            }
+
+            $this->logger($profile, 'Strava refreshStravaToken update', $response);
+
+            $data = $response->json();
+
+            $profile->access_token = $data['access_token'];
+            $profile->refresh_token = $data['refresh_token'];
+            $profile->token_expires_at = Carbon::createFromTimestamp($data['expires_at']);
+            $profile->save();
+
+            $profile->refresh();
+
+            return $profile;
+        } catch (Exception $e) {
+
+            return false;
+        }
     }
 }
