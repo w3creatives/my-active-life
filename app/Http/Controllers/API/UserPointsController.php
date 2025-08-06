@@ -1556,6 +1556,10 @@ final class UserPointsController extends BaseController
 
         foreach ($participations as $participation) {
 
+            if (! $participation->isModalityOverridden($modality)) {
+                continue;
+            }
+
             $pointdata = ['amount' => $distance, 'date' => $date, 'event_id' => $participation->event_id, 'modality' => $modality, 'data_source_id' => $sourceProfile->data_source_id];
 
             $userPoint = $user->points()->where(['date' => $date, 'modality' => $modality, 'event_id' => $participation->event_id, 'data_source_id' => $sourceProfile->data_source_id])->first();
@@ -1677,15 +1681,15 @@ final class UserPointsController extends BaseController
         $fitbitMileConversion = 0.621371;
 
         $activities = $activities->map(function ($item) use ($fitbitMileConversion) {
-            try{
-            $modality = $this->modality($item['name']);
-            $date = $item['startDate'];
-            $distance = $item['distance'] * $fitbitMileConversion;
-            $raw_distance = $item['distance'];
+            try {
+                $modality = $this->modality($item['name']);
+                $date = $item['startDate'];
+                $distance = $item['distance'] * $fitbitMileConversion;
+                $raw_distance = $item['distance'];
 
-            return compact('date', 'distance', 'modality', 'raw_distance');
-            } catch(\Exception $e) {
-                \Log::debug("Fitbit Activity Error : ", ['item' => $item,'error' => $e->getMessage()]);
+                return compact('date', 'distance', 'modality', 'raw_distance');
+            } catch (\Exception $e) {
+                Log::debug('Fitbit Activity Error : ', ['item' => $item, 'error' => $e->getMessage()]);
             }
         })->reject(function ($item) {
             return $item === null;

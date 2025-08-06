@@ -17,6 +17,71 @@ use Illuminate\Support\Facades\Route;
 */
 Route::get('test-user-token', function (\Illuminate\Http\Request $request) {
 
+
+    $d = ['daily_steps', 'run', 'walk'];
+
+    $d[] = 'other';
+
+    dd($d);
+
+    $participation = \App\Models\EventParticipation::find(57965);
+
+    dd($participation,$participation->isModalityOverridden('other'));
+    $settings = $participation->settings;
+
+    $participationSetting = json_decode($settings,true);
+
+    $modalityOverrides = $participationSetting['modality_overrides']??['daily_steps','run','walk'];
+
+    dd(in_array('run',$modalityOverrides));
+
+    $data = ['userAccessToken'=>3,'callbackURLf'=>6665];
+
+    dd(! isset($data['userAccessToken']) || ! isset($data['callbackURL']));
+    $data = [['name'=>'test']];
+  //  \Illuminate\Support\Facades\Storage::disk('public')->put(sprintf('webhooks/%s.json', \Illuminate\Support\Str::uuid()->toString()), json_encode($data));
+
+
+    $data = json_decode(file_get_contents(public_path('garmin.json')), true);
+    $activities = collect($data);
+
+    $activities = $activities->map(function ($activity){
+        if (isset($activity['distanceInMeters'])) {
+            $date = \Carbon\Carbon::createFromTimestamp($activity['startTimeInSeconds'])->format('Y-m-d');
+            $distance = round(($activity['distanceInMeters'] / 1609.344), 3);
+
+            $modality = match ($activity['activityType']) {
+                'RUNNING', 'TRACK_RUNNING', 'STREET_RUNNING', 'TREADMILL_RUNNING', 'TRAIL_RUNNING', 'VIRTUAL_RUN', 'INDOOR_RUNNING', 'OBSTACLE_RUN', 'OBSTACLE_RUNNING', 'ULTRA_RUN', 'ULTRA_RUNNING' => 'run',
+                'WALKING', 'CASUAL_WALKING', 'SPEED_WALKING', 'GENERIC' => 'walk',
+                'CYCLING', 'CYCLOCROSS', 'DOWNHILL_BIKING', 'INDOOR_CYCLING', 'MOUNTAIN_BIKING', 'RECUMBENT_CYCLING', 'ROAD_BIKING', 'TRACK_CYCLING', 'VIRTUAL_RIDE' => 'bike',
+                'SWIMMING', 'LAP_SWIMMING', 'OPEN_WATER_SWIMMING' => 'swim',
+                'WALKING', 'CASUAL_WALKING', 'SPEED_WALKING', 'GENERIC' => 'daily_steps',
+                'HIKING', 'CROSS_COUNTRY_SKIING', 'MOUNTAINEERING', 'ELLIPTICAL', 'STAIR_CLIMBING' => 'other',
+                default => 'daily_steps',
+            };
+            $time = $activity['startTimeInSeconds'];
+
+            return compact('date', 'distance', 'modality');
+        }
+    })->toArray();
+
+    dd($activities);
+    $date = \Carbon\Carbon::now();
+    $nextDate = $date->copy()->addDay();
+
+    $currentStart = \Carbon\Carbon::parse('2025-08-01');
+    $currentCronEnd = \Carbon\Carbon::now();
+
+    while ($currentStart->lte($currentCronEnd)) {
+
+        $currentEnd = $currentStart->copy()->addDays(2);
+        echo $currentStart,' = ',$currentEnd,"\n\n | ";
+        $currentStart = $currentEnd->copy();
+
+        echo $currentStart,' = ',$currentEnd,"\n\n </br>";
+    }
+
+   // dd($date, $nextDate, $date);
     $a = null;
     $b = 2;
 

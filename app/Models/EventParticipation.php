@@ -25,4 +25,15 @@ final class EventParticipation extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function isModalityOverridden($modality): bool
+    {
+        $participationSetting = json_decode($this->settings, true);
+
+        $modalityOverrides = $participationSetting['modality_overrides'] ?? ['daily_steps', 'run', 'walk'];
+
+        $modalityOverrides[] = 'other';
+
+        return in_array($modality, $modalityOverrides);
+    }
 }

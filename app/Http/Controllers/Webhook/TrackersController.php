@@ -381,6 +381,10 @@ dd(json_decode($response, true));*/
 
         foreach ($participations as $participation) {
 
+            if(!$participation->isModalityOverridden($modality)){
+                continue;
+            }
+
             $pointdata = ['amount' => $distance, 'date' => $date, 'event_id' => $participation->event_id, 'modality' => $modality, 'data_source_id' => $sourceProfile->data_source_id];
 
             $userPoint = $user->points()->where(['date' => $date, 'modality' => $modality, 'event_id' => $participation->event_id, 'data_source_id' => $sourceProfile->data_source_id])->first();

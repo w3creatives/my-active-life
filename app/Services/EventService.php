@@ -457,6 +457,11 @@ final class EventService
         }
 
         foreach ($participations as $participation) {
+
+            if (! $participation->isModalityOverridden($point['modality'])) {
+                continue;
+            }
+
             if (! $participation->include_daily_steps && $point['modality'] === 'daily_steps') {
                 continue;
             }
