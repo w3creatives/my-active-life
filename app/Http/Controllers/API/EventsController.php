@@ -64,7 +64,7 @@ final class EventsController extends BaseController
                 $query->where('user_id', $user->id);
 
                 if ($listType === 'all') {
-                    return $query;
+                    return $query->where('subscription_end_date', '>=', $currentDate);
                 }
                 if ($listType === 'active') {
                     return $query->where('subscription_end_date', '>=', $currentDate);
@@ -76,7 +76,7 @@ final class EventsController extends BaseController
                 $query->where('user_id', $user->id);
 
                 if ($listType === 'all') {
-                    return $query;
+                    return $query->where('subscription_end_date', '>=', $currentDate);
                 }
                 if ($listType === 'active') {
                     return $query->where('subscription_end_date', '>=', $currentDate);
@@ -94,10 +94,14 @@ final class EventsController extends BaseController
                     $team->is_team_owner = $team->owner_id === $user->id;
                 }
 
+                $participation = $event->participations->first();
+
                 $event->has_team = ! is_null($membership);
                 $event->preferred_team_id = $membership ? $team->id : null;
                 $event->preferred_team = $membership ? $team : null;
-                $event->is_expired = ! Carbon::parse($event->end_date)->gt(Carbon::now());
+                $event->is_expired = ! Carbon::parse($participation->subscription_end_date)->gt(Carbon::now());
+
+                $event->event_status = Carbon::parse($participation->subscription_start_date)->gt(Carbon::now()) ? 'future' : 'current';
 
                 $event->statistics = $eventService->userMileStatics($event, $user);
 
@@ -139,6 +143,8 @@ final class EventsController extends BaseController
                 $team = $teamService->formatTeam($team, $user);
                 return $team;
             });*/
+
+            $event->event_status = Carbon::parse($participation->subscription_start_date)->gt(Carbon::now()) ? 'future' : 'current';
 
             $event->user = compact('participation', 'points');
 
