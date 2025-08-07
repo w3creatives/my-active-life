@@ -16,6 +16,8 @@ final class EventParticipation extends Model
 
     protected $guarded = [];
 
+    protected $appends = ['modality_overrides'];
+
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
@@ -35,5 +37,16 @@ final class EventParticipation extends Model
         $modalityOverrides[] = 'other';
 
         return in_array($modality, $modalityOverrides);
+    }
+
+    public function getModalityOverridesAttribute(): array
+    {
+        $participationSetting = json_decode($this->settings, true);
+
+        $modalityOverrides = $participationSetting['modality_overrides'] ?? ['daily_steps', 'run', 'walk'];
+
+        $modalityOverrides[] = 'other';
+
+        return $modalityOverrides;
     }
 }
