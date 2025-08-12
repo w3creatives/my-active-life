@@ -53,7 +53,7 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::get('/events/{id}/milestones/{milestoneId}/edit', [MilestonesController::class, 'create'])->name('admin.events.milestones.edit');
     Route::post('/events/{id}/milestones/{milestoneId}/edit', [MilestonesController::class, 'store']);
     Route::get('/events/{id}/milestones/{milestoneId}/view', [MilestonesController::class, 'view'])->name('admin.events.milestones.view');
-
+    Route::get('/milestone/import', [MilestonesController::class, 'import']);
     /**
      * Fit Life Event Activities routes
      */

@@ -9,6 +9,7 @@ use App\Models\EmailTemplate;
 use App\Models\Event;
 use App\Utilities\DataTable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 final class MilestonesController extends Controller
 {
@@ -129,38 +130,38 @@ final class MilestonesController extends Controller
 
         if ($request->hasFile('logo')) {
             $logoFile = $request->file('logo');
-            $logoFileName = $event->id.'_'.time().'_'.uniqid().'.'.$logoFile->getClientOriginalExtension();
+            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
             $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
             $data['logo'] = $logoFileName;
         }
         if ($request->hasFile('bw_logo')) {
             $logoFile = $request->file('bw_logo');
-            $logoFileName = $event->id.'_'.time().'_'.uniqid().'.'.$logoFile->getClientOriginalExtension();
+            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
             $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
             $data['bw_logo'] = $logoFileName;
         }
         if ($request->hasFile('calendar_logo')) {
             $logoFile = $request->file('calendar_logo');
-            $logoFileName = $event->id.'_'.time().'_'.uniqid().'.'.$logoFile->getClientOriginalExtension();
+            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
             $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
             $data['calendar_logo'] = $logoFileName;
         }
         if ($request->hasFile('bw_calendar_logo')) {
             $logoFile = $request->file('bw_calendar_logo');
-            $logoFileName = $event->id.'_'.time().'_'.uniqid().'.'.$logoFile->getClientOriginalExtension();
+            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
             $logoFile->storeAs('uploads/milestones', $logoFileName, 'public');
             $data['bw_calendar_logo'] = $logoFileName;
         }
 
         if ($request->hasFile('team_logo')) {
             $teamLogoFile = $request->file('team_logo');
-            $teamLogoFileName = $event->id.'_'.time().'_'.uniqid().'.'.$teamLogoFile->getClientOriginalExtension();
+            $teamLogoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $teamLogoFile->getClientOriginalExtension();
             $teamLogoFile->storeAs('uploads/milestones', $teamLogoFileName, 'public');
             $data['team_logo'] = $teamLogoFileName;
         }
         if ($request->hasFile('calendar_team_logo')) {
             $teamLogoFile = $request->file('calendar_team_logo');
-            $teamLogoFileName = $event->id.'_'.time().'_'.uniqid().'.'.$teamLogoFile->getClientOriginalExtension();
+            $teamLogoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $teamLogoFile->getClientOriginalExtension();
             $teamLogoFile->storeAs('uploads/milestones', $teamLogoFileName, 'public');
             $data['calendar_team_logo'] = $teamLogoFileName;
         }
@@ -209,5 +210,78 @@ final class MilestonesController extends Controller
         $eventMilestone = $event->milestones()->find($milestoneId);
 
         return ['html' => view('admin.milestones.view', compact('eventMilestone'))->render()];
+    }
+
+    /**
+     * @param Request $request
+     * @return void
+     * @uses Create bulk milestone with images (upload/save)
+     */
+    public function import(Request $request)
+    {
+        dd("Applicable to new events only");
+        $event = Event::where('name', 'RTY 2026')->first();
+//dd($event);
+        $basePath = storage_path('app/public/run-the-year-2026');
+        $miles = collect(array_map('str_getcsv', file(storage_path('app/public/run-the-year-2026/RTY 2026 Video Links_Tim.csv'))))->skip(4)->filter(function ($item) {
+            return (!!trim($item[0]) && $item[0] > 200);
+        });
+        $count = 0;
+
+
+        foreach ($miles as $mile) {
+            $mile = array_combine(['distance', 'video_url'], $mile);
+
+            $data = ['distance' => $mile['distance']];
+
+            $data['name'] = "RTY 2026 Mile " . $mile['distance'];
+            $data['description'] = $data['name'];
+
+            $data['data'] = json_encode(['flyover_url' => $mile['video_url']]);
+
+            $calendarLogo = $this->loadFile($basePath . '/Individual 150x150/' . $mile['distance'] . ' -150px.png');
+            $logo = $this->loadFile($basePath . '/Individual 1000x1000/' . $mile['distance'] . ' -1000px.png');
+            $teamLogo = $this->loadFile($basePath . '/Teams 1000x1000/' . $mile['distance'] . ' -1000px.png');
+            $teamCalendarLogo = $this->loadFile($basePath . '/Teams 150x150/' . $mile['distance'] . ' -150px.png');
+
+            /*$request->files->set('logo', $logo);
+            $request->files->set('calendar_logo', $calendarLogo);
+            $request->files->set('team_logo', $teamLogo);
+            $request->files->set('calendar_team_logo', $teamCalendarLogo);
+*/
+            $data['logo'] = $this->saveFile($event, $logo, 'logo');
+            $data['calendar_logo'] = $this->saveFile($event, $calendarLogo, 'calendar_logo');
+            $data['team_logo'] = $this->saveFile($event, $teamLogo, 'team_logo');
+            $data['calendar_team_logo'] = $this->saveFile($event, $teamCalendarLogo, 'calendar_team_logo');
+
+            //$event->milestones()->create($data);
+            echo $mile['distance'], '<br>';
+            $count++;
+            if ($count > 200000000) {
+
+                dd($data);
+                dd($request->file('logo'), 'logo');
+            }
+        }
+
+        dd($miles);
+    }
+
+    private function loadFile($filePath)
+    {
+
+        return new \Illuminate\Http\UploadedFile($filePath, 'file');
+        //$request->files->set('file', $file);
+    }
+
+    private function saveFile($event, $file, $key)
+    {
+        $orgFileName = str_replace('px.png', '', $file->getFileName());
+        $orgFileName = \Illuminate\Support\Str::slug($orgFileName, '_');
+
+        $fileName = $event->id . '_' . time() . '_' . uniqid() . '_' . $key . '_' . $orgFileName . '.' . $file->getExtension();
+
+        $file->storeAs('uploads/milestones/rty2026', $fileName, 'public');
+        return $fileName;
     }
 }
