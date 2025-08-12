@@ -78,7 +78,7 @@ final class EventsController extends Controller
             'goals' => 'required',
         ]);
 
-        $data = $request->only('name', 'start_date', 'end_date', 'event_type', 'goals', 'social_hashtags', 'description', 'total_points', 'registration_url', 'bibs_name', 'event_group');
+        $data = $request->only('name', 'start_date', 'end_date', 'event_type', 'goals', 'social_hashtags', 'description', 'total_points', 'registration_url', 'bibs_name', 'event_group','future_start_message');
         $data['event_type'] = mb_strtolower($data['event_type']);
         $data['registration_url'] = $data['registration_url'] ?? '#';
         $data['goals'] = json_encode(array_map('trim', explode(',', $data['goals'])));

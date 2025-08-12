@@ -141,6 +141,13 @@
                                           name="description" id="description" data-parsley-trigger="change" rows="3"
                                           required>{{ $event->description??'' }}</textarea>
                             </div>
+                            <div class="mb-4 col-xl-8 col-sm-12 col-md-6">
+                                <label for="future_start_message" class="form-label">Future Start Message</label>
+
+                                <div id="text-editor" data-editable-input="#future-start-message-content"></div>
+                                <textarea name="future_start_message" id="future-start-message-content"
+                                          class="form-control d-none">{!! $event->future_start_message ?? old('future_start_message') !!}</textarea>
+                            </div>
                         </div>
                         <div class="d-flex justify-content-between mt-3">
                             <button type="submit" class="btn btn-primary">{{ $event?'Update':'Add'}} Event</button>
@@ -174,6 +181,8 @@
         <link rel="stylesheet" href="{{ asset('assets/vendor/libs/@form-validation/form-validation.css') }}">
         <link rel="stylesheet" href="{{ asset('assets/vendor/libs/flatpickr/flatpickr.css') }}" />
         <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
+        <link rel="stylesheet" href="{{ asset('assets/vendor/libs/highlight/highlight.css') }}" />
+        <link rel="stylesheet" href="{{ asset('assets/vendor/libs/quill/editor.css') }}" />
     @endpush
     @push('scripts')
         {{-- <script src="{{ asset('assets/js/plugins/parsley.min.js') }}"></script>--}}
@@ -183,6 +192,8 @@
         <script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
         <script src="{{ asset('assets/vendor/libs/flatpickr/flatpickr.js') }}"></script>
         <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
+        <script src="{{ asset('assets//vendor/libs/highlight/highlight.js') }}"></script>
+        <script src="{{ asset('assets/vendor/libs/quill/quill.js') }}"></script>
         <script type="text/javascript">
             (function() {
                 'use strict';
@@ -221,6 +232,73 @@
                     monthSelectorType: 'static',
                     static: true
                 });
+
+                const editorToolbar = [
+
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [
+                        {
+                            color: []
+                        },
+                        {
+                            background: []
+                        }
+                    ],
+                    [
+                        {
+                            script: 'super'
+                        },
+                        {
+                            script: 'sub'
+                        }
+                    ],
+                    [
+                        {
+                            header: '1'
+                        },
+                        {
+                            header: '2'
+                        },
+                        {
+                            header: '3'
+                        },
+                        'blockquote',
+                        'code-block'
+                    ],
+                    [
+                        {
+                            list: 'ordered'
+                        },
+                        {
+                            indent: '-1'
+                        },
+                        {
+                            indent: '+1'
+                        }
+                    ],
+                    [{ direction: 'rtl' }, { align: [] }],
+                    ['link', 'image', 'video', 'formula'],
+                    ['clean']
+                ];
+
+                const editor = new Quill('#text-editor', {
+                    bounds: '#full-editor',
+                    placeholder: 'Type Something...',
+                    modules: {
+                        syntax: true,
+                        toolbar: editorToolbar
+                    },
+                    theme: 'snow'
+                });
+
+                let editorTextarea = $($('#text-editor').data('editable-input'));
+
+                editor.on('text-change', function(delta, oldDelta, source) {
+                    editorTextarea.val(editor.container.firstChild.innerHTML.replace('<p><br></p>', ''));
+                });
+
+                editor.setContents(editor.clipboard.convert({ html: editorTextarea.val() }), 'silent');
+
                 // Fetch all the forms we want to apply custom Bootstrap validation styles to
                 var forms = document.querySelectorAll('.needs-validation');
 
