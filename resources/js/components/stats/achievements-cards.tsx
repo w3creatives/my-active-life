@@ -27,8 +27,8 @@ export default function AchievementsCards() {
     const fetchAchievements = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(route('api.stats.achievements'));
-        setAchievements(response.data.achievements);
+        // const response = await axios.get(route('api.stats.achievements'));
+        // setAchievements(response.data.achievements);
       } catch (err) {
         setError('Failed to load achievements');
         console.error('Error fetching achievements:', err);
@@ -120,8 +120,8 @@ export default function AchievementsCards() {
             {achievements?.best_month ? achievements.best_month.miles?.toFixed(2) : '0.00'}
           </div>
           <p className="text-xs text-muted-foreground">
-            {achievements?.best_month?.year && achievements?.best_month?.month 
-              ? formatMonth(achievements.best_month.year, achievements.best_month.month) 
+            {achievements?.best_month?.year && achievements?.best_month?.month
+              ? formatMonth(achievements.best_month.year, achievements.best_month.month)
               : 'No data available'}
           </p>
         </CardContent>

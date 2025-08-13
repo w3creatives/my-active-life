@@ -137,7 +137,7 @@ export default function FollowingParticipants() {
                 <div className="flex-1 mx-6">
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
-                      className="bg-primary h-2 rounded-full"
+                      className="bg-gray h-2 rounded-full"
                       style={{ width: `${Math.min(person.total_miles, 100)}%` }}
                       role="progressbar"
                       aria-valuenow={Math.min(person.total_miles, 100)}
@@ -150,7 +150,7 @@ export default function FollowingParticipants() {
                 {/* Miles & Unfollow */}
                 <div className="flex items-center gap-4">
                   <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                    {person.total_miles.toFixed(1)} mi
+                    {person.total_miles} mi
                   </div>
                   <Button
                     variant="danger"

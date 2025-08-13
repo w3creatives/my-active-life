@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\Models\Event;
+use App\Models\PointMonthly;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 
 final class UserRepository
@@ -102,7 +105,10 @@ final class UserRepository
         $modality = $request->modality;
         $eventId = $request->event_id;
 
-        $participations = $user->participations()->with('event')->get();
+        // $participations = $user->participations()->with('event')->get();
+        $participations = $user->participations()->with('event')->whereHas('event', function($query) {
+            $query->where('mobile_event', true);
+        })->get();
 
         $points = $user->points()->with('event')
             ->where(function ($query) use ($startDate, $endDate, $modality, $eventId) {
@@ -201,5 +207,43 @@ final class UserRepository
     public function createShopifyUser($data)
     {
         return User::create($data);
+    }
+
+    public function getMonthlyPoints(int $eventId, User $user): Collection
+    {
+        $event = Event::where('id', $eventId)->first();
+        $eventStartDate = Carbon::parse($event->start_date);
+        $eventEndDate = Carbon::parse($event->end_date);
+
+        return PointMonthly::select('amount', 'date')
+            ->where('event_id', $eventId)
+            ->where('user_id', $user->id)
+            ->whereDate('date', '>=', $eventStartDate)
+            ->whereDate('date', '<=', $eventEndDate)
+            ->get()
+            ->map(function ($item) {
+                $item->label = Carbon::parse($item->date)->format('M y'); // e.g., Dec 25
+
+                return $item;
+            });
+    }
+
+    public function getYearlyPoints(int $eventId, User $user): Collection
+    {
+        $event = Event::where('id', $eventId)->first();
+        $eventStartDate = Carbon::parse($event->start_date);
+        $eventEndDate = Carbon::parse($event->end_date);
+
+        return PointMonthly::select('amount', 'date')
+            ->where('event_id', $eventId)
+            ->where('user_id', $user->id)
+            ->whereDate('date', '>=', $eventStartDate)
+            ->whereDate('date', '<=', $eventEndDate)
+            ->get()
+            ->map(function ($item) {
+                $item->label = Carbon::parse($item->date)->format('M y'); // e.g., Dec 25
+
+                return $item;
+            });
     }
 }

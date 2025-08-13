@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
-use Illuminate\Foundation\Inspiring;
+use App\Models\Event;
+use App\Traits\UserEventParticipationTrait;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 
 final class HandleInertiaRequests extends Middleware
 {
+    use UserEventParticipationTrait;
+
     /**
      * The root template that's loaded on the first page visit.
      *
@@ -46,19 +49,31 @@ final class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
+                'total_points' => function () use ($request) {
+                    if (! $request->user()) {
+                        return 0;
+                    }
+
+//                    $totalPoints = (float) $request->user()->totalPoints()->where('event_id', $request->user()->preferred_event_id)->first()->amount ?? 0.0;
+
+                    return 0;
+                },
+                'preferred_event' => function () use ($request) {
+                    if (! $request->user()) {
+                        return null;
+                    }
+
+                    return $request->user()->preferred_event_id ?
+                        Event::find($request->user()->preferred_event_id) : null;
+                },
                 'participations' => function () use ($request) {
                     if (! $request->user()) {
                         return [];
                     }
 
-                    $user = $request->user();
-                    $currentDate = now()->format('Y-m-d');
-
-                    return $user->participations()
-                        ->with('event')
-                        ->get();
+                    return $this->userParticipations($request->user());
                 },
-                'is_admin' => $request->user() ? (bool) $request->user()->super_admin : false,
+                'is_admin' => $request->user() && (bool) $request->user()->super_admin,
                 'is_impersonating' => $manager->isImpersonating(),
             ],
             'ziggy' => fn (): array => [

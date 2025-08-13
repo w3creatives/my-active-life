@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Actions\EventTutorials\GetEventTutorials;
-use App\Actions\Follow\UndoFollowing;
 use App\Actions\Follow\RequestFollow;
+use App\Actions\Follow\UndoFollowing;
 use App\Models\Event;
+use App\Models\Team;
 use App\Services\EventService;
 use App\Services\MailboxerService;
 use App\Services\TeamService;
@@ -36,7 +37,7 @@ final class DashboardController extends Controller
 
     public function stats(): Response
     {
-        return Inertia::render('stats');
+        return Inertia::render('stats/index');
     }
 
     public function tutorials(): Response
@@ -54,6 +55,16 @@ final class DashboardController extends Controller
         return response()->json([
             'tutorials' => $tutorials,
         ]);
+    }
+
+    public function trophyCase(): Response
+    {
+        return Inertia::render('trophy-case/index');
+    }
+
+    public function teams(): Response
+    {
+        return Inertia::render('teams/index');
     }
 
     public function follow(Request $request): Response
@@ -412,29 +423,13 @@ final class DashboardController extends Controller
         return Inertia::render('new-conversation');
     }
 
-    /**
-     * Temporarily set the user's selected event (session-based, not persisted)
-     */
-    public function selectTempEvent(Request $request)
-    {
-        $request->validate([
-            'event_id' => 'required|exists:events,id',
-        ]);
-
-        // Store the selected event ID in the session
-        session(['selected_event_id' => $request->event_id]);
-
-        // Return to the previous page with updated props
-        return redirect()->back();
-    }
-
     public function unfollow(Request $request, UndoFollowing $undoFollowing)
     {
         $result = (new UndoFollowing())($request, $request->user());
 
         // Check if this is an Inertia request
         if ($request->header('X-Inertia')) {
-            if (!$result['success']) {
+            if (! $result['success']) {
                 return redirect()->back()->withErrors(['error' => $result['message']]);
             }
 
@@ -443,21 +438,21 @@ final class DashboardController extends Controller
 
         // Check if this is an AJAX request (non-Inertia)
         if ($request->wantsJson()) {
-            if (!$result['success']) {
+            if (! $result['success']) {
                 return response()->json([
                     'success' => false,
-                    'message' => $result['message']
+                    'message' => $result['message'],
                 ], 422);
             }
 
             return response()->json([
                 'success' => true,
-                'message' => $result['message']
+                'message' => $result['message'],
             ]);
         }
 
         // Handle regular form submissions with redirects
-        if (!$result['success']) {
+        if (! $result['success']) {
             return redirect()->back()->with('error', $result['message']);
         }
 
@@ -470,7 +465,7 @@ final class DashboardController extends Controller
 
         // Check if this is an Inertia request
         if ($request->header('X-Inertia')) {
-            if (!$result['success']) {
+            if (! $result['success']) {
                 return redirect()->back()->withErrors(['error' => $result['message']]);
             }
 
@@ -479,25 +474,79 @@ final class DashboardController extends Controller
 
         // Check if this is an AJAX request (non-Inertia)
         if ($request->wantsJson()) {
-            if (!$result['success']) {
+            if (! $result['success']) {
                 return response()->json([
                     'success' => false,
-                    'message' => $result['message']
+                    'message' => $result['message'],
                 ], 422);
             }
 
             return response()->json([
                 'success' => true,
                 'message' => $result['message'],
-                'data' => $result['data']
+                'data' => $result['data'],
             ]);
         }
 
         // Handle regular form submissions with redirects
-        if (!$result['success']) {
+        if (! $result['success']) {
             return redirect()->back()->with('error', $result['message']);
         }
 
         return redirect()->back()->with('success', $result['message']);
+    }
+
+    /**
+     * Set the user's preferred event.
+     */
+    public function setPreferredEvent(Request $request)
+    {
+        $validated = $request->validate([
+            'event_id' => 'required|exists:events,id',
+        ]);
+
+        $user = $request->user();
+
+        // Check if user is participating in the event
+        $participation = $user->participations()
+            ->where('event_id', $validated['event_id'])
+            ->first();
+
+        if (! $participation) {
+            return back()->with('error', 'You are not participating in this event.');
+        }
+
+        // Update the user's preferred event
+        $user->preferred_event_id = $validated['event_id'];
+        $user->save();
+
+        return back()->with('success', 'Preferred event updated successfully.');
+    }
+
+    public function getUserEventDetails(Request $request, string $type): JsonResponse
+    {
+        $user = $request->user();
+        $searchTerm = '';
+
+        $teams = Team::where('event_id', $user->preferred_event_id)
+            ->where(function ($query) use ($user, $type, $searchTerm) {
+                match ($type) {
+                    'own' => $query->where('owner_id', $user->id),
+                    'other' => $query->where('owner_id', '!=', $user->id),
+                    'joined' => $query->whereHas('memberships', function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    }),
+                };
+
+                if ($searchTerm) {
+                    $query->where('name', 'ILIKE', "{$searchTerm}%");
+                }
+
+                return $query;
+            });
+
+        return response()->json([
+            'teams' => $teams->get(),
+        ]);
     }
 }

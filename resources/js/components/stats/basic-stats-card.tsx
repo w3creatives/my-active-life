@@ -17,8 +17,8 @@ export default function BasicStatsCard() {
     const fetchBasicStats = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(route('api.stats.basic'));
-        setStats(response.data.stats);
+        // const response = await axios.get(route('api.stats.basic'));
+        // setStats(response.data.stats);
       } catch (err) {
         setError('Failed to load basic statistics');
         console.error('Error fetching basic stats:', err);
