@@ -25,7 +25,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Teams',
-        href: '/',
+        href: '/teams',
         icon: Users,
     },
     {

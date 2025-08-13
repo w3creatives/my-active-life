@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\TeamsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,8 +16,7 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-Route::get('test-user-token', function (\Illuminate\Http\Request $request) {
-
+Route::get('test-user-token', function (Illuminate\Http\Request $request) {
 
     $d = ['daily_steps', 'run', 'walk'];
 
@@ -24,30 +24,29 @@ Route::get('test-user-token', function (\Illuminate\Http\Request $request) {
 
     dd($d);
 
-    $participation = \App\Models\EventParticipation::find(57965);
+    $participation = App\Models\EventParticipation::find(57965);
 
-    dd($participation,$participation->isModalityOverridden('other'));
+    dd($participation, $participation->isModalityOverridden('other'));
     $settings = $participation->settings;
 
-    $participationSetting = json_decode($settings,true);
+    $participationSetting = json_decode($settings, true);
 
-    $modalityOverrides = $participationSetting['modality_overrides']??['daily_steps','run','walk'];
+    $modalityOverrides = $participationSetting['modality_overrides'] ?? ['daily_steps', 'run', 'walk'];
 
-    dd(in_array('run',$modalityOverrides));
+    dd(in_array('run', $modalityOverrides));
 
-    $data = ['userAccessToken'=>3,'callbackURLf'=>6665];
+    $data = ['userAccessToken' => 3, 'callbackURLf' => 6665];
 
     dd(! isset($data['userAccessToken']) || ! isset($data['callbackURL']));
-    $data = [['name'=>'test']];
-  //  \Illuminate\Support\Facades\Storage::disk('public')->put(sprintf('webhooks/%s.json', \Illuminate\Support\Str::uuid()->toString()), json_encode($data));
-
+    $data = [['name' => 'test']];
+    //  \Illuminate\Support\Facades\Storage::disk('public')->put(sprintf('webhooks/%s.json', \Illuminate\Support\Str::uuid()->toString()), json_encode($data));
 
     $data = json_decode(file_get_contents(public_path('garmin.json')), true);
     $activities = collect($data);
 
-    $activities = $activities->map(function ($activity){
+    $activities = $activities->map(function ($activity) {
         if (isset($activity['distanceInMeters'])) {
-            $date = \Carbon\Carbon::createFromTimestamp($activity['startTimeInSeconds'])->format('Y-m-d');
+            $date = Carbon\Carbon::createFromTimestamp($activity['startTimeInSeconds'])->format('Y-m-d');
             $distance = round(($activity['distanceInMeters'] / 1609.344), 3);
 
             $modality = match ($activity['activityType']) {
@@ -66,11 +65,11 @@ Route::get('test-user-token', function (\Illuminate\Http\Request $request) {
     })->toArray();
 
     dd($activities);
-    $date = \Carbon\Carbon::now();
+    $date = Carbon\Carbon::now();
     $nextDate = $date->copy()->addDay();
 
-    $currentStart = \Carbon\Carbon::parse('2025-08-01');
-    $currentCronEnd = \Carbon\Carbon::now();
+    $currentStart = Carbon\Carbon::parse('2025-08-01');
+    $currentCronEnd = Carbon\Carbon::now();
 
     while ($currentStart->lte($currentCronEnd)) {
 
@@ -81,27 +80,26 @@ Route::get('test-user-token', function (\Illuminate\Http\Request $request) {
         echo $currentStart,' = ',$currentEnd,"\n\n </br>";
     }
 
-   // dd($date, $nextDate, $date);
+    // dd($date, $nextDate, $date);
     $a = null;
     $b = 2;
 
-    $item = $c??$a??$b;
+    $item = $c ?? $a ?? $b;
 
     dd($item);
 
-    $user = \App\Models\User::first();
+    $user = App\Models\User::first();
 
     $user->logSourceConnected(['data_source_id' => 2]);
     $user->logSourceDisconnected(['data_source_id' => 2]);
 
-    //return ['token' => $user->createToken('MyApp')->accessToken];
+    // return ['token' => $user->createToken('MyApp')->accessToken];
 });
 Route::get('test-email', function () {
 
+    $accessToken = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkNLRzIiLCJzdWIiOiJDOU5KWUwiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyYWN0IHJzZXQgcndlaSBycHJvIHJudXQgcnNsZSIsImV4cCI6MTc1MjI3NzEwMSwiaWF0IjoxNzUyMjQ4MzAxfQ.kdO3BvLuOCT75PzMAGTUblwZJhNYu4Um5faX3Xyghj8';
 
-    $accessToken = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyMkNLRzIiLCJzdWIiOiJDOU5KWUwiLCJpc3MiOiJGaXRiaXQiLCJ0eXAiOiJhY2Nlc3NfdG9rZW4iLCJzY29wZXMiOiJyYWN0IHJzZXQgcndlaSBycHJvIHJudXQgcnNsZSIsImV4cCI6MTc1MjI3NzEwMSwiaWF0IjoxNzUyMjQ4MzAxfQ.kdO3BvLuOCT75PzMAGTUblwZJhNYu4Um5faX3Xyghj8";
-
-    $httpClient = new \GuzzleHttp\Client([
+    $httpClient = new GuzzleHttp\Client([
         'base_uri' => 'https://api.fitbit.com/1/',
         'headers' => [
             'Authorization' => sprintf('Bearer %s', $accessToken),
@@ -109,7 +107,7 @@ Route::get('test-email', function () {
         ],
     ]);
 
-    $date = "2025-03-09";
+    $date = '2025-03-09';
 
     $response = $httpClient->get("user/-/activities/date/{$date}.json");
 
@@ -118,15 +116,13 @@ Route::get('test-email', function () {
     $data = $result['activities'];
     $distances = $result['summary']['distances'];
 
-    dd($data,$distances);
+    dd($data, $distances);
 
     $event = App\Models\Event::find(89);
     $user = App\Models\User::find(165220);
-    $test = (new \App\Services\EventService(new \App\Repositories\EventRepository, new \App\Repositories\UserPointRepository))->userStreaks($user, $event);
-dd($test);
+    $test = (new App\Services\EventService(new App\Repositories\EventRepository, new App\Repositories\UserPointRepository))->userStreaks($user, $event);
+    dd($test);
     // $userStreak
-
-
 
     dd($user->userStreaks()->where('event_id', $event->id)->first(), $event->streaks()->first());
     (new App\Services\EventService(
@@ -171,6 +167,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Event selection route (temporary session-based)
     Route::post('/events/select-temp', [DashboardController::class, 'selectTempEvent'])->name('events.select-temp');
+
+    // Teams route
+    Route::get('/teams', [TeamsController::class, 'index'])->name('teams');
 });
 
 require __DIR__.'/settings.php';
