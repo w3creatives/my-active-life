@@ -36,37 +36,7 @@ const mainNavItems: NavItem[] = [
         title: 'Tutorials',
         href: '/tutorials',
         icon: Handshake,
-    },
-  {
-    title: 'Home',
-    href: '/dashboard',
-    icon: CalendarDays,
-  },
-  {
-    title: 'Stats',
-    href: '/stats',
-    icon: ChartSpline,
-  },
-  {
-    title: 'Trophy Case',
-    href: '/trophy-case',
-    icon: Trophy,
-  },
-  {
-    title: 'Teams',
-    href: '/teams',
-    icon: Users,
-  },
-  {
-    title: 'Follow',
-    href: '/follow',
-    icon: Users,
-  },
-  {
-    title: 'Tutorials',
-    href: '/tutorials',
-    icon: Handshake,
-  },
+    }
 ];
 
 const footerNavItems: NavItem[] = [
