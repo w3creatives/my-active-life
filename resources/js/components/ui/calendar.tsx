@@ -175,7 +175,7 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
 
   return (
     <div className="w-full rounded-lg border bg-card text-card-foreground shadow-sm">
-      <div className="flex items-center justify-between p-4">
+      <div className="flex flex-col sm:flex-row gap-5 md:items-center justify-between p-4 pb-0 md:pb-4">
         <div className="space-y-2">
           <div className="flex space-x-4">
             <Button variant="outline" size="icon" onClick={prevMonth}>
@@ -210,7 +210,7 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
       <div className="p-4">
         {loading ? (
           <div className="grid grid-cols-8 gap-0 border border-border">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Tot.'].map((day) => (
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Total'].map((day) => (
               <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2 border-b border-r border-border">
                 {day}
                </div>
@@ -233,7 +233,7 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
                   </div>
                 ))}
                 {/* Weekly total skeleton */}
-                <div className="aspect-square p-1 bg-gray-100 flex items-center justify-center border-b border-border">
+                <div className="aspect-square p-1 bg-gray-50/50 dark:bg-black/50 flex items-center justify-center border-b border-border">
                   <Skeleton className="h-5 w-12" />
                 </div>
               </React.Fragment>
@@ -241,7 +241,7 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
           </div>
         ) : (
           <div className="grid grid-cols-8 gap-0 border border-border">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Tot.'].map((day) => (
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Total'].map((day) => (
               <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2 border-b border-r border-border">
                 {day}
               </div>
@@ -287,7 +287,7 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
                   </div>
                 ))}
                 {/* Weekly total column */}
-                <div className="aspect-square p-1 bg-gray-100 flex items-center justify-center border-b border-border">
+                <div className="aspect-square p-1 bg-gray-50/50 dark:bg-black/50 flex items-center justify-center border-b border-border">
                   <div className="truncate text-center text-sm md:text-xl">
                     {getWeeklyTotal(week).toFixed(2)}
                   </div>

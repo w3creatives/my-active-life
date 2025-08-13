@@ -16,14 +16,16 @@ use Illuminate\Support\Facades\Log;
 final class StravaUnsubscriber
 {
     private User $user;
+
     private DataSource $dataSource;
+
     private StravaService $stravaService;
 
     /**
      * Initialize the unsubscriber with user and data source
-     * 
-     * @param User $user The user to unsubscribe
-     * @param DataSource $dataSource The Strava data source
+     *
+     * @param  User  $user  The user to unsubscribe
+     * @param  DataSource  $dataSource  The Strava data source
      */
     public function __construct(User $user, DataSource $dataSource)
     {
@@ -35,15 +37,16 @@ final class StravaUnsubscriber
     /**
      * Unsubscribe the user from Strava
      * Revokes access tokens and removes the user's profile
-     * 
+     *
      * @return bool True if unsubscription was successful
+     *
      * @throws Exception If unsubscription fails
      */
     public function unsubscribe(): bool
     {
         try {
             Log::info('Unsubscribing user from Strava', [
-                'user_id' => $this->user->id
+                'user_id' => $this->user->id,
             ]);
 
             // Get the user's Strava profile
@@ -51,10 +54,11 @@ final class StravaUnsubscriber
                 ->where('data_source_id', $this->dataSource->id)
                 ->first();
 
-            if (!$profile) {
+            if (! $profile) {
                 Log::info('No Strava profile found for user', [
-                    'user_id' => $this->user->id
+                    'user_id' => $this->user->id,
                 ]);
+
                 return true;
             }
 
@@ -77,7 +81,7 @@ final class StravaUnsubscriber
             } catch (Exception $e) {
                 Log::warning('Failed to deauthorize with Strava API, but continuing', [
                     'error' => $e->getMessage(),
-                    'user_id' => $this->user->id
+                    'user_id' => $this->user->id,
                 ]);
             }
 
@@ -85,7 +89,7 @@ final class StravaUnsubscriber
         } catch (Exception $e) {
             Log::error('Failed to unsubscribe from Strava', [
                 'error' => $e->getMessage(),
-                'user_id' => $this->user->id
+                'user_id' => $this->user->id,
             ]);
             throw $e;
         }

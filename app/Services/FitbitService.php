@@ -313,7 +313,11 @@ final class FitbitService implements DataSourceInterface
             return $item === null;
         });
 
-        $otherDistance = $totalDistance - $activities->sum('raw_distance');
+        $runWalkActivities = $activities->filter(function ($item) {
+            return $item['modality'] !== 'bike';
+        });
+
+        $otherDistance = $totalDistance - $runWalkActivities->sum('raw_distance');
 
         if ($otherDistance > 0) {
             $activities = $activities->push(['date' => $date, 'distance' => $otherDistance * 0.621371, 'modality' => 'other', 'raw_distance' => $otherDistance]);

@@ -6,6 +6,7 @@ import axios from 'axios';
 import VideoCard from '@/components/tutorial/video-card';
 import { VideoCardSkeleton, SkeletonGrid } from '@/components/ui/skeleton-components';
 import { Card, CardContent } from '@/components/ui/card';
+import EventBannerImage from '@/components/atoms/EventBannerImage';
 
 type TutorialItem = {
   type: string;
@@ -23,6 +24,10 @@ type TutorialData = {
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
+  {
+    title: 'Home',
+    href: route('dashboard'),
+  },
   {
     title: 'Tutorials',
     href: route('tutorials'),
@@ -89,6 +94,7 @@ export default function Tutorials() {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={pageTitle} />
       <div className="flex flex-col gap-6 p-4">
+        <EventBannerImage />
         <h1 className="text-4xl font-normal">{pageTitle}</h1>
 
         {loading ? (

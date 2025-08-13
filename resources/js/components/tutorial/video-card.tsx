@@ -54,7 +54,7 @@ export default function VideoCard({ source, title, thumb, url }: VideoProps) {
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>
-            <h2 className="text-2xl font-normal">{title}</h2>
+            <h2 className="text-lg font-normal">{title}</h2>
           </CardTitle>
         </CardHeader>
         <CardContent>

@@ -4,10 +4,10 @@ namespace App\Actions\Follow;
 
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use App\Models\User;
 use App\Models\Event;
-use App\Models\Team;
 use App\Models\EventParticipation;
+use App\Models\Team;
+use App\Models\User;
 
 class RequestFollow
 {

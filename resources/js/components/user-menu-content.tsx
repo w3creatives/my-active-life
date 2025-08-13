@@ -6,47 +6,47 @@ import { Link } from '@inertiajs/react';
 import { LogOut, Settings, UserPen, Watch } from 'lucide-react';
 
 interface UserMenuContentProps {
-    user: User;
+  user: User;
 }
 
 export function UserMenuContent({ user }: UserMenuContentProps) {
-    const cleanup = useMobileNavigation();
+  const cleanup = useMobileNavigation();
 
-    return (
-        <>
-            <DropdownMenuLabel className="p-0 font-normal">
-                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                    <UserInfo user={user} showEmail={true} />
-                </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup className="space-y-1">
-                <DropdownMenuItem asChild>
-                    <Link className="block w-full" href="#" as="button" prefetch onClick={cleanup}>
-                        <UserPen className="mr-2" />
-                        View My Profile
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link className="block w-full" href={route('profile.edit')} as="button" prefetch onClick={cleanup}>
-                        <Settings className="mr-2" />
-                        Account Settings
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                    <Link className="block w-full" href={route('profile.device-sync.edit')} as="button" prefetch onClick={cleanup}>
-                        <Watch className="mr-2" />
-                        Device Syncing
-                    </Link>
-                </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-                <Link className="block w-full" method="post" href={route('logout')} as="button" onClick={cleanup}>
-                    <LogOut className="mr-2" />
-                    Log out
-                </Link>
-            </DropdownMenuItem>
-        </>
-    );
+  return (
+    <>
+      <DropdownMenuLabel className="p-0 font-normal">
+        <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+          <UserInfo user={user} showEmail={true} />
+        </div>
+      </DropdownMenuLabel>
+      <DropdownMenuSeparator />
+      <DropdownMenuGroup className="space-y-1 py-1">
+        <DropdownMenuItem asChild>
+          <Link className="block w-full cursor-pointer gap-4" href="#" as="button" prefetch onClick={cleanup}>
+            <UserPen />
+            View My Profile
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link className="block w-full cursor-pointer gap-4" href={route('profile.edit')} as="button" prefetch onClick={cleanup}>
+            <Settings />
+            Account Settings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link className="block w-full cursor-pointer gap-4" href={route('profile.device-sync.edit')} as="button" prefetch onClick={cleanup}>
+            <Watch />
+            Device Syncing
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuGroup>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem asChild>
+        <Link className="block w-full cursor-pointer gap-4" method="post" href={route('logout')} as="button" onClick={cleanup}>
+          <LogOut />
+          Log out
+        </Link>
+      </DropdownMenuItem>
+    </>
+  );
 }

@@ -16,6 +16,7 @@ use App\Models\UserPoint;
 use App\Services\EventService;
 use App\Services\GarminService;
 use App\Services\MilestoneImageService;
+use App\Services\UserPointService;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Closure;
@@ -1064,7 +1065,7 @@ final class UserPointsController extends BaseController
         return $this->sendResponse(['total_points' => $userTotalPoints], 'Total points retrieved successfully');
     }
 
-    public function last30DaysStats(Request $request)
+    public function last30DaysStats(Request $request, UserPointService $userPointService): JsonResponse
     {
         $request->validate([
             'event_id' => [
@@ -1076,61 +1077,9 @@ final class UserPointsController extends BaseController
         $user = $request->user();
         $eventId = $request->event_id;
 
-        // Calculate date range
-        $endDate = Carbon::now()->format('Y-m-d');
-        $startDate = Carbon::now()->subDays(30)->format('Y-m-d');
+        $rangeData = $userPointService->last30DaysStats($user, $eventId);
 
-        // Get daily points for last 30 days
-        $dailyPoints = $user->points()
-            ->selectRaw('DATE(date) as date, SUM(amount) as daily_total')
-            ->where('event_id', $eventId)
-            ->where('date', '>=', $startDate)
-            ->where('date', '<=', $endDate)
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-
-        // Create a collection of all dates in the range
-        $dateRange = collect();
-        $currentDate = Carbon::parse($startDate);
-        $lastDate = Carbon::parse($endDate);
-
-        while ($currentDate <= $lastDate) {
-            $dateRange->push([
-                'date' => $currentDate->format('Y-m-d'),
-                'daily_total' => 0,
-                'seven_day_avg' => 0,
-            ]);
-            $currentDate->addDay();
-        }
-
-        // Map actual points to date range
-        $dailyPoints->each(function ($point) use (&$dateRange) {
-            $dateRange = $dateRange->map(function ($item) use ($point) {
-                if ($item['date'] === $point->date) {
-                    $item['daily_total'] = round($point->daily_total, 2);
-                }
-
-                return $item;
-            });
-        });
-
-        // Calculate 7-day rolling average
-        $dateRange = $dateRange->map(function ($item, $key) use ($dateRange) {
-            // Get previous 7 days including current day
-            $sevenDayWindow = $dateRange->filter(function ($windowItem) use ($item) {
-                $itemDate = Carbon::parse($item['date']);
-                $windowDate = Carbon::parse($windowItem['date']);
-
-                return $windowDate <= $itemDate &&
-                    $windowDate > $itemDate->copy()->subDays(7);
-            });
-
-            $sevenDaySum = $sevenDayWindow->sum('daily_total');
-            $item['seven_day_avg'] = round($sevenDaySum / min(7, $sevenDayWindow->count()), 2);
-
-            return $item;
-        });
+        return $this->sendResponse($rangeData, 'Last 30 days statistics retrieved successfully');
 
         return $this->sendResponse([
             'stats' => $dateRange->values(),

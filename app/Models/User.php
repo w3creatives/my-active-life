@@ -196,13 +196,62 @@ final class User extends Authenticatable
 
     public function logSourceConnected($data): void
     {
-        $data['action'] = 'CONNECTED';
+        $data['action'] = $data['action'] ?? 'CONNECTED';
         $this->profileLogs()->create($data);
     }
 
     public function logSourceDisconnected($data): void
     {
-        $data['action'] = 'DISCONNECTED';
+        $data['action'] = $data['action'] ?? 'DISCONNECTED';
         $this->profileLogs()->create($data);
+    }
+
+    /**
+     * Retrieves MailboxerConversation instances associated with the current user.
+     *
+     * Filters conversations where notifications are sent by the current user and loads related notification receipts.
+     */
+    public function mailboxerConversations()
+    {
+        return MailboxerConversation::whereHas('notifications', function ($query) {
+            $query->where('sender_id', $this->id);
+        })
+            ->with([
+                'notifications' => function ($query) {
+                    $query->with('receipts');
+                },
+            ]);
+    }
+
+    /**
+     * Retrieves inbox messages for the current user.
+     *
+     * Filters MailboxerReceipt instances where the user is the receiver and the mailbox type is 'inbox'.
+     * Loads related notification data including conversations and sender details.
+     */
+    public function inboxMessages()
+    {
+        return MailboxerReceipt::where('receiver_id', $this->id)
+            ->where('mailbox_type', 'inbox')
+            ->with([
+                'notification.conversation',
+                'notification.sender',
+            ]);
+    }
+
+    /**
+     * Retrieves sent messages for the current user.
+     *
+     * Filters receipts where the receiver is the current user and the mailbox type is 'sentbox'.
+     * Loads related notification conversation and sender details.
+     */
+    public function sentMessages()
+    {
+        return MailboxerReceipt::where('receiver_id', $this->id)
+            ->where('mailbox_type', 'sentbox')
+            ->with([
+                'notification.conversation',
+                'notification.sender',
+            ]);
     }
 }

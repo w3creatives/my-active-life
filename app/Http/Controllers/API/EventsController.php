@@ -60,6 +60,8 @@ final class EventsController extends BaseController
 
         //  $events = Cache::remember($cacheName, now()->addHours(2), function () use($user, $listType, $pageLimit, $eventService){
         $events = Event::where('event_type', '!=', 'promotional')
+            ->where('mobile_event', true)
+            ->where('start_date','<=', $currentDate)
             ->whereHas('participations', function ($query) use ($user, $currentDate, $listType) {
                 $query->where('user_id', $user->id);
 

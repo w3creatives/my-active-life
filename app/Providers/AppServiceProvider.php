@@ -8,10 +8,17 @@ use App\Interfaces\DataSourceInterface;
 use App\Services\FitbitService;
 use App\Services\GarminService;
 use App\Services\StravaService;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use App\Models\MailboxerConversation;
+use App\Models\MailboxerConversationOptOut;
+use App\Models\MailboxerNotification;
+use App\Models\MailboxerReceipt;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 final class AppServiceProvider extends ServiceProvider
 {
@@ -39,10 +46,19 @@ final class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        /**
-         * Disable drop tables artisan commands
-         */
-        DB::prohibitDestructiveCommands(true);
+        Paginator::useBootstrap();
+        $this->configureUrls();
+
+        Relation::morphMap([
+            // User model (used in sender_type, receiver_type, unsubscriber_type)
+            'User' => User::class,
+
+            // Mailboxer-related models
+            'MailboxerNotification' => MailboxerNotification::class,
+            'MailboxerReceipt' => MailboxerReceipt::class,
+            'MailboxerConversation' => MailboxerConversation::class,
+            'MailboxerConversationOptOut' => MailboxerConversationOptOut::class,
+        ]);
     }
 
     /**
