@@ -74,8 +74,6 @@ final class SettableGoalManager
 
     /**
      * Get the event total goal.
-     *
-     * @return int
      */
     private function getEventTotalGoal(): int
     {

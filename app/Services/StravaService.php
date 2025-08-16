@@ -236,7 +236,7 @@ final class StravaService implements DataSourceInterface
      * Retrieve activities for the configured date range
      * Fetches activities day by day and processes them
      *
-     * @param string $responseType
+     * @param  string  $responseType
      * @return Collection Collection of processed activity data
      */
     public function activities($responseType = 'data'): Collection

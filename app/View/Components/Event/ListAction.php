@@ -1,16 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\View\Components\Event;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class ListAction extends Component
+final class ListAction extends Component
 {
     public string $addActionUrl;
 
     public string $backActionUrl;
+
     public string $addActionTitle = 'Milestone';
 
     public function __construct(public $event, public $activity = null)

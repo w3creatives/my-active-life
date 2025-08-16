@@ -13,7 +13,9 @@ final class EventMilestone extends Model
     use HasFactory;
 
     protected $fillable = ['name', 'distance', 'data', 'description', 'logo', 'team_logo', 'calendar_logo', 'calendar_team_logo', 'email_template_id'];
+
     private string $uploadPath = 'uploads/milestones/';
+
     public function getLogoAttribute(): ?string
     {
         if (! $this->attributes['logo']) {

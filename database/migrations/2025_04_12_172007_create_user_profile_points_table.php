@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -20,8 +22,8 @@ return new class extends Migration
             $table->string('cron_distance_km')->nullable();
             $table->string('cron_distance_mile')->nullable();
             $table->date('date')->nullable();
-            $table->timestamp('created_at')->nullable()->default(DB::raw("now()"));
-            $table->timestamp('updated_at')->nullable()->default(DB::raw("now()"));
+            $table->timestamp('created_at')->nullable()->default(DB::raw('now()'));
+            $table->timestamp('updated_at')->nullable()->default(DB::raw('now()'));
             $table->integer('id')->primary();
             $table->string('action_type', 20)->nullable()->default('auto');
         });

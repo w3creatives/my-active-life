@@ -1,60 +1,72 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Team extends Model
+final class Team extends Model
 {
-
     protected $guarded = [];
 
-    public function memberships(){
+    public function memberships()
+    {
         return $this->hasMany(TeamMembership::class);
     }
 
-    public function owner(){
-        return $this->belongsTo(User::class,'owner_id');
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owner_id');
     }
 
-    public function event(){
+    public function event()
+    {
         return $this->belongsTo(Event::class);
     }
 
-     public function achievements(){
+    public function achievements()
+    {
         return $this->hasMany(TeamAchievement::class);
     }
 
-    public function monthlyPoints(){
+    public function monthlyPoints()
+    {
         return $this->hasMany(TeamPointMonthly::class);
     }
 
-    public function weeklyPoints(){
+    public function weeklyPoints()
+    {
         return $this->hasMany(TeamPointWeekly::class);
     }
 
-    public function totalPoints(){
+    public function totalPoints()
+    {
         return $this->hasMany(TeamPointTotal::class);
     }
 
-    public function invites(){
+    public function invites()
+    {
         return $this->hasMany(TeamMembershipInvite::class);
     }
 
-    public function followerRequests(){
+    public function followerRequests()
+    {
         return $this->hasMany(TeamFollowRequest::class);
     }
 
-    public function followers(){
+    public function followers()
+    {
         return $this->hasMany(TeamFollow::class);
     }
 
-    public function requests(){
+    public function requests()
+    {
         return $this->hasMany(TeamMembershipRequest::class);
     }
 
-    public function points(){
+    public function points()
+    {
         return $this->hasMany(TeamPoint::class);
     }
 }

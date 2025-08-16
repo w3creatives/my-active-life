@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\UserStatsController;
 use App\Http\Controllers\TeamsController;
+use App\Http\Controllers\UserStatsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -170,7 +170,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/events/select-temp', [DashboardController::class, 'selectTempEvent'])->name('events.select-temp');
 
     Route::get('/trophy-case', [DashboardController::class, 'trophyCase'])->name('trophy-case');
-    //Route::get('/teams', [DashboardController::class, 'teams'])->name('teams');
+    // Route::get('/teams', [DashboardController::class, 'teams'])->name('teams');
 
     // User preferred event route
     Route::post('/user/set-preferred-event', [DashboardController::class, 'setPreferredEvent'])->name('user.set-preferred-event');

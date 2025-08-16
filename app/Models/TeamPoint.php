@@ -1,16 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TeamPoint extends Model
+final class TeamPoint extends Model
 {
-    
     protected $guarded = [];
-    
-    public function event(){
+
+    public function event()
+    {
         return $this->belongsTo(Event::class);
     }
 }

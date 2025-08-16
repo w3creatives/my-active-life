@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Models\UserPoint;
 use App\Models\Event;
+use App\Models\UserPoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
-class DataValidationController extends Controller
+final class DataValidationController extends Controller
 {
     public function findInvalidDataSourcePoints(Request $request)
     {
@@ -53,11 +53,13 @@ class DataValidationController extends Controller
         // Group by user for summary
         $userSummary = $invalidPoints->groupBy('user_id')->map(function ($points, $userId) {
             $user = $points->first();
+
             return [
                 'user_id' => $userId,
                 'email' => $user->email,
                 'invalid_data_sources' => $points->groupBy('data_source_id')->map(function ($dsPoints, $dataSourceId) {
                     $ds = $dsPoints->first();
+
                     return [
                         'data_source_id' => $dataSourceId,
                         'data_source_name' => $ds->data_source_name,

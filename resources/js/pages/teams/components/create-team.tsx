@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { type SharedData } from '@/types';
 import { Switch } from '@headlessui/react';
 import { useForm, usePage } from '@inertiajs/react';
-import { FormEventHandler, useState } from 'react';
+import { FormEventHandler } from 'react';
 import { toast } from 'sonner';
 
 type CreateTeamForm = {
@@ -20,7 +20,7 @@ export default function CreateTeam({ status }: { status?: string }) {
   // @ts-ignore
   const { team, chutzpahFactorUnit, teamPublicProfile } = usePage<SharedData>().props;
   // @ts-ignore
-    const { data, setData, post, errors, processing, reset, recentlySuccessful } = useForm<CreateTeamForm>({
+  const { data, setData, post, errors, processing, reset, recentlySuccessful } = useForm<CreateTeamForm>({
     chutzpah_factor: chutzpahFactorUnit,
     name: team?.name || '',
     public_profile: teamPublicProfile,
@@ -32,7 +32,7 @@ export default function CreateTeam({ status }: { status?: string }) {
 
     post(route('teams.create'), {
       preserveScroll: true,
-        preserveState:false,
+      preserveState: false,
       onSuccess: (response) => {
         let alert = response.props.alert;
 

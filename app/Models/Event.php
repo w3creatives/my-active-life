@@ -25,14 +25,14 @@ final class Event extends Model
 
     public function getLogoUrlAttribute(): string|UrlGenerator|null
     {
-        if (!isset($this->attributes['logo'])) {
+        if (! isset($this->attributes['logo'])) {
             return null;
         }
-        if (file_exists(public_path('static/' . $this->attributes['logo']))) {
-            return url('static/' . trim($this->attributes['logo']));
+        if (file_exists(public_path('static/'.$this->attributes['logo']))) {
+            return url('static/'.trim($this->attributes['logo']));
         }
 
-        $fileurl = $this->uploadPath . trim($this->attributes['logo']);
+        $fileurl = $this->uploadPath.trim($this->attributes['logo']);
 
         return Storage::url($fileurl);
     }
@@ -139,7 +139,7 @@ final class Event extends Model
     public function hasUserParticipation($user, $count = true, $field = null)
     {
 
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -151,7 +151,7 @@ final class Event extends Model
 
         $participation = $participation->first();
 
-        if (!$participation) {
+        if (! $participation) {
             return false;
         }
 

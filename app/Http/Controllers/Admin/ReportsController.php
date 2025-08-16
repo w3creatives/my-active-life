@@ -73,8 +73,7 @@ final class ReportsController extends Controller
                 ->selectRaw('datasource_point_trackers.*, data_sources.name as source')
                 ->join('data_sources', 'data_sources.id', '=', 'datasource_point_trackers.data_source_id');
 
-
-            [$itemCount, $items] = $dataTable->setSearchableColumns(['id', 'total_point','source'])->query($request, $query)->response();
+            [$itemCount, $items] = $dataTable->setSearchableColumns(['id', 'total_point', 'source'])->query($request, $query)->response();
 
             return response()->json([
                 'draw' => $request->get('draw'),
@@ -83,6 +82,7 @@ final class ReportsController extends Controller
                 'data' => $items,
             ]);
         }
+
         return view('admin.reports.point-tracker');
     }
 
@@ -128,7 +128,6 @@ final class ReportsController extends Controller
 
                 return $dataSource;
             });
-
 
             return response()->json([
                 'draw' => $request->get('draw'),

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +36,7 @@ return new class extends Migration
             $table->timestamp('created_at');
             $table->timestamp('updated_at');
         });
-        //DB::statement("alter table \"events\" add column \"event_type\" event_type null default 'regular'");
+        // DB::statement("alter table \"events\" add column \"event_type\" event_type null default 'regular'");
     }
 
     /**

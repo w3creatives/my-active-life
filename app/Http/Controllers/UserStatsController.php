@@ -46,6 +46,7 @@ final readonly class UserStatsController
 
         return $points['stats']->map(function ($item) {
             $item['label'] = Carbon::parse($item['date'])->format('d M y'); // e.g., 18 Dec 25
+
             return $item;
         });
     }

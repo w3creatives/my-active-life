@@ -1,11 +1,11 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, Line, XAxis, YAxis } from 'recharts';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export const description = 'A bar chart';
 
@@ -49,21 +49,17 @@ export default function Last30days() {
       {loading ? (
         <Card>
           <CardHeader>
-            <Skeleton className="h-6 w-full mb-2" />
+            <Skeleton className="mb-2 h-6 w-full" />
             <Skeleton className="h-4 w-full" />
           </CardHeader>
           <CardContent>
-            <div className="flex items-end gap-2 h-60 w-full px-4">
+            <div className="flex h-60 w-full items-end gap-2 px-4">
               {[40, 60, 30, 50, 70, 20, 60, 80, 55, 45, 35, 65].map((height, idx) => (
-                <Skeleton
-                  key={idx}
-                  className="w-18 rounded-md"
-                  style={{ height: `${height}%` }}
-                />
+                <Skeleton key={idx} className="w-18 rounded-md" style={{ height: `${height}%` }} />
               ))}
             </div>
           </CardContent>
-          <CardFooter className="flex-col items-start gap-2 text-sm px-4 pb-4">
+          <CardFooter className="flex-col items-start gap-2 px-4 pb-4 text-sm">
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-full" />
           </CardFooter>
@@ -108,7 +104,7 @@ export default function Last30days() {
                   dataKey="seven_day_avg"
                   stroke="var(--color-secondary, #f7a35c)"
                   strokeWidth={2.5}
-                  dot={{ r: 3, fill: "var(--color-secondary, #f7a35c)" }}
+                  dot={{ r: 3, fill: 'var(--color-secondary, #f7a35c)' }}
                   activeDot={{ r: 5 }}
                   name="7-Day Average"
                 />

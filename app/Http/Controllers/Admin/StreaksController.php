@@ -65,8 +65,7 @@ final class StreaksController extends Controller
 
         $selectedEmailTemplate = ($eventStreak && $eventStreak->email_template_id) ? $eventStreak->email_template_id : $event->email_template_id;
 
-
-        return view('admin.streaks.create', compact('event', 'eventStreak','emailTemplates', 'selectedEmailTemplate'));
+        return view('admin.streaks.create', compact('event', 'eventStreak', 'emailTemplates', 'selectedEmailTemplate'));
     }
 
     public function store(Request $request)
@@ -91,14 +90,14 @@ final class StreaksController extends Controller
 
         if ($request->hasFile('logo')) {
             $logoFile = $request->file('logo');
-            $logoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $logoFile->getClientOriginalExtension();
+            $logoFileName = $event->id.'_'.time().'_'.uniqid().'.'.$logoFile->getClientOriginalExtension();
             $logoFile->storeAs('uploads/streaks', $logoFileName, 'public');
             $data['logo'] = $logoFileName;
         }
 
         if ($request->hasFile('calendar_logo')) {
             $teamLogoFile = $request->file('calendar_logo');
-            $teamLogoFileName = $event->id . '_' . time() . '_' . uniqid() . '.' . $teamLogoFile->getClientOriginalExtension();
+            $teamLogoFileName = $event->id.'_'.time().'_'.uniqid().'.'.$teamLogoFile->getClientOriginalExtension();
             $teamLogoFile->storeAs('uploads/streaks', $teamLogoFileName, 'public');
             $data['calendar_logo'] = $teamLogoFileName;
         }

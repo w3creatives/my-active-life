@@ -1,16 +1,10 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { router } from '@inertiajs/react';
-import { toast } from 'sonner';
-import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface TeamStatistics {
   distance_total: number;
@@ -80,7 +74,7 @@ export default function FollowingTeams() {
         onFinish: () => {
           setUnfollowingId(null);
         },
-      }
+      },
     );
   }
 
@@ -88,14 +82,14 @@ export default function FollowingTeams() {
   const TeamSkeleton = () => (
     <div className="flex items-center justify-between border-b pb-4 last:border-b-0">
       {/* Avatar + Team Name */}
-      <div className="flex items-center gap-3 min-w-36">
+      <div className="flex min-w-36 items-center gap-3">
         <Skeleton className="size-10 rounded-full" />
         <Skeleton className="h-4 w-20" />
       </div>
 
       {/* Progress Bar */}
-      <div className="flex-1 mx-6">
-        <Skeleton className="w-full h-2 rounded-full" />
+      <div className="mx-6 flex-1">
+        <Skeleton className="h-2 w-full rounded-full" />
       </div>
 
       {/* Miles & Unfollow */}
@@ -110,9 +104,7 @@ export default function FollowingTeams() {
     <Card>
       <CardHeader>
         <CardTitle>Teams I Follow</CardTitle>
-        <CardDescription>
-          Here's a list of teams you’re currently following.
-        </CardDescription>
+        <CardDescription>Here's a list of teams you’re currently following.</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -124,22 +116,17 @@ export default function FollowingTeams() {
             <TeamSkeleton />
           </div>
         ) : error ? (
-          <div className="text-red-500 text-center">{error}</div>
+          <div className="text-center text-red-500">{error}</div>
         ) : !teams || teams.data.length === 0 ? (
-          <div className="text-muted-foreground text-center">
-            You are not following any teams yet.
-          </div>
+          <div className="text-muted-foreground text-center">You are not following any teams yet.</div>
         ) : (
           <div className="space-y-4">
             {teams.data.map(({ id, team, statistics }) => (
-              <div
-                key={id}
-                className="flex items-center justify-between border-b pb-4 last:border-b-0"
-              >
+              <div key={id} className="flex items-center justify-between border-b pb-4 last:border-b-0">
                 {/* Avatar + Team Name */}
-                <div className="flex items-center gap-3 min-w-36">
+                <div className="flex min-w-36 items-center gap-3">
                   <div
-                    className="size-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 uppercase text-sm font-medium"
+                    className="flex size-10 items-center justify-center rounded-full bg-gray-200 text-sm font-medium text-gray-500 uppercase"
                     aria-label={`Initial of ${team.name}`}
                   >
                     {team.name?.charAt(0) || 'T'}
@@ -148,26 +135,16 @@ export default function FollowingTeams() {
                 </div>
 
                 {/* Progress Bar */}
-                <div className="flex-1 mx-6">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-primary h-2 rounded-full"
-                      style={{ width: `${Math.min(statistics.progress_percentage, 100)}%` }}
-                    ></div>
+                <div className="mx-6 flex-1">
+                  <div className="h-2 w-full rounded-full bg-gray-200">
+                    <div className="bg-primary h-2 rounded-full" style={{ width: `${Math.min(statistics.progress_percentage, 100)}%` }}></div>
                   </div>
                 </div>
 
                 {/* Miles & Unfollow */}
                 <div className="flex items-center gap-4">
-                  <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                    {statistics.distance_completed.toFixed(1)} mi
-                  </div>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleUnfollow(team.id, team.name)}
-                    disabled={unfollowingId === team.id}
-                  >
+                  <div className="text-muted-foreground text-sm font-medium whitespace-nowrap">{statistics.distance_completed.toFixed(1)} mi</div>
+                  <Button variant="danger" size="sm" onClick={() => handleUnfollow(team.id, team.name)} disabled={unfollowingId === team.id}>
                     {unfollowingId === team.id ? 'Unfollowing' : 'Unfollow'}
                   </Button>
                 </div>

@@ -1,26 +1,13 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Lock, LockOpen, Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
-import { toast } from 'sonner';
 import axios from 'axios';
+import { Lock, LockOpen, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface User {
   id: number;
@@ -82,9 +69,7 @@ export default function FollowParticipant() {
       {
         preserveScroll: true,
         onSuccess: () => {
-          const message = isPublic
-            ? `You are now following ${displayName}.`
-            : `Follow request sent to ${displayName}.`;
+          const message = isPublic ? `You are now following ${displayName}.` : `Follow request sent to ${displayName}.`;
           toast.success(message);
           // Refresh the data after successful follow
           fetchUsers();
@@ -96,7 +81,7 @@ export default function FollowParticipant() {
         onFinish: () => {
           setFollowingId(null);
         },
-      }
+      },
     );
   }
 
@@ -119,24 +104,24 @@ export default function FollowParticipant() {
 
   // Skeleton component for individual user rows
   const UserRowSkeleton = () => (
-    <div className="flex flex-wrap lg:items-center p-4 border-b text-sm">
-      <div className="flex items-center gap-3 w-3/4 lg:w-1/5">
-        <Skeleton className="w-10 h-10 rounded-full" />
+    <div className="flex flex-wrap border-b p-4 text-sm lg:items-center">
+      <div className="flex w-3/4 items-center gap-3 lg:w-1/5">
+        <Skeleton className="h-10 w-10 rounded-full" />
         <div className="space-y-1">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-3 w-32" />
         </div>
       </div>
-      <div className='w-1/5 lg:w-1/5 flex justify-end lg:justify-start items-center'>
-        <Skeleton className="w-5 h-5" />
+      <div className="flex w-1/5 items-center justify-end lg:w-1/5 lg:justify-start">
+        <Skeleton className="h-5 w-5" />
       </div>
-      <div className='w-1/4 lg:w-1/5'>
+      <div className="w-1/4 lg:w-1/5">
         <Skeleton className="h-4 w-16" />
       </div>
-      <div className='w-1/4 lg:w-1/5'>
+      <div className="w-1/4 lg:w-1/5">
         <Skeleton className="h-4 w-12" />
       </div>
-      <div className="w-full lg:w-1/5 lg:text-right mt-2 lg:mt-0">
+      <div className="mt-2 w-full lg:mt-0 lg:w-1/5 lg:text-right">
         <Skeleton className="h-8 w-16" />
       </div>
     </div>
@@ -166,10 +151,7 @@ export default function FollowParticipant() {
           </div>
 
           <div className="relative w-full max-w-50">
-            <Select
-              value={perPageUser}
-              onValueChange={setPerPageUser}
-            >
+            <Select value={perPageUser} onValueChange={setPerPageUser}>
               <SelectTrigger className="h-full">
                 <SelectValue placeholder="Records per page" />
               </SelectTrigger>
@@ -184,8 +166,8 @@ export default function FollowParticipant() {
         </div>
 
         {/* User Listing */}
-        <div className="border rounded-md">
-          <div className="grid grid-cols-1 md:grid-cols-5 px-4 py-2 border-b bg-muted text-muted-foreground text-sm font-medium">
+        <div className="rounded-md border">
+          <div className="bg-muted text-muted-foreground grid grid-cols-1 border-b px-4 py-2 text-sm font-medium md:grid-cols-5">
             <div>User</div>
             <div>Privacy</div>
             <div>City</div>
@@ -205,52 +187,45 @@ export default function FollowParticipant() {
           ) : error ? (
             <div className="p-8 text-center text-red-500">{error}</div>
           ) : !users || users.data.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">No users found.</div>
+            <div className="text-muted-foreground p-8 text-center">No users found.</div>
           ) : (
             users.data.map((user) => (
-            <div
-              key={user.id}
-              className="flex flex-wrap lg:items-center p-4 border-b text-sm"
-            >
-              <div className="flex items-center gap-3 w-3/4 lg:w-1/5">
-                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 font-bold">
-                  {user.first_name.charAt(0)}
-                  {user.last_name.charAt(0)}
-                </div>
-                <div>
-                  <div className="font-medium">{user.display_name}</div>
-                  <div className="text-muted-foreground">
-                    {user.first_name} {user.last_name}
+              <div key={user.id} className="flex flex-wrap border-b p-4 text-sm lg:items-center">
+                <div className="flex w-3/4 items-center gap-3 lg:w-1/5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 font-bold text-gray-500">
+                    {user.first_name.charAt(0)}
+                    {user.last_name.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="font-medium">{user.display_name}</div>
+                    <div className="text-muted-foreground">
+                      {user.first_name} {user.last_name}
+                    </div>
                   </div>
                 </div>
+                <div className="flex w-1/5 items-center justify-end lg:w-1/5 lg:justify-start">
+                  {user.public_profile ? <LockOpen className="size-5 text-gray-500" /> : <Lock className="size-5 text-gray-500" />}
+                </div>
+                <div className="w-1/4 lg:w-1/5">{user.city}</div>
+                <div className="w-1/4 lg:w-1/5">{user.state}</div>
+                <div className="mt-2 w-full lg:mt-0 lg:w-1/5 lg:text-right">
+                  {user.following_status_text === 'Follow' || user.following_status_text === 'Request Follow' ? (
+                    <Button
+                      variant={user.public_profile ? 'default' : 'yellow'}
+                      size="sm"
+                      onClick={() => handleFollow(user.id, user.display_name, user.public_profile)}
+                      disabled={followingId === user.id}
+                    >
+                      {followingId === user.id ? 'Following...' : user.following_status_text}
+                    </Button>
+                  ) : (
+                    <Button variant="secondary" size="sm" disabled>
+                      {user.following_status_text}
+                    </Button>
+                  )}
+                </div>
               </div>
-              <div className='w-1/5 lg:w-1/5 flex justify-end lg:justify-start items-center'>
-                {user.public_profile ? (
-                  <LockOpen className="text-gray-500 size-5" />
-                ) : (
-                  <Lock className="text-gray-500 size-5" />
-                )}
-              </div>
-              <div className='w-1/4 lg:w-1/5'>{user.city}</div>
-              <div className='w-1/4 lg:w-1/5'>{user.state}</div>
-              <div className="w-full lg:w-1/5 lg:text-right mt-2 lg:mt-0">
-                {(user.following_status_text === 'Follow' || user.following_status_text === 'Request Follow') ? (
-                  <Button
-                    variant={user.public_profile ? "default" : "yellow"}
-                    size="sm"
-                    onClick={() => handleFollow(user.id, user.display_name, user.public_profile)}
-                    disabled={followingId === user.id}
-                  >
-                    {followingId === user.id ? 'Following...' : user.following_status_text}
-                  </Button>
-                ) : (
-                  <Button variant="secondary" size="sm" disabled>
-                    {user.following_status_text}
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))
+            ))
           )}
         </div>
       </CardContent>
@@ -263,18 +238,10 @@ export default function FollowParticipant() {
           </div>
         ) : (
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => handlePagination((users?.current_page || 1) - 1)}
-              disabled={!users?.prev_page_url}
-            >
+            <Button variant="outline" onClick={() => handlePagination((users?.current_page || 1) - 1)} disabled={!users?.prev_page_url}>
               Previous
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => handlePagination((users?.current_page || 1) + 1)}
-              disabled={!users?.next_page_url}
-            >
+            <Button variant="outline" onClick={() => handlePagination((users?.current_page || 1) + 1)} disabled={!users?.next_page_url}>
               Next
             </Button>
           </div>

@@ -61,6 +61,6 @@ final class DataSource extends Model
 
     public function users(): HasManyThrough
     {
-        return $this->hasManyThrough(User::class, DataSourceProfile::class, 'data_source_id', 'id','id','user_id');
+        return $this->hasManyThrough(User::class, DataSourceProfile::class, 'data_source_id', 'id', 'id', 'user_id');
     }
 }

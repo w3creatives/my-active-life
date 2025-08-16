@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions\Follow;
 
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use App\Models\Event;
 use App\Models\EventParticipation;
 use App\Models\Team;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
-class RequestFollow
+final class RequestFollow
 {
     /**
      * Handle the follow request logic for both users and teams.
@@ -19,14 +21,15 @@ class RequestFollow
     {
         if ($type === 'user') {
             return $this->requestFollowUser($request, $user);
-        } elseif ($type === 'team') {
+        }
+        if ($type === 'team') {
             return $this->requestFollowTeam($request, $user);
         }
 
         return [
             'success' => false,
             'message' => 'Invalid follow type',
-            'data' => []
+            'data' => [],
         ];
     }
 
@@ -45,11 +48,11 @@ class RequestFollow
             ->where('user_id', $request->user_id)
             ->first();
 
-        if (!$memberParticipation) {
+        if (! $memberParticipation) {
             return [
                 'success' => false,
                 'message' => 'User is not participating in this event',
-                'data' => []
+                'data' => [],
             ];
         }
 
@@ -58,20 +61,20 @@ class RequestFollow
             ->where('event_id', $request->event_id)
             ->first();
 
-        if (!$userParticipation) {
+        if (! $userParticipation) {
             return [
                 'success' => false,
                 'message' => 'You are not participating in this event',
-                'data' => []
+                'data' => [],
             ];
         }
 
         // Check if user is trying to follow themselves
-        if ($user->id == $request->user_id) {
+        if ($user->id === $request->user_id) {
             return [
                 'success' => false,
                 'message' => 'You cannot follow yourself',
-                'data' => []
+                'data' => [],
             ];
         }
 
@@ -87,7 +90,7 @@ class RequestFollow
             return [
                 'success' => false,
                 'message' => 'You are already following this user',
-                'data' => []
+                'data' => [],
             ];
         }
 
@@ -101,7 +104,7 @@ class RequestFollow
             return [
                 'success' => false,
                 'message' => 'Follow request already sent',
-                'data' => []
+                'data' => [],
             ];
         }
 
@@ -109,16 +112,16 @@ class RequestFollow
         if ($targetUser->public_profile) {
             $user->following()->create([
                 'followed_id' => $request->user_id,
-                'event_id' => $request->event_id
+                'event_id' => $request->event_id,
             ]);
 
             return [
                 'success' => true,
-                'message' => 'Now following ' . $targetUser->display_name,
+                'message' => 'Now following '.$targetUser->display_name,
                 'data' => [
                     'follow_status' => 'following',
-                    'follow_status_text' => 'Following'
-                ]
+                    'follow_status_text' => 'Following',
+                ],
             ];
         }
 
@@ -126,16 +129,16 @@ class RequestFollow
         $user->followingRequests()->create([
             'followed_id' => $request->user_id,
             'event_id' => $request->event_id,
-            'status' => 'request_to_follow_issued'
+            'status' => 'request_to_follow_issued',
         ]);
 
         return [
             'success' => true,
-            'message' => 'Follow request sent to ' . $targetUser->display_name,
+            'message' => 'Follow request sent to '.$targetUser->display_name,
             'data' => [
                 'follow_status' => 'request_to_follow_issued',
-                'follow_status_text' => 'Requested'
-            ]
+                'follow_status_text' => 'Requested',
+            ],
         ];
     }
 
@@ -151,11 +154,11 @@ class RequestFollow
 
         $team = Team::where(['id' => $request->team_id, 'event_id' => $request->event_id])->first();
 
-        if (!$team) {
+        if (! $team) {
             return [
                 'success' => false,
                 'message' => 'Team not found',
-                'data' => []
+                'data' => [],
             ];
         }
 
@@ -164,20 +167,20 @@ class RequestFollow
             ->where('event_id', $request->event_id)
             ->first();
 
-        if (!$userParticipation) {
+        if (! $userParticipation) {
             return [
                 'success' => false,
                 'message' => 'You are not participating in this event',
-                'data' => []
+                'data' => [],
             ];
         }
 
         // Check if user is trying to follow their own team
-        if ($team->owner_id == $user->id) {
+        if ($team->owner_id === $user->id) {
             return [
                 'success' => false,
                 'message' => 'You cannot follow your own team',
-                'data' => []
+                'data' => [],
             ];
         }
 
@@ -191,7 +194,7 @@ class RequestFollow
             return [
                 'success' => false,
                 'message' => 'You are already following this team',
-                'data' => []
+                'data' => [],
             ];
         }
 
@@ -205,7 +208,7 @@ class RequestFollow
             return [
                 'success' => false,
                 'message' => 'Follow request already sent',
-                'data' => []
+                'data' => [],
             ];
         }
 
@@ -213,16 +216,16 @@ class RequestFollow
         if ($team->public_profile) {
             $team->followers()->create([
                 'follower_id' => $user->id,
-                'event_id' => $request->event_id
+                'event_id' => $request->event_id,
             ]);
 
             return [
                 'success' => true,
-                'message' => 'Now following ' . $team->name,
+                'message' => 'Now following '.$team->name,
                 'data' => [
                     'follow_status' => 'following',
-                    'follow_status_text' => 'Following'
-                ]
+                    'follow_status_text' => 'Following',
+                ],
             ];
         }
 
@@ -230,16 +233,16 @@ class RequestFollow
         $team->followerRequests()->create([
             'prospective_follower_id' => $user->id,
             'event_id' => $request->event_id,
-            'status' => 'request_to_follow_issued'
+            'status' => 'request_to_follow_issued',
         ]);
 
         return [
             'success' => true,
-            'message' => 'Follow request sent to ' . $team->name,
+            'message' => 'Follow request sent to '.$team->name,
             'data' => [
                 'follow_status' => 'request_to_follow_issued',
-                'follow_status_text' => 'Requested'
-            ]
+                'follow_status_text' => 'Requested',
+            ],
         ];
     }
 }

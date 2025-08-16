@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\Event;
@@ -7,7 +9,7 @@ use App\Models\FitLifeActivity;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
-class MilestoneImageService
+final class MilestoneImageService
 {
     private const BASE_IMAGE_PATH = 'images';
 
@@ -15,7 +17,6 @@ class MilestoneImageService
     {
         $event = Event::find($eventId);
         $imagePath = [];
-
 
         if (! $event) {
             return [
@@ -52,7 +53,7 @@ class MilestoneImageService
         if (! empty($bibImages['bib'])) {
             foreach ($bibImages['bib'] as $image) {
                 if ($isCompleted) {
-                    if (!str_contains($image['filename'], '-bw')) {
+                    if (! str_contains($image['filename'], '-bw')) {
                         $images = $image['url'];
                     }
                 } else {
@@ -62,6 +63,7 @@ class MilestoneImageService
                 }
             }
         }
+
         return $images;
     }
 
@@ -75,7 +77,7 @@ class MilestoneImageService
         // Build the path structure: images/{event_id}/{sponsor-slug}/{category-slug}/{group-slug}/{event_id}_{distance}_{activity_id}.jpg
         $directoryPath = '';
 
-        //if ($event->id === 77) {
+        // if ($event->id === 77) {
         $directoryPath = sprintf(
             '%s/%s/%s/%s/%s%s',
             self::BASE_IMAGE_PATH,
@@ -85,7 +87,7 @@ class MilestoneImageService
             $groupSlug,
             '/the-heros-journey'
         );
-        //}
+        // }
 
         $fullPath = public_path($directoryPath);
 
@@ -112,7 +114,7 @@ class MilestoneImageService
                     'filename' => $filename,
                 ];
 
-                if (stripos($filename, 'calendar') !== false) {
+                if (mb_stripos($filename, 'calendar') !== false) {
                     $matchingImages['calendar'][] = $imageData;
                 } else {
                     $matchingImages['bib'][] = $imageData;

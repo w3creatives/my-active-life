@@ -10,10 +10,10 @@ use App\Models\Event;
 use App\Models\Team;
 use App\Models\TeamFollowRequest;
 use App\Models\User;
+use App\Services\DeviceService;
 use App\Services\EventService;
 use App\Services\TeamService;
 use App\Services\UserService;
-use App\Services\DeviceService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\JsonResponse;
@@ -193,9 +193,9 @@ final class ProfilesController extends BaseController
 
         $hasRevoked = $deviceService->revoke($profile);
 
-        if($hasRevoked == false)
-        {
-            $user->logSourceDisconnected(['data_source_id' => $profile->data_source_id, 'action_source' => 'mobile','action' => 'REVOKE_FAILED']);
+        if ($hasRevoked === false) {
+            $user->logSourceDisconnected(['data_source_id' => $profile->data_source_id, 'action_source' => 'mobile', 'action' => 'REVOKE_FAILED']);
+
             return $this->sendError('Data source could not be disconnected, please try again', ['error' => 'Data source could not be disconnected, please try again']);
         }
 
@@ -457,13 +457,13 @@ final class ProfilesController extends BaseController
 
                 $userTotalPointDays = 0; // $user->points()->where('event_id',$event->id)->where('date','>=',Carbon::parse($event->start_date)->format('Y-m-d'))->where('date','<=', Carbon::now()->format('Y-m-d'))->groupBy('date')->count();
 
-                $userTotalPoints = (float)$userPoint->total_mile;
+                $userTotalPoints = (float) $userPoint->total_mile;
 
                 // $totalDayTillToday = Carbon::now()->diffInDays(Carbon::parse($event->start_date));
                 $period = CarbonPeriod::create($event->start_date, Carbon::now()->toDateString());
                 $totalDayTillToday = $period->count();
 
-                $totalRemainingDays = (float)($totalDays - $totalDayTillToday);
+                $totalRemainingDays = (float) ($totalDays - $totalDayTillToday);
 
                 if (! $totalDayTillToday) {
                     $totalDayTillToday = 1;
@@ -475,8 +475,8 @@ final class ProfilesController extends BaseController
 
                 // $perDayAvgMile = (float)($userTotalPoints / ($totalDayTillToday));
                 // $perDayAvgMileRequired = (float)(($distance - $userTotalPoints) / ($totalRemainingDays));
-                $perDayAvgMile = number_format($userTotalPoints/($totalDayTillToday), 2, '.', '');
-                $perDayAvgMileRequired = number_format(($distance - $userTotalPoints)/($totalRemainingDays), 2, '.', '');
+                $perDayAvgMile = number_format($userTotalPoints / ($totalDayTillToday), 2, '.', '');
+                $perDayAvgMileRequired = number_format(($distance - $userTotalPoints) / ($totalRemainingDays), 2, '.', '');
 
                 $completedPercentage = ($userTotalPoints * 100) / $distance;
 
@@ -497,23 +497,23 @@ final class ProfilesController extends BaseController
                 $message .= "Isn't this amazing!? Consistency and proper pacing led you to this point. Be proud and rejoice on {$estimatedCompletionDate}!\nSo far, you averaged {$perDayAvgMile} miles per day. Moving forward, {$perDayAvgMileRequired} miles per day would ensure you reach your goal in time. Great job! You are overachieving!\nIf you were to decrease your average daily mileage from {$perDayAvgMile} miles per day to {$perDayAvgMileRequired} miles per day, you would still reach your goal on {$subEndDate}.";
                 }
                  */
-                $attitude = (isset($settings['attitude']))?$settings['attitude']:'default';
+                $attitude = (isset($settings['attitude'])) ? $settings['attitude'] : 'default';
                 $userTotalPoints = (float) number_format($userTotalPoints, 2, '.', '');
 
                 $on_target_mileage = ($totalDayTillToday + 1) * $perDayAvgMile;
 
-                if( $on_target_mileage > 0 ) {
-                    $on_target_percentage = (float) number_format( (($userTotalPoints / $on_target_mileage) * 100), 2, '.', '');
+                if ($on_target_mileage > 0) {
+                    $on_target_percentage = (float) number_format((($userTotalPoints / $on_target_mileage) * 100), 2, '.', '');
 
-                    if( $userTotalPoints >= $on_target_mileage ) {
+                    if ($userTotalPoints >= $on_target_mileage) {
                         $goalMessage['message'] = "You did it! You crushed the {$on_target_mileage} miles goal! Yay!";
                         $goalMessage['indicator'] = '';
                     } else {
                         $goalMessage = $this->getGoalMessage($attitude, $on_target_percentage, $estimatedCompletionDate);
                     }
                 } else {
-                    $goalMessage['message'] = "";
-                    $goalMessage['indicator'] = "";
+                    $goalMessage['message'] = '';
+                    $goalMessage['indicator'] = '';
                 }
 
                 $data = [
@@ -522,13 +522,13 @@ final class ProfilesController extends BaseController
                     'mileage_required_per_day' => $perDayAvgMileRequired,
                     'total_miles' => $distance,
                     'completed_miles' => $userTotalPoints,
-                    'completed_percentage' => number_format($completedPercentage,2,'.',''),
+                    'completed_percentage' => number_format($completedPercentage, 2, '.', ''),
                     'completion_date' => $participation->subscription_end_date,
                     'estimated_completion_date' => $estimatedCompletionDate,
-                    'goal_message' => !empty($goalMessage['message']) ? $goalMessage['message'] : '',
-                    'goal_indicator' => !empty($goalMessage['indicator']) ? $goalMessage['indicator'] : '',
-                    'extra' => compact('totalRemainingDays','userTotalPoints','totalDayTillToday','totalDays','userTotalPointDays','event','participation'),
-                    //'completion_date_formatted' => Carbon::parse($participation->subscription_end_date)->format('M Do Y'),
+                    'goal_message' => ! empty($goalMessage['message']) ? $goalMessage['message'] : '',
+                    'goal_indicator' => ! empty($goalMessage['indicator']) ? $goalMessage['indicator'] : '',
+                    'extra' => compact('totalRemainingDays', 'userTotalPoints', 'totalDayTillToday', 'totalDays', 'userTotalPointDays', 'event', 'participation'),
+                    // 'completion_date_formatted' => Carbon::parse($participation->subscription_end_date)->format('M Do Y'),
                 ];
                 break;
             case 'modalities':
@@ -563,108 +563,108 @@ final class ProfilesController extends BaseController
     {
         $goalMessage = [];
 
-        if( $on_target_percentage < 80 ) {
+        if ($on_target_percentage < 80) {
             $goalMessage['indicator'] = 'behind';
             switch ($attitude) {
                 case 'yoda':
                     $goalMessage['message'] = 'No! Try not! Do or do not. There is no try. Get more miles, you must! Or change your goal, you can.';
                     break;
 
-                case 'positive';
+                case 'positive':
                     $goalMessage['message'] = 'You can do this! To meet your current goal you just need to get rolling! Of course, you can also change your goal in Account Settings.';
                     break;
 
-                case 'tough_love';
+                case 'tough_love':
                     $goalMessage['message'] = "Stop reading this and go get some miles! You need to get your BUTT IN GEAR to get back on pace! You've got this! I'll make sure of it!";
                     break;
 
-                case 'cheerleader';
-                    $goalMessage['message'] = "No frowns allowed, only cheers here! Let’s turn up the energy and make it a great year!";
+                case 'cheerleader':
+                    $goalMessage['message'] = 'No frowns allowed, only cheers here! Let’s turn up the energy and make it a great year!';
                     break;
 
-                case "scifi";
+                case 'scifi':
                     $goalMessage['message'] = "Your current trajectory is off-course. Redirect your energy to the hyperlanes, and you'll reach light speed in no time!";
                     break;
 
-                case "historian";
+                case 'historian':
                     $goalMessage['message'] = "Remember, Rome wasn't built in a day, and your goal isn't missed in one. Regroup and march on!";
                     break;
 
-                case "superhero";
+                case 'superhero':
                     $goalMessage['message'] = "This is no time for a cliffhanger! Summon your superpowers and let's get you back in the hero game. The city believes in you!";
                     break;
 
                 default:
-                    $goalMessage['message'] = "Ruh-roh! You are behind the mileage you need to reach your goal. No neeed to panic, though. Get out and giddy up!";
+                    $goalMessage['message'] = 'Ruh-roh! You are behind the mileage you need to reach your goal. No neeed to panic, though. Get out and giddy up!';
                     break;
             }
         }
 
-        if( $on_target_percentage >= 80 && $on_target_percentage < 100 ) {
+        if ($on_target_percentage >= 80 && $on_target_percentage < 100) {
             $goalMessage['indicator'] = 'nearly there';
             switch ($attitude) {
                 case 'yoda':
-                    $goalMessage['message'] = "So close, you are, with just a few more miles each day, reach your goal, you will. Hmmmmmm.";
+                    $goalMessage['message'] = 'So close, you are, with just a few more miles each day, reach your goal, you will. Hmmmmmm.';
                     break;
 
-                case 'positive';
+                case 'positive':
                     $goalMessage['message'] = "We believe in you! Every day is a new day. Start fresh and set your sights high to get back on track! You're so close!";
                     break;
 
-                case 'tough_love';
-                    $goalMessage['message'] = "Hmm really? Is this all you got? Get your butt moving! This is embarrassing.";
+                case 'tough_love':
+                    $goalMessage['message'] = 'Hmm really? Is this all you got? Get your butt moving! This is embarrassing.';
                     break;
 
-                case 'cheerleader';
-                    $goalMessage['message'] = "Hop, skip, and a jump to get back on pace! You’ve gotta keep going with much more haste!";
+                case 'cheerleader':
+                    $goalMessage['message'] = 'Hop, skip, and a jump to get back on pace! You’ve gotta keep going with much more haste!';
                     break;
 
-                case "scifi";
-                    $goalMessage['message'] = "Engage hyperdrive! A small boost in your thrusters will realign you with your starbound trajectory.";
+                case 'scifi':
+                    $goalMessage['message'] = 'Engage hyperdrive! A small boost in your thrusters will realign you with your starbound trajectory.';
                     break;
 
-                case "historian";
-                    $goalMessage['message'] = "History is filled with near-misses that became great triumphs. Yours is within reach—forge ahead!";
+                case 'historian':
+                    $goalMessage['message'] = 'History is filled with near-misses that became great triumphs. Yours is within reach—forge ahead!';
                     break;
 
-                case "superhero";
+                case 'superhero':
                     $goalMessage['message'] = "Every hero faces trials. Yours is just a sprint away. Power up, hero—it's time for an epic comeback!";
                     break;
 
                 default:
-                    $goalMessage['message'] = "Good start there, friend. If you up the ante just a tad, you will find your way to the finish line easy-peasy.";
+                    $goalMessage['message'] = 'Good start there, friend. If you up the ante just a tad, you will find your way to the finish line easy-peasy.';
                     break;
             }
         }
 
-        if( $on_target_percentage >= 100 && $on_target_percentage < 120 ) {
+        if ($on_target_percentage >= 100 && $on_target_percentage < 120) {
             $goalMessage['indicator'] = 'on target or overachieving';
             switch ($attitude) {
                 case 'yoda':
                     $goalMessage['message'] = "I sense that, focused on your goal, you are. An overachiever, you may even be. The way, this is. On {$expected_finish_date}, celebrate, you will!";
                     break;
 
-                case 'positive';
+                case 'positive':
                     $goalMessage['message'] = "WHOA! You're crushing this challenge! Keep it up, you're on pace to finish on {$expected_finish_date} and not a day later!";
                     break;
 
-                case 'tough_love';
+                case 'tough_love':
                     $goalMessage['message'] = "So you think you're hot stuff, don't you? So what if you're expected to finish on {$expected_finish_date}, you could finish faster if you actually tried.";
                     break;
 
-                case 'cheerleader';
+                case 'cheerleader':
                     $goalMessage['message'] = "You're doing GREAT! Keep up this pep! You'll be crossing that finish line with a flair in your step! {$expected_finish_date}.";
                     break;
 
-                case "scifi";
+                case 'scifi':
                     $goalMessage['message'] = "Steady as a spaceship on its mission, you are in perfect alignment with the universal finish date of {$expected_finish_date}.";
                     break;
 
-                case "historian";
+                case 'historian':
                     $goalMessage['message'] = "Like the great explorers of old, you are charting a steady course to your own discovery—finishing on {$expected_finish_date}.";
                     break;
 
-                case "superhero";
+                case 'superhero':
                     $goalMessage['message'] = "Steadfast as a hero's resolve, you're flying straight and true. Maintain this heroic pace for a victorious celebration on {$expected_finish_date}.";
                     break;
 
@@ -674,34 +674,34 @@ final class ProfilesController extends BaseController
             }
         }
 
-        if( $on_target_percentage >= 100 && $on_target_percentage >= 120 ) {
+        if ($on_target_percentage >= 100 && $on_target_percentage >= 120) {
             $goalMessage['indicator'] = 'ahead';
             switch ($attitude) {
                 case 'yoda':
                     $goalMessage['message'] = "Powerful you have become but future is always changing. Finish you will on approximately {$expected_finish_date}.";
                     break;
 
-                case 'positive';
+                case 'positive':
                     $goalMessage['message'] = "Wow! You are amazing and well ahead of your goal! You are on target to finish approximately on {$expected_finish_date}.";
                     break;
 
-                case 'tough_love';
+                case 'tough_love':
                     $goalMessage['message'] = "Don't get cocky just because you are ahead of pace. You still have a lot to prove so go get more miles!";
                     break;
 
-                case 'cheerleader';
+                case 'cheerleader':
                     $goalMessage['message'] = "Pom-poms out, you're leading the pack! Keep that sparkle and stay on track! {$expected_finish_date}!";
                     break;
 
-                case "scifi";
+                case 'scifi':
                     $goalMessage['message'] = "Warp speed ahead! You're racing through the galaxy and on track to orbit the finish star on {$expected_finish_date}.";
                     break;
 
-                case "historian";
+                case 'historian':
                     $goalMessage['message'] = "Bravo! You're setting a pace worthy of the history books, racing towards a triumphant finish on {$expected_finish_date}.";
                     break;
 
-                case "superhero";
+                case 'superhero':
                     $goalMessage['message'] = "Incredible! With great power comes great progress! You're soaring above the skyline, on course to save the day on {$expected_finish_date}.";
                     break;
 
@@ -728,7 +728,7 @@ final class ProfilesController extends BaseController
         $participations = $user->participations()
             ->where('subscription_end_date', '>=', Carbon::now()->format('Y-m-d'))
             ->with('event')
-            ->whereHas('event', function($query) {
+            ->whereHas('event', function ($query) {
                 $query->where('mobile_event', true);
             })
             ->simplePaginate(100)
@@ -805,9 +805,10 @@ final class ProfilesController extends BaseController
 
         if ($type === 'undo') {
             $hasCount = $team->followers()->where(['follower_id' => $user->id, 'event_id' => $request->event_id])->count();
-            if($team->public_profile || $hasCount){
+            if ($team->public_profile || $hasCount) {
                 $team->followers()->where(['follower_id' => $user->id, 'event_id' => $request->event_id])->delete();
-                $team->followerRequests()->where(['prospective_follower_id'=>$user->id,'event_id' => $request->event_id])->delete();
+                $team->followerRequests()->where(['prospective_follower_id' => $user->id, 'event_id' => $request->event_id])->delete();
+
                 return $this->sendResponse([], 'Follow request undone');
             }
 

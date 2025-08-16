@@ -7,36 +7,36 @@ import { CalendarDays, ChartSpline, Handshake, Settings, Trophy, Users } from 'l
 import { EventSwitcher } from './event-switcher';
 
 const mainNavItems: NavItem[] = [
-    {
-        title: 'Home',
-        href: '/dashboard',
-        icon: CalendarDays,
-    },
-    {
-        title: 'Stats',
-        href: '/stats',
-        icon: ChartSpline,
-    },
-    {
-        title: 'Trophy Case',
-        href: '/',
-        icon: Trophy,
-    },
-    {
-        title: 'Teams',
-        href: '/teams',
-        icon: Users,
-    },
-    {
-        title: 'Follow',
-        href: '/follow',
-        icon: Users,
-    },
-    {
-        title: 'Tutorials',
-        href: '/tutorials',
-        icon: Handshake,
-    }
+  {
+    title: 'Home',
+    href: '/dashboard',
+    icon: CalendarDays,
+  },
+  {
+    title: 'Stats',
+    href: '/stats',
+    icon: ChartSpline,
+  },
+  {
+    title: 'Trophy Case',
+    href: '/',
+    icon: Trophy,
+  },
+  {
+    title: 'Teams',
+    href: '/teams',
+    icon: Users,
+  },
+  {
+    title: 'Follow',
+    href: '/follow',
+    icon: Users,
+  },
+  {
+    title: 'Tutorials',
+    href: '/tutorials',
+    icon: Handshake,
+  },
 ];
 
 const footerNavItems: NavItem[] = [

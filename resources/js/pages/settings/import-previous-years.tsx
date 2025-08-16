@@ -1,19 +1,12 @@
-import { useState } from 'react';
 import { Head } from '@inertiajs/react';
+import { useState } from 'react';
 
 import HeadingSmall from '@/components/heading-small';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { type BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -44,22 +37,16 @@ export default function ImportPreviousYears() {
           />
           <Dialog>
             <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="bg-primary text-white"
-                onClick={() => setSelectedYear(2020)}
-              >
+              <Button variant="outline" className="bg-primary text-white" onClick={() => setSelectedYear(2020)}>
                 2020 Manual Entry
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Run The Year 2020 Miles Manual Entry</DialogTitle>
-                <DialogDescription>
-                  Choose how to enter your miles:
-                </DialogDescription>
+                <DialogDescription>Choose how to enter your miles:</DialogDescription>
               </DialogHeader>
-              <div className="flex flex-col gap-4 mt-4">
+              <div className="mt-4 flex flex-col gap-4">
                 <Button variant="outline">Enter Year’s Total Miles</Button>
                 <Button variant="outline">Enter Miles By Month</Button>
               </div>
@@ -74,22 +61,16 @@ export default function ImportPreviousYears() {
           />
           <Dialog>
             <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="bg-primary text-white"
-                onClick={() => setSelectedYear(2019)}
-              >
+              <Button variant="outline" className="bg-primary text-white" onClick={() => setSelectedYear(2019)}>
                 2019 Manual Entry
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Run The Year 2019 Miles Manual Entry</DialogTitle>
-                <DialogDescription>
-                  Choose how to enter your miles:
-                </DialogDescription>
+                <DialogDescription>Choose how to enter your miles:</DialogDescription>
               </DialogHeader>
-              <div className="flex flex-col gap-4 mt-4">
+              <div className="mt-4 flex flex-col gap-4">
                 <Button variant="outline">Enter Year’s Total Miles</Button>
                 <Button variant="outline">Enter Miles By Month</Button>
               </div>

@@ -1,23 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
-import {
-  Inbox,
-  MessageSquare,
-  MoreVertical,
-  Search,
-  Send,
-  SendIcon,
-  Trash2,
-  User
-} from 'lucide-react';
-import { useState, useEffect } from 'react';
 import axios from 'axios';
-import Sidebar from './mailbox/components/sidebar';
+import { Inbox, MessageSquare, Send, SendIcon, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -92,7 +81,7 @@ export default function Conversations() {
         setConversations(JSON.parse(conversationsData));
       } else {
         // If it's already an object, use it directly
-        setConversations(conversationsData as Conversation[] || []);
+        setConversations((conversationsData as Conversation[]) || []);
       }
       setLoading(false);
     } catch (error) {
@@ -110,15 +99,15 @@ export default function Conversations() {
         id: selectedConversation.id,
         subject: selectedConversation.subject,
         participants: [], // We don't have this data in the current structure
-        messages: selectedConversation.notifications.map(notification => ({
+        messages: selectedConversation.notifications.map((notification) => ({
           id: notification.id,
           body: notification.body,
           sender: {
             id: notification.sender_id,
-            name: notification.sender_display_name || 'Unknown User'
+            name: notification.sender_display_name || 'Unknown User',
           },
-          created_at: notification.created_at
-        }))
+          created_at: notification.created_at,
+        })),
       };
       setConversationDetail(detail);
       setLoadingDetail(false);
@@ -138,7 +127,7 @@ export default function Conversations() {
     return {
       body: lastNotification.body,
       created_at: lastNotification.created_at,
-      sender_id: lastNotification.sender_id
+      sender_id: lastNotification.sender_id,
     };
   };
 
@@ -147,7 +136,7 @@ export default function Conversations() {
     (conversation) =>
       conversation.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
       conversation.last_message?.body?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      conversation.notifications.some(msg => msg.body.toLowerCase().includes(searchQuery.toLowerCase()))
+      conversation.notifications.some((msg) => msg.body.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   const formatDate = (dateString: string) => {
@@ -173,7 +162,7 @@ export default function Conversations() {
 
     try {
       await axios.post(route('api.conversations.reply', selectedConversation.id), {
-        body: replyMessage
+        body: replyMessage,
       });
 
       // Refresh the conversations list
@@ -182,9 +171,7 @@ export default function Conversations() {
       setConversations(conversationsData);
 
       // Update the selected conversation
-      const updatedConversation = conversationsData.find(
-        (conv: Conversation) => conv.id === selectedConversation.id
-      );
+      const updatedConversation = conversationsData.find((conv: Conversation) => conv.id === selectedConversation.id);
       setSelectedConversation(updatedConversation || null);
 
       // Clear the input field
@@ -196,9 +183,7 @@ export default function Conversations() {
 
   const handleMoveToTrash = async (ids: number[]) => {
     try {
-      await Promise.all(
-        ids.map(id => axios.post(route('api.conversations.trash', id)))
-      );
+      await Promise.all(ids.map((id) => axios.post(route('api.conversations.trash', id))));
 
       // Refresh the conversations list
       const response = await axios.get(route('user.conversations'));
@@ -221,10 +206,10 @@ export default function Conversations() {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Conversations" />
       <div className="flex h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] border-r">
-        <div className="flex flex-col border-r w-64">
-          <div className="p-3 border-b">
+        <div className="flex w-64 flex-col border-r">
+          <div className="border-b p-3">
             <Link href={route('user.conversations.new')}>
-              <Button variant="default" className="justify-start gap-2 w-full">
+              <Button variant="default" className="w-full justify-start gap-2">
                 <MessageSquare size={16} />
                 <span>New Message</span>
               </Button>
@@ -233,7 +218,7 @@ export default function Conversations() {
           <nav className="space-y-1 p-2">
             <Button
               variant={activeFolder === 'inbox' ? 'secondary' : 'ghost'}
-              className="justify-start gap-2 w-full"
+              className="w-full justify-start gap-2"
               onClick={() => setActiveFolder('inbox')}
             >
               <Inbox size={16} />
@@ -241,7 +226,7 @@ export default function Conversations() {
             </Button>
             <Button
               variant={activeFolder === 'sent' ? 'secondary' : 'ghost'}
-              className="justify-start gap-2 w-full"
+              className="w-full justify-start gap-2"
               onClick={() => setActiveFolder('sent')}
             >
               <Send size={16} />
@@ -249,7 +234,7 @@ export default function Conversations() {
             </Button>
             <Button
               variant={activeFolder === 'trash' ? 'secondary' : 'ghost'}
-              className="justify-start gap-2 w-full text-red-500"
+              className="w-full justify-start gap-2 text-red-500"
               onClick={() => setActiveFolder('trash')}
             >
               <Trash2 size={16} />
@@ -259,18 +244,18 @@ export default function Conversations() {
         </div>
 
         {/* Message List */}
-        <div className="flex flex-col border-r w-80">
+        <div className="flex w-80 flex-col border-r">
           {/* Add select all checkboxes */}
-          <div className="flex items-center p-3 border-b h-10">
+          <div className="flex h-10 items-center border-b p-3">
             <div className="flex items-center">
               <Checkbox
                 id="select-all"
                 checked={selectedConversations.length === filteredConversations.length && filteredConversations.length > 0}
                 onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
-                className="mr-2 border-primary"
+                className="border-primary mr-2"
                 disabled={filteredConversations.length === 0}
               />
-              <label htmlFor="select-all" className="text-gray-500 text-xs cursor-pointer">
+              <label htmlFor="select-all" className="cursor-pointer text-xs text-gray-500">
                 Select All
               </label>
             </div>
@@ -279,7 +264,7 @@ export default function Conversations() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="px-2 h-6 text-red-500 hover:bg-background hover:text-red-600 text-xs"
+                  className="hover:bg-background h-6 px-2 text-xs text-red-500 hover:text-red-600"
                   onClick={() => handleMoveToTrash(selectedConversations)}
                 >
                   <Trash2 size={14} />
@@ -293,11 +278,11 @@ export default function Conversations() {
 
           <div className="flex-1 overflow-auto">
             {loading ? (
-              <div className="flex justify-center items-center h-full">
-                <div className="border-gray-900 border-b-2 rounded-full w-8 h-8 animate-spin"></div>
+              <div className="flex h-full items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
               </div>
             ) : conversations.length === 0 ? (
-              <div className="flex flex-col justify-center items-center p-4 h-full text-gray-500 text-center">
+              <div className="flex h-full flex-col items-center justify-center p-4 text-center text-gray-500">
                 <MessageSquare size={32} className="mb-2" />
                 <p className="text-sm">No conversations found</p>
                 {searchQuery && <p className="mt-1 text-xs">Try adjusting your search</p>}
@@ -306,8 +291,9 @@ export default function Conversations() {
               conversations.map((conversation) => (
                 <div
                   key={conversation.id}
-                  className={`flex gap-4 cursor-pointer border-b py-2 px-3 hover:bg-primary/10 dark:hover:bg-primary/2 ${selectedConversation?.id === conversation.id ? 'bg-primary/10 dark:bg-primary/20' : ''
-                    }`}
+                  className={`hover:bg-primary/10 dark:hover:bg-primary/2 flex cursor-pointer gap-4 border-b px-3 py-2 ${
+                    selectedConversation?.id === conversation.id ? 'bg-primary/10 dark:bg-primary/20' : ''
+                  }`}
                 >
                   <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
@@ -316,20 +302,15 @@ export default function Conversations() {
                       onCheckedChange={(checked) => handleSelectConversation(conversation.id, checked as boolean)}
                     />
                   </div>
-                  <div
-                    className="flex-1 w-full overflow-hidden whitespace-nowrap mail-preview"
-                    onClick={() => setSelectedConversation(conversation)}
-                  >
-                    <div className="flex justify-between items-start">
+                  <div className="mail-preview w-full flex-1 overflow-hidden whitespace-nowrap" onClick={() => setSelectedConversation(conversation)}>
+                    <div className="flex items-start justify-between">
                       <span className="truncate font-semibold">{conversation.subject}</span>
-                      <span className="text-gray-500 text-xs">
-                        {formatDate(getLastMessage(conversation)?.created_at || conversation.created_at)}
-                      </span>
+                      <span className="text-xs text-gray-500">{formatDate(getLastMessage(conversation)?.created_at || conversation.created_at)}</span>
                     </div>
-                    <div className="text-gray-500 text-sm truncate">
-                      {getLastMessage(conversation)?.sender_display_name ?
-                        `${getLastMessage(conversation)?.sender_display_name}: ${getLastMessage(conversation)?.body}` :
-                        getLastMessage(conversation)?.body || 'No messages'}
+                    <div className="truncate text-sm text-gray-500">
+                      {getLastMessage(conversation)?.sender_display_name
+                        ? `${getLastMessage(conversation)?.sender_display_name}: ${getLastMessage(conversation)?.body}`
+                        : getLastMessage(conversation)?.body || 'No messages'}
                     </div>
                   </div>
                 </div>
@@ -339,19 +320,19 @@ export default function Conversations() {
         </div>
 
         {/* Chat Conversation View */}
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-1 flex-col">
           {selectedConversation ? (
             <>
               {/* Chat Header */}
-              <div className="p-3 border-b">
-                <div className="flex justify-between items-center">
+              <div className="border-b p-3">
+                <div className="flex items-center justify-between">
                   <div>
                     <h2 className="font-semibold">{selectedConversation.subject}</h2>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                    className="text-red-500 hover:bg-red-50 hover:text-red-600"
                     onClick={() => handleMoveToTrash([selectedConversation.id])}
                   >
                     <Trash2 size={16} className="mr-1" />
@@ -361,28 +342,21 @@ export default function Conversations() {
               </div>
 
               {/* Chat Messages */}
-              <div className="flex-1 space-y-3 bg-primary/10 dark:bg-primary/10 p-3 overflow-auto">
+              <div className="bg-primary/10 dark:bg-primary/10 flex-1 space-y-3 overflow-auto p-3">
                 {selectedConversation.notifications.map((msg) => {
                   const isCurrentUser = msg.sender_id === (auth as any).user.id;
-                  const senderName = isCurrentUser
-                    ? 'You'
-                    : (msg.sender_display_name || `User ${msg.sender_id}`);
+                  const senderName = isCurrentUser ? 'You' : msg.sender_display_name || `User ${msg.sender_id}`;
 
                   return (
                     <div key={msg.id} className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
                       <div
-                        className={`max-w-[70%] rounded-lg p-2 shadow-sm ${isCurrentUser
-                            ? 'bg-primary text-white rounded-tr-none'
-                            : 'bg-white dark:bg-gray-800 rounded-tl-none'
-                          }`}
+                        className={`max-w-[70%] rounded-lg p-2 shadow-sm ${
+                          isCurrentUser ? 'bg-primary rounded-tr-none text-white' : 'rounded-tl-none bg-white dark:bg-gray-800'
+                        }`}
                       >
-                        <div className={`text-xs mb-1 font-semibold ${isCurrentUser ? 'text-blue-100' : 'text-gray-500'}`}>
-                          {senderName}
-                        </div>
+                        <div className={`mb-1 text-xs font-semibold ${isCurrentUser ? 'text-blue-100' : 'text-gray-500'}`}>{senderName}</div>
                         <p className="text-sm">{msg.body}</p>
-                        <div className={`text-xs mt-1 ${isCurrentUser ? 'text-blue-100' : 'text-gray-500'}`}>
-                          {formatTime(msg.created_at)}
-                        </div>
+                        <div className={`mt-1 text-xs ${isCurrentUser ? 'text-blue-100' : 'text-gray-500'}`}>{formatTime(msg.created_at)}</div>
                       </div>
                     </div>
                   );
@@ -390,12 +364,12 @@ export default function Conversations() {
               </div>
 
               {/* Chat Input */}
-              <div className="bg-white dark:bg-gray-800 p-3 border-t">
+              <div className="border-t bg-white p-3 dark:bg-gray-800">
                 <div className="flex items-end gap-2">
                   <div className="flex-1">
                     <Textarea
                       placeholder="Type your message..."
-                      className="min-h-[60px] max-h-[60px] resize-none"
+                      className="max-h-[60px] min-h-[60px] resize-none"
                       value={replyMessage}
                       onChange={(e) => setReplyMessage(e.target.value)}
                       onKeyDown={(e) => {
@@ -409,7 +383,7 @@ export default function Conversations() {
                   <Button
                     variant="default"
                     size="icon"
-                    className="rounded-full w-9 h-9"
+                    className="h-9 w-9 rounded-full"
                     onClick={handleSendReply}
                     disabled={replyMessage.trim() === ''}
                   >
@@ -419,9 +393,9 @@ export default function Conversations() {
               </div>
             </>
           ) : (
-            <div className="flex flex-col justify-center items-center h-full text-gray-500">
+            <div className="flex h-full flex-col items-center justify-center text-gray-500">
               <MessageSquare size={48} className="mb-4" />
-              <h3 className="mb-2 font-medium text-xl">Select a conversation</h3>
+              <h3 className="mb-2 text-xl font-medium">Select a conversation</h3>
               <p>Choose a conversation from the list to view its contents</p>
             </div>
           )}

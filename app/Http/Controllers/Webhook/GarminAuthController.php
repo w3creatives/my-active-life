@@ -1,25 +1,32 @@
 <?php
+
+declare(strict_types=1);
 /**
  * @Deprecated
  * I will be removed once changes are migrated
  */
+
 namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
+use App\Models\DataSourceProfile;
 use App\Services\EventService;
 use App\Services\GarminService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
-use App\Models\DataSourceProfile;
-use Illuminate\Support\Facades\Log;
 
-class GarminAuthController extends Controller
+final class GarminAuthController extends Controller
 {
     private $consumerKey;
+
     private $consumerSecret;
+
     private $baseUrl;
+
     private $callbackUrl;
 
     public function __construct()
@@ -46,28 +53,28 @@ class GarminAuthController extends Controller
             'oauth_nonce' => $nonce,
             'oauth_signature_method' => 'HMAC-SHA1',
             'oauth_timestamp' => $timestamp,
-            'oauth_version' => '1.0'
+            'oauth_version' => '1.0',
         ];
 
         ksort($params);
 
-        $baseString = 'POST&' . urlencode($this->baseUrl . 'request_token') . '&' . urlencode(http_build_query($params));
+        $baseString = 'POST&'.urlencode($this->baseUrl.'request_token').'&'.urlencode(http_build_query($params));
 
         // Generate signature
-        $signingKey = $this->consumerSecret . '&';
+        $signingKey = $this->consumerSecret.'&';
         $signature = base64_encode(hash_hmac('sha1', $baseString, $signingKey, true));
 
         // Create authorization header
-        $header = 'OAuth ' .
-            'oauth_consumer_key="' . urlencode($this->consumerKey) . '", ' .
-            'oauth_nonce="' . urlencode($nonce) . '", ' .
-            'oauth_signature="' . urlencode($signature) . '", ' .
-            'oauth_signature_method="HMAC-SHA1", ' .
-            'oauth_timestamp="' . $timestamp . '", ' .
+        $header = 'OAuth '.
+            'oauth_consumer_key="'.urlencode($this->consumerKey).'", '.
+            'oauth_nonce="'.urlencode($nonce).'", '.
+            'oauth_signature="'.urlencode($signature).'", '.
+            'oauth_signature_method="HMAC-SHA1", '.
+            'oauth_timestamp="'.$timestamp.'", '.
             'oauth_version="1.0"';
 
         try {
-            $response = Http::withHeaders(['Authorization' => $header])->post($this->baseUrl . 'request_token');
+            $response = Http::withHeaders(['Authorization' => $header])->post($this->baseUrl.'request_token');
 
             parse_str($response->body(), $result);
 
@@ -77,7 +84,7 @@ class GarminAuthController extends Controller
 
                 // Redirect to Garmin authorization page
                 return redirect()->away(
-                    'https://connect.garmin.com/oauthConfirm?' .
+                    'https://connect.garmin.com/oauthConfirm?'.
                     http_build_query([
                         'oauth_token' => $result['oauth_token'],
                         'oauth_callback' => $this->callbackUrl,
@@ -85,9 +92,9 @@ class GarminAuthController extends Controller
                 );
             }
 
-            throw new \Exception('Failed to get request token');
-        } catch (\Exception $e) {
-            Log::error("Failed to connect to Garmin: ". $e->getMessage());
+            throw new Exception('Failed to get request token');
+        } catch (Exception $e) {
+            Log::error('Failed to connect to Garmin: '.$e->getMessage());
         }
     }
 
@@ -96,10 +103,10 @@ class GarminAuthController extends Controller
      */
     public function handleCallback(Request $request)
     {
-        $isApp = $request->session()->get('state') == 'app';
+        $isApp = $request->session()->get('state') === 'app';
 
-        if (!$request->has(['oauth_token', 'oauth_verifier'])) {
-            Log::error("Authorization failed");
+        if (! $request->has(['oauth_token', 'oauth_verifier'])) {
+            Log::error('Authorization failed');
         }
 
         $timestamp = time();
@@ -118,27 +125,27 @@ class GarminAuthController extends Controller
 
         ksort($params);
 
-        $baseString = 'POST&' . urlencode($this->baseUrl . 'access_token') . '&' .
+        $baseString = 'POST&'.urlencode($this->baseUrl.'access_token').'&'.
             urlencode(http_build_query($params));
 
         // Generate signature using both consumer secret and request token secret
-        $signingKey = $this->consumerSecret . '&' . Session::get('garmin_token_secret');
+        $signingKey = $this->consumerSecret.'&'.Session::get('garmin_token_secret');
         $signature = base64_encode(hash_hmac('sha1', $baseString, $signingKey, true));
 
         // Create authorization header
-        $header = 'OAuth ' .
-            'oauth_consumer_key="' . urlencode($this->consumerKey) . '", ' .
-            'oauth_token="' . urlencode($request->oauth_token) . '", ' .
-            'oauth_nonce="' . urlencode($nonce) . '", ' .
-            'oauth_signature="' . urlencode($signature) . '", ' .
-            'oauth_signature_method="HMAC-SHA1", ' .
-            'oauth_timestamp="' . $timestamp . '", ' .
-            'oauth_verifier="' . urlencode($request->oauth_verifier) . '", ' .
+        $header = 'OAuth '.
+            'oauth_consumer_key="'.urlencode($this->consumerKey).'", '.
+            'oauth_token="'.urlencode($request->oauth_token).'", '.
+            'oauth_nonce="'.urlencode($nonce).'", '.
+            'oauth_signature="'.urlencode($signature).'", '.
+            'oauth_signature_method="HMAC-SHA1", '.
+            'oauth_timestamp="'.$timestamp.'", '.
+            'oauth_verifier="'.urlencode($request->oauth_verifier).'", '.
             'oauth_version="1.0"';
 
         try {
             $response = Http::withHeaders(['Authorization' => $header])
-                ->post($this->baseUrl . 'access_token');
+                ->post($this->baseUrl.'access_token');
 
             parse_str($response->body(), $result);
 
@@ -150,7 +157,7 @@ class GarminAuthController extends Controller
                 // Log::info("Successfully connected to Garmin");
 
                 if ($isApp) {
-                    return redirect(sprintf("rte://settings/%s/%s/%s/%s/%s/1", $result['oauth_token'], 'NULL', 'NULL', $result['oauth_token_secret'], 'garmin'));
+                    return redirect(sprintf('rte://settings/%s/%s/%s/%s/%s/1', $result['oauth_token'], 'NULL', 'NULL', $result['oauth_token_secret'], 'garmin'));
                 }
 
                 // Save tokens in your database or session
@@ -159,16 +166,15 @@ class GarminAuthController extends Controller
                     'garmin_token_secret' => $result['oauth_token_secret'],
                 ]);
 
-                $tokens = [ 'token' => $result['oauth_token'], 'token_secret' => $result['oauth_token_secret'] ];
+                $tokens = ['token' => $result['oauth_token'], 'token_secret' => $result['oauth_token_secret']];
 
-                return response()->json([ 'message' => 'Garmin authentication successful!', 'tokens' => $tokens ]);
+                return response()->json(['message' => 'Garmin authentication successful!', 'tokens' => $tokens]);
             }
 
             // throw new \Exception('Failed to get access token');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error("Failed to complete authorization: {$e->getMessage()}");
         }
-
 
         /**
         if ($request->has('error')) {
@@ -233,52 +239,11 @@ class GarminAuthController extends Controller
     }
 
     /**
-     * Get Garmin User ID using access token
-     */
-    private function getUserId($accessToken, $accessTokenSecret)
-    {
-        $timestamp = time();
-        $nonce = Str::random(32);
-
-        $params = [
-            'oauth_consumer_key' => $this->consumerKey,
-            'oauth_token' => $accessToken,
-            'oauth_nonce' => $nonce,
-            'oauth_signature_method' => 'HMAC-SHA1',
-            'oauth_timestamp' => $timestamp,
-            'oauth_version' => '1.0',
-        ];
-
-        ksort($params);
-
-        $baseString = 'GET&' . urlencode('https://apis.garmin.com/wellness-api/rest/user/id') . '&' .
-            urlencode(http_build_query($params));
-
-        $signingKey = $this->consumerSecret . '&' . $accessTokenSecret;
-        $signature = base64_encode(hash_hmac('sha1', $baseString, $signingKey, true));
-
-        $header = 'OAuth ' .
-            'oauth_consumer_key="' . urlencode($this->consumerKey) . '", ' .
-            'oauth_token="' . urlencode($accessToken) . '", ' .
-            'oauth_nonce="' . urlencode($nonce) . '", ' .
-            'oauth_signature="' . urlencode($signature) . '", ' .
-            'oauth_signature_method="HMAC-SHA1", ' .
-            'oauth_timestamp="' . $timestamp . '", ' .
-            'oauth_version="1.0"';
-
-        $response = Http::withHeaders(['Authorization' => $header])
-            ->get('https://apis.garmin.com/wellness-api/rest/user/id');
-
-        $result = json_decode($response->body(), true);
-        return $result['userId'] ?? null;
-    }
-
-    /**
      * Handle webhook from Garmin
      *
-     * @param Request $request The webhook request
-     * @param EventService $eventService The event service
-     * @param GarminService $garminService The Garmin service
+     * @param  Request  $request  The webhook request
+     * @param  EventService  $eventService  The event service
+     * @param  GarminService  $garminService  The Garmin service
      * @return \Illuminate\Http\JsonResponse
      */
     public function handleWebhook(Request $request, EventService $eventService, GarminService $garminService)
@@ -301,7 +266,7 @@ class GarminAuthController extends Controller
          *  )
          */
 
-        Log::info("Webhook Data Received for Garmin: " . json_encode($request->all()));
+        Log::info('Webhook Data Received for Garmin: '.json_encode($request->all()));
         // Process the webhook data using the GarminService
         $result = $garminService->processWebhookData($request, $eventService);
 
@@ -313,37 +278,82 @@ class GarminAuthController extends Controller
         // ], $result['code']);
     }
 
-    public function handleGarminDeregistrations(Request $request){
+    public function handleGarminDeregistrations(Request $request)
+    {
 
-        Log::channel('device')->info("GARMIN Deregistrations:",['message' => 'Deregistrations requested', 'data' => $request->all()]);
+        Log::channel('device')->info('GARMIN Deregistrations:', ['message' => 'Deregistrations requested', 'data' => $request->all()]);
 
-        if(!isset($request->deregistrations)) {
-            Log::channel('device')->info("GARMIN Deregistrations:",['message' => 'Deregistrations missing data', 'data' => $request->all()]);
+        if (! isset($request->deregistrations)) {
+            Log::channel('device')->info('GARMIN Deregistrations:', ['message' => 'Deregistrations missing data', 'data' => $request->all()]);
+
             return response()->noContent();
         }
 
-        foreach($request->deregistrations as $deregistration) {
+        foreach ($request->deregistrations as $deregistration) {
 
-            $profile = DataSourceProfile::where('access_token', $deregistration['userAccessToken'])->whereHas('source', function($query){
-                return $query->where('short_name','garmin');
+            $profile = DataSourceProfile::where('access_token', $deregistration['userAccessToken'])->whereHas('source', function ($query) {
+                return $query->where('short_name', 'garmin');
             })
                 ->limit(1)
                 ->first();
 
-            if(!$profile) {
-                Log::channel('device')->info("GARMIN Deregistrations:",['message' => 'Access token not found', 'data' => $request->all()]);
+            if (! $profile) {
+                Log::channel('device')->info('GARMIN Deregistrations:', ['message' => 'Access token not found', 'data' => $request->all()]);
+
                 continue;
             }
 
             $profile->delete();
 
-            $profile->user->logSourceDisconnected(['data_source_id' => $profile->data_source_id, 'action_source' => 'webhook','action' => 'ACCESS_REVOKED']);
+            $profile->user->logSourceDisconnected(['data_source_id' => $profile->data_source_id, 'action_source' => 'webhook', 'action' => 'ACCESS_REVOKED']);
 
-            Log::channel('device')->info("GARMIN Deregistrations:",['message' => 'Access revoked', 'data' => $request->all(),'userId' => $profile->user_id]);
+            Log::channel('device')->info('GARMIN Deregistrations:', ['message' => 'Access revoked', 'data' => $request->all(), 'userId' => $profile->user_id]);
 
         }
 
         return response()->noContent();
 
+    }
+
+    /**
+     * Get Garmin User ID using access token
+     */
+    private function getUserId($accessToken, $accessTokenSecret)
+    {
+        $timestamp = time();
+        $nonce = Str::random(32);
+
+        $params = [
+            'oauth_consumer_key' => $this->consumerKey,
+            'oauth_token' => $accessToken,
+            'oauth_nonce' => $nonce,
+            'oauth_signature_method' => 'HMAC-SHA1',
+            'oauth_timestamp' => $timestamp,
+            'oauth_version' => '1.0',
+        ];
+
+        ksort($params);
+
+        $baseString = 'GET&'.urlencode('https://apis.garmin.com/wellness-api/rest/user/id').'&'.
+            urlencode(http_build_query($params));
+
+        $signingKey = $this->consumerSecret.'&'.$accessTokenSecret;
+        $signature = base64_encode(hash_hmac('sha1', $baseString, $signingKey, true));
+
+        $header = 'OAuth '.
+            'oauth_consumer_key="'.urlencode($this->consumerKey).'", '.
+            'oauth_token="'.urlencode($accessToken).'", '.
+            'oauth_nonce="'.urlencode($nonce).'", '.
+            'oauth_signature="'.urlencode($signature).'", '.
+            'oauth_signature_method="HMAC-SHA1", '.
+            'oauth_timestamp="'.$timestamp.'", '.
+            'oauth_version="1.0"';
+
+        $response = Http::withHeaders(['Authorization' => $header])
+            ->get('https://apis.garmin.com/wellness-api/rest/user/id');
+
+        $result = json_decode($response->body(), true);
+
+        return $result['userId'] ?? null;
     }
 }

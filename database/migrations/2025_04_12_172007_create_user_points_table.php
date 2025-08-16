@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -29,8 +31,8 @@ return new class extends Migration
             $table->index(['event_id', 'user_id'], 'index_user_points_on_event_id_and_user_id');
             $table->index(['event_id', 'user_id', 'date'], 'index_user_points_on_event_id_and_user_id_and_date');
         });
-        //DB::statement("alter table \"user_points\" add column \"modality\" modality null default 'run'");
-        DB::statement("create index \"index_user_points_on_user_id_and_date_and_modality\" on \"user_points\" (\"user_id\", \"date\", \"modality\")");
+        // DB::statement("alter table \"user_points\" add column \"modality\" modality null default 'run'");
+        DB::statement('create index "index_user_points_on_user_id_and_date_and_modality" on "user_points" ("user_id", "date", "modality")');
     }
 
     /**

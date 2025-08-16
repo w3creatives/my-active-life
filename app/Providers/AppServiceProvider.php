@@ -5,20 +5,18 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Interfaces\DataSourceInterface;
-use App\Services\FitbitService;
-use App\Services\GarminService;
-use App\Services\StravaService;
-use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\ServiceProvider;
 use App\Models\MailboxerConversation;
 use App\Models\MailboxerConversationOptOut;
 use App\Models\MailboxerNotification;
 use App\Models\MailboxerReceipt;
 use App\Models\User;
+use App\Services\FitbitService;
+use App\Services\GarminService;
+use App\Services\StravaService;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 
 final class AppServiceProvider extends ServiceProvider
 {

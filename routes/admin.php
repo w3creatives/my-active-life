@@ -6,12 +6,12 @@ use App\Http\Controllers\Admin\ActivitiesController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmailBuildersController;
 use App\Http\Controllers\Admin\EventsController;
+use App\Http\Controllers\Admin\EventTutorialsController;
 use App\Http\Controllers\Admin\ImpersonateController;
 use App\Http\Controllers\Admin\MilestonesController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\StreaksController;
 use App\Http\Controllers\Admin\UsersController;
-use App\Http\Controllers\Admin\EventTutorialsController;
 use Illuminate\Support\Facades\Route;
 
 Route::impersonate();

@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\View\Components\Alert;
 
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class Validation extends Component
+final class Validation extends Component
 {
     /**
      * Create a new component instance.

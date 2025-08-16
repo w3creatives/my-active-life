@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -23,8 +25,8 @@ return new class extends Migration
             $table->timestamp('created_at');
             $table->timestamp('updated_at');
         });
-        //DB::statement("alter table \"team_achievements\" add column \"achievement\" t_achievement not null");
-        DB::statement("create index \"index_team_achievements_on_team_id_and_achievement\" on \"team_achievements\" (\"team_id\", \"achievement\")");
+        // DB::statement("alter table \"team_achievements\" add column \"achievement\" t_achievement not null");
+        DB::statement('create index "index_team_achievements_on_team_id_and_achievement" on "team_achievements" ("team_id", "achievement")');
     }
 
     /**

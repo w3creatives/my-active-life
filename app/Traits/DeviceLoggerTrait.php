@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Traits;
 
 use Illuminate\Support\Facades\Log;
@@ -7,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 trait DeviceLoggerTrait
 {
     private $logChannel = 'device';
+
     private function logger($profile, $message, $response)
     {
 

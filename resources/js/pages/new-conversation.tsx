@@ -1,36 +1,16 @@
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
+import { Check, ChevronsUpDown, Inbox, MessageSquare, Send, Trash2, User, X } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import {
-  Inbox,
-  MessageSquare,
-  Send,
-  Trash2,
-  X,
-  User,
-  Check,
-  ChevronsUpDown
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList
-} from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from '@/components/ui/popover';
-import { Badge } from '@/components/ui/badge';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -50,50 +30,50 @@ const users = [
     name: 'John Doe',
     email: 'john.doe@example.com',
     avatar: null,
-    role: 'Coach'
+    role: 'Coach',
   },
   {
     id: 2,
     name: 'Jane Smith',
     email: 'jane.smith@example.com',
     avatar: null,
-    role: 'Team Member'
+    role: 'Team Member',
   },
   {
     id: 3,
     name: 'Mike Johnson',
     email: 'mike.johnson@example.com',
     avatar: null,
-    role: 'Admin'
+    role: 'Admin',
   },
   {
     id: 4,
     name: 'Sarah Williams',
     email: 'sarah.williams@example.com',
     avatar: null,
-    role: 'Team Member'
+    role: 'Team Member',
   },
   {
     id: 5,
     name: 'Alex Brown',
     email: 'alex.brown@example.com',
     avatar: null,
-    role: 'Coach'
+    role: 'Coach',
   },
   {
     id: 6,
     name: 'Emily Davis',
     email: 'emily.davis@example.com',
     avatar: null,
-    role: 'Team Member'
+    role: 'Team Member',
   },
   {
     id: 7,
     name: 'Robert Wilson',
     email: 'robert.wilson@example.com',
     avatar: null,
-    role: 'Admin'
-  }
+    role: 'Admin',
+  },
 ];
 
 export default function NewConversation() {
@@ -107,9 +87,9 @@ export default function NewConversation() {
     e.preventDefault();
     // Handle form submission logic here
     console.log({
-      recipients: selectedRecipients.map(id => users.find(user => user.id === id)),
+      recipients: selectedRecipients.map((id) => users.find((user) => user.id === id)),
       subject,
-      message
+      message,
     });
     // Redirect to conversations page after sending
     window.location.href = route('user.conversations');
@@ -121,16 +101,12 @@ export default function NewConversation() {
   };
 
   const toggleRecipient = (userId: number) => {
-    setSelectedRecipients(current =>
-      current.includes(userId)
-        ? current.filter(id => id !== userId)
-        : [...current, userId]
-    );
+    setSelectedRecipients((current) => (current.includes(userId) ? current.filter((id) => id !== userId) : [...current, userId]));
   };
 
   const removeRecipient = (userId: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    setSelectedRecipients(current => current.filter(id => id !== userId));
+    setSelectedRecipients((current) => current.filter((id) => id !== userId));
   };
 
   return (
@@ -138,19 +114,16 @@ export default function NewConversation() {
       <Head title="New Conversation" />
       <div className="flex h-[calc(100vh-4rem)] overflow-hidden border-r border-l">
         {/* Sidebar */}
-        <div className="w-64 border-r flex flex-col">
-          <div className="p-4 border-b">
+        <div className="flex w-64 flex-col border-r">
+          <div className="border-b p-4">
             <Button variant="default" className="w-full justify-start gap-2">
               <MessageSquare size={16} />
               <span>New Message</span>
             </Button>
           </div>
-          <nav className="p-2 space-y-1">
+          <nav className="space-y-1 p-2">
             <Link href={route('user.conversations')}>
-              <Button
-                variant={activeFolder === 'inbox' ? 'secondary' : 'ghost'}
-                className="w-full justify-start gap-2"
-              >
+              <Button variant={activeFolder === 'inbox' ? 'secondary' : 'ghost'} className="w-full justify-start gap-2">
                 <Inbox size={16} />
                 <span>Inbox</span>
               </Button>
@@ -175,45 +148,38 @@ export default function NewConversation() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          <div className="p-4 border-b">
+        <div className="flex flex-1 flex-col">
+          <div className="border-b p-4">
             <h2 className="text-xl font-bold">New Message</h2>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
-            <div className="p-4 border-b">
+          <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
+            <div className="border-b p-4">
               <div className="space-y-4">
                 <div className="flex items-start">
-                  <Label htmlFor="recipients" className="w-20 flex-shrink-0 pt-2">To:</Label>
+                  <Label htmlFor="recipients" className="w-20 flex-shrink-0 pt-2">
+                    To:
+                  </Label>
                   <div className="flex-1">
                     <Popover open={open} onOpenChange={setOpen}>
                       <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={open}
-                          className="w-full justify-between h-auto min-h-10 py-1"
-                        >
-                          <div className="flex flex-wrap gap-1 items-center">
+                        <Button variant="outline" role="combobox" aria-expanded={open} className="h-auto min-h-10 w-full justify-between py-1">
+                          <div className="flex flex-wrap items-center gap-1">
                             {selectedRecipients.length === 0 ? (
                               <span className="text-muted-foreground">Select recipients...</span>
                             ) : (
-                              selectedRecipients.map(id => {
-                                const user = users.find(u => u.id === id);
+                              selectedRecipients.map((id) => {
+                                const user = users.find((u) => u.id === id);
                                 return (
-                                  <Badge
-                                    key={id}
-                                    variant="secondary"
-                                    className="flex items-center gap-1 pl-1 pr-1"
-                                  >
-                                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-200 mr-1">
+                                  <Badge key={id} variant="secondary" className="flex items-center gap-1 pr-1 pl-1">
+                                    <div className="mr-1 flex h-5 w-5 items-center justify-center rounded-full bg-gray-200">
                                       <User size={12} />
                                     </div>
                                     <span>{user?.name}</span>
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      className="h-4 w-4 p-0 ml-1 hover:bg-transparent"
+                                      className="ml-1 h-4 w-4 p-0 hover:bg-transparent"
                                       onClick={(e) => removeRecipient(id, e)}
                                     >
                                       <X size={12} />
@@ -232,7 +198,7 @@ export default function NewConversation() {
                           <CommandList>
                             <CommandEmpty>No users found.</CommandEmpty>
                             <CommandGroup>
-                              {users.map(user => (
+                              {users.map((user) => (
                                 <CommandItem
                                   key={user.id}
                                   value={user.name}
@@ -241,22 +207,19 @@ export default function NewConversation() {
                                     setOpen(true); // Keep the dropdown open after selection
                                   }}
                                 >
-                                  <div className="flex items-center w-full">
-                                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 mr-2">
+                                  <div className="flex w-full items-center">
+                                    <div className="mr-2 flex h-7 w-7 items-center justify-center rounded-full bg-gray-200">
                                       <User size={14} />
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="font-medium truncate">{user.name}</p>
-                                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate font-medium">{user.name}</p>
+                                      <p className="text-muted-foreground truncate text-xs">{user.email}</p>
                                     </div>
-                                    <div className="flex items-center shrink-0 ml-2">
-                                      <Badge variant="outline" className="mr-2">{user.role}</Badge>
-                                      <Check
-                                        className={cn(
-                                          "h-4 w-4",
-                                          selectedRecipients.includes(user.id) ? "opacity-100" : "opacity-0"
-                                        )}
-                                      />
+                                    <div className="ml-2 flex shrink-0 items-center">
+                                      <Badge variant="outline" className="mr-2">
+                                        {user.role}
+                                      </Badge>
+                                      <Check className={cn('h-4 w-4', selectedRecipients.includes(user.id) ? 'opacity-100' : 'opacity-0')} />
                                     </div>
                                   </div>
                                 </CommandItem>
@@ -270,7 +233,9 @@ export default function NewConversation() {
                 </div>
 
                 <div className="flex items-center">
-                  <Label htmlFor="subject" className="w-20 flex-shrink-0">Subject:</Label>
+                  <Label htmlFor="subject" className="w-20 flex-shrink-0">
+                    Subject:
+                  </Label>
                   <Input
                     id="subject"
                     placeholder="Enter subject"
@@ -283,7 +248,7 @@ export default function NewConversation() {
               </div>
             </div>
 
-            <div className="flex-1 p-4 overflow-auto">
+            <div className="flex-1 overflow-auto p-4">
               <Textarea
                 id="message"
                 placeholder="Type your message here..."
@@ -294,21 +259,13 @@ export default function NewConversation() {
               />
             </div>
 
-            <div className="p-4 border-t">
-              <div className="flex gap-2 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancel}
-                  className="gap-2"
-                >
+            <div className="border-t p-4">
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={handleCancel} className="gap-2">
                   <X size={16} />
                   <span>Cancel</span>
                 </Button>
-                <Button
-                  type="submit"
-                  className="gap-2"
-                >
+                <Button type="submit" className="gap-2">
                   <Send size={16} />
                   <span>Send</span>
                 </Button>

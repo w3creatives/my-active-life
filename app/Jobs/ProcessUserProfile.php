@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Models\DataSourceProfile;
@@ -14,14 +16,14 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class ProcessUserProfile implements ShouldQueue
+final class ProcessUserProfile implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
      * The profile instance.
      *
-     * @var \App\Models\DataSourceProfile
+     * @var DataSourceProfile
      */
     protected $profile;
 
@@ -31,7 +33,7 @@ class ProcessUserProfile implements ShouldQueue
     public function __construct(DataSourceProfile $profile)
     {
         $this->profile = $profile;
-        Log::info('ProcessUserProfile: Job queued for user ID: ' . $profile->user_id . ' at ' . Carbon::now()->toDateTimeString());
+        Log::info('ProcessUserProfile: Job queued for user ID: '.$profile->user_id.' at '.Carbon::now()->toDateTimeString());
     }
 
     /**
@@ -39,8 +41,8 @@ class ProcessUserProfile implements ShouldQueue
      */
     public function handle(EventService $eventService): void
     {
-        Log::info('ProcessUserProfile: Starting job at ' . Carbon::now()->toDateTimeString());
-        Log::info('ProcessUserProfile: Processing profile for user ID: ' . $this->profile->user_id . ' on queue: ' . ($this->queue ?? 'default'));
+        Log::info('ProcessUserProfile: Starting job at '.Carbon::now()->toDateTimeString());
+        Log::info('ProcessUserProfile: Processing profile for user ID: '.$this->profile->user_id.' on queue: '.($this->queue ?? 'default'));
 
         try {
             $accessToken = $this->profile->access_token;
@@ -48,13 +50,13 @@ class ProcessUserProfile implements ShouldQueue
             if (Carbon::parse($this->profile->token_expires_at)->lte(Carbon::now())) {
                 $userSourceProfile = $this->fitbitRefreshToken($this->profile);
 
-                Log::info('ProcessUserProfile: Access token expired for user ID: ' . $this->profile->user_id . ', refreshing token.');
+                Log::info('ProcessUserProfile: Access token expired for user ID: '.$this->profile->user_id.', refreshing token.');
 
                 if ($userSourceProfile) {
                     $accessToken = $userSourceProfile->access_token;
-                    Log::info('ProcessUserProfile: Token refreshed successfully for user ID: ' . $this->profile->user_id);
+                    Log::info('ProcessUserProfile: Token refreshed successfully for user ID: '.$this->profile->user_id);
                 } else {
-                    Log::error('ProcessUserProfile: Failed to refresh token for user ID: ' . $this->profile->user_id);
+                    Log::error('ProcessUserProfile: Failed to refresh token for user ID: '.$this->profile->user_id);
 
                     return;
                 }
@@ -66,18 +68,18 @@ class ProcessUserProfile implements ShouldQueue
                 $response = Http::withToken($accessToken)->get("https://api.fitbit.com/1/user/-/activities/distance/date/{$startDate}/{$endDate}.json");
 
                 if ($response->unauthorized()) {
-                    Log::error('ProcessUserProfile: Unauthorized: ' . $this->profile->user_id, ['data' => $response->body()]);
+                    Log::error('ProcessUserProfile: Unauthorized: '.$this->profile->user_id, ['data' => $response->body()]);
 
                     return;
                 }
 
                 $dateDistances = $response->json('activities-distance');
 
-                if (!$dateDistances) {
+                if (! $dateDistances) {
                     $dateDistances = [];
                 }
 
-                if (!count($dateDistances)) {
+                if (! count($dateDistances)) {
                     return;
                 }
 
@@ -86,7 +88,7 @@ class ProcessUserProfile implements ShouldQueue
                     $date = $data['dateTime'];
 
                     $this->createOrUpdateUserProfilePoint($this->profile->user, $distance, $date, $this->profile, 'cron', 'manual');
-                    if (!$distance) {
+                    if (! $distance) {
                         $distance = 0;
                     }
 
@@ -94,28 +96,28 @@ class ProcessUserProfile implements ShouldQueue
                     try {
                         $this->createPoints($eventService, $this->profile->user, $date, $distance, $this->profile);
                     } catch (Exception $e) {
-                        Log::error('ProcessUserProfile: Error creating points for user ID: ' . $this->profile->user_id . ' on ' . $date . ': ' . $e->getMessage());
+                        Log::error('ProcessUserProfile: Error creating points for user ID: '.$this->profile->user_id.' on '.$date.': '.$e->getMessage());
                     }
                 }
 
                 $this->profile->fill(['last_run_at' => Carbon::now()])->save();
 
             } catch (Exception $e) {
-                Log::error('ProcessUserProfile: Error fetching Fitbit data for user ID: ' . $this->profile->user_id . ': ' . $e->getMessage());
+                Log::error('ProcessUserProfile: Error fetching Fitbit data for user ID: '.$this->profile->user_id.': '.$e->getMessage());
                 $this->fitbitRefreshToken($this->profile);
             }
         } catch (Exception $e) {
-            Log::error('ProcessUserProfile: Unexpected error for user ID: ' . $this->profile->user_id . ': ' . $e->getMessage());
+            Log::error('ProcessUserProfile: Unexpected error for user ID: '.$this->profile->user_id.': '.$e->getMessage());
         }
     }
 
     private function fitbitRefreshToken($profile)
     {
-        Log::info('ProcessUserProfile: Attempting to refresh Fitbit token for user ID: ' . $profile->user_id);
+        Log::info('ProcessUserProfile: Attempting to refresh Fitbit token for user ID: '.$profile->user_id);
 
         $response = Http::asForm()
             ->withHeaders([
-                'Authorization' => 'Basic ' . base64_encode(env('FITBIT_CLIENT_ID') . ':' . env('FITBIT_CLIENT_SECRET')),
+                'Authorization' => 'Basic '.base64_encode(env('FITBIT_CLIENT_ID').':'.env('FITBIT_CLIENT_SECRET')),
             ])
             ->post('https://api.fitbit.com/oauth2/token', [
                 'grant_type' => 'refresh_token',
@@ -133,7 +135,7 @@ class ProcessUserProfile implements ShouldQueue
             return $profile;
         }
 
-        Log::error('ProcessUserProfile: Failed to refresh Fitbit token for user ID: ' . $profile->user_id . '. Response: ' . $response->body());
+        Log::error('ProcessUserProfile: Failed to refresh Fitbit token for user ID: '.$profile->user_id.'. Response: '.$response->body());
 
         return false;
     }
@@ -159,7 +161,7 @@ class ProcessUserProfile implements ShouldQueue
 
     private function createPoints($eventService, $user, $date, $distance, $sourceProfile)
     {
-        if (!$distance) {
+        if (! $distance) {
             return false;
         }
 

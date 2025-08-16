@@ -1,12 +1,12 @@
+import EventBannerImage from '@/components/atoms/EventBannerImage';
+import VideoCard from '@/components/tutorial/video-card';
+import { Card, CardContent } from '@/components/ui/card';
+import { SkeletonGrid, VideoCardSkeleton } from '@/components/ui/skeleton-components';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
 import axios from 'axios';
-import VideoCard from '@/components/tutorial/video-card';
-import { VideoCardSkeleton, SkeletonGrid } from '@/components/ui/skeleton-components';
-import { Card, CardContent } from '@/components/ui/card';
-import EventBannerImage from '@/components/atoms/EventBannerImage';
+import { useEffect, useState } from 'react';
 
 type TutorialItem = {
   type: string;
@@ -53,7 +53,7 @@ export default function Tutorials() {
             setTutorialItems(parsedItems);
 
             // Set page title from first heading if available
-            const firstHeading = parsedItems.find(item => item.type === 'heading' && item.level === 1);
+            const firstHeading = parsedItems.find((item) => item.type === 'heading' && item.level === 1);
             if (firstHeading) {
               setPageTitle(firstHeading.content);
             }
@@ -76,15 +76,7 @@ export default function Tutorials() {
   const renderTutorialItem = (item: TutorialItem, index: number) => {
     switch (item.type) {
       case 'video':
-        return (
-          <VideoCard
-            key={index}
-            source={item.source || ''}
-            title={item.title}
-            thumb={item.thumb}
-            url={item.url || ''}
-          />
-        );
+        return <VideoCard key={index} source={item.source || ''} title={item.title} thumb={item.thumb} url={item.url || ''} />;
       default:
         return null;
     }
@@ -98,11 +90,7 @@ export default function Tutorials() {
         <h1 className="text-4xl font-normal">{pageTitle}</h1>
 
         {loading ? (
-          <SkeletonGrid
-            count={4}
-            columns={2}
-            component={VideoCardSkeleton}
-          />
+          <SkeletonGrid count={4} columns={2} component={VideoCardSkeleton} />
         ) : error ? (
           <Card>
             <CardContent className="p-6">
@@ -110,9 +98,7 @@ export default function Tutorials() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {tutorialItems.map((item, index) => renderTutorialItem(item, index))}
-          </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">{tutorialItems.map((item, index) => renderTutorialItem(item, index))}</div>
         )}
       </div>
     </AppLayout>

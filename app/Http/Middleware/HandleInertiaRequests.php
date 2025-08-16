@@ -55,7 +55,7 @@ final class HandleInertiaRequests extends Middleware
                         return 0;
                     }
 
-//                    $totalPoints = (float) $request->user()->totalPoints()->where('event_id', $request->user()->preferred_event_id)->first()->amount ?? 0.0;
+                    //                    $totalPoints = (float) $request->user()->totalPoints()->where('event_id', $request->user()->preferred_event_id)->first()->amount ?? 0.0;
 
                     return 0;
                 },

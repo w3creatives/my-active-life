@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @Deprecated
  * I will be removed once changes are migrated

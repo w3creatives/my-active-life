@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -26,8 +28,8 @@ return new class extends Migration
             $table->index(['user_id', 'event_id'], 'index_user_achievements_on_user_id_and_event_id');
             $table->index(['user_id', 'event_id', 'date'], 'index_user_achievements_on_user_id_and_event_id_and_date');
         });
-        //DB::statement("alter table \"user_achievements\" add column \"achievement\" t_achievement not null");
-        DB::statement("create index \"index_user_achievements_on_user_id_and_achievement\" on \"user_achievements\" (\"user_id\", \"achievement\")");
+        // DB::statement("alter table \"user_achievements\" add column \"achievement\" t_achievement not null");
+        DB::statement('create index "index_user_achievements_on_user_id_and_achievement" on "user_achievements" ("user_id", "achievement")');
     }
 
     /**

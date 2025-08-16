@@ -63,7 +63,7 @@ final class EventImageSeeder extends Seeder
 
             $eventSubFolders = File::directories($directory);
 
-            foreach($eventSubFolders as $eventSubFolder) {
+            foreach ($eventSubFolders as $eventSubFolder) {
                 $images = File::files($eventSubFolder);
 
                 dd($images);

@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Models\EventParticipation;
 use App\Services\MailService;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -12,7 +15,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class TriggerCelebrationMail implements ShouldQueue
+final class TriggerCelebrationMail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -21,7 +24,7 @@ class TriggerCelebrationMail implements ShouldQueue
      */
     public function __construct()
     {
-        Log::info('TriggerCelebrationMail: Job queued at ' . Carbon::now()->toDateTimeString());
+        Log::info('TriggerCelebrationMail: Job queued at '.Carbon::now()->toDateTimeString());
     }
 
     /**
@@ -29,8 +32,8 @@ class TriggerCelebrationMail implements ShouldQueue
      */
     public function handle(MailService $mailService): void
     {
-        Log::info('TriggerCelebrationMail: Starting job at ' . Carbon::now()->toDateTimeString());
-        Log::info('TriggerCelebrationMail: Queue connection: ' . config('queue.default') . ', Queue name: ' . ($this->queue ?? 'default'));
+        Log::info('TriggerCelebrationMail: Starting job at '.Carbon::now()->toDateTimeString());
+        Log::info('TriggerCelebrationMail: Queue connection: '.config('queue.default').', Queue name: '.($this->queue ?? 'default'));
 
         $currentDate = Carbon::now()->format('Y-m-d');
 
@@ -40,14 +43,14 @@ class TriggerCelebrationMail implements ShouldQueue
             })
             ->get();
 
-        Log::info('TriggerCelebrationMail: Found ' . $participations->count() . ' participations to process');
+        Log::info('TriggerCelebrationMail: Found '.$participations->count().' participations to process');
 
         foreach ($participations as $participation) {
             try {
                 $mailService->sendCelebrationMail($participation->event_id, $participation->user_id);
-                Log::info('TriggerCelebrationMail: Sent celebration mail for event ID: ' . $participation->event_id . ', user ID: ' . $participation->user_id);
-            } catch (\Exception $e) {
-                Log::error('TriggerCelebrationMail: Error sending celebration mail for event ID: ' . $participation->event_id . ', user ID: ' . $participation->user_id . ': ' . $e->getMessage());
+                Log::info('TriggerCelebrationMail: Sent celebration mail for event ID: '.$participation->event_id.', user ID: '.$participation->user_id);
+            } catch (Exception $e) {
+                Log::error('TriggerCelebrationMail: Error sending celebration mail for event ID: '.$participation->event_id.', user ID: '.$participation->user_id.': '.$e->getMessage());
             }
         }
     }

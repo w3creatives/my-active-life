@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ShopifyOrder extends Model
+final class ShopifyOrder extends Model
 {
     use HasFactory;
-    
+
     protected $fillable = [
         'order_id',
         'order_number',
@@ -27,6 +29,6 @@ class ShopifyOrder extends Model
         'variant_id',
         'properties',
         'tracker_status',
-        'hubspot_status'
+        'hubspot_status',
     ];
 }

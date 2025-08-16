@@ -381,7 +381,7 @@ dd(json_decode($response, true));*/
 
         foreach ($participations as $participation) {
 
-            if(!$participation->isModalityOverridden($modality)){
+            if (! $participation->isModalityOverridden($modality)) {
                 continue;
             }
 

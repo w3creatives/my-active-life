@@ -106,7 +106,7 @@ final class UserRepository
         $eventId = $request->event_id;
 
         // $participations = $user->participations()->with('event')->get();
-        $participations = $user->participations()->with('event')->whereHas('event', function($query) {
+        $participations = $user->participations()->with('event')->whereHas('event', function ($query) {
             $query->where('mobile_event', true);
         })->get();
 

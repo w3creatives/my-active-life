@@ -1,33 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\API\BaseController;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Closure;
-use Illuminate\Support\Facades\Cache;
+use App\Models\Event;
+use App\Models\EventParticipation;
+use App\Models\Team;
+use App\Models\TeamPointMonthly;
+use App\Models\TeamPointTotal;
+use App\Models\User;
+use App\Services\MailService;
+use App\Services\TeamService;
 use Carbon\Carbon;
-use App\Models\{
-    EventParticipation,
-    Team,
-    TeamPointMonthly,
-    TeamPointTotal,
-    User,
-    Event
-};
-use App\Services\{
-    UserService,
-    TeamService,
-    MailService
-};
+use Closure;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
-use Illuminate\Support\Facades\Log;
-
-class TeamsController extends BaseController
+final class TeamsController extends BaseController
 {
     public function all(Request $request): JsonResponse
     {
@@ -42,105 +35,108 @@ class TeamsController extends BaseController
             ],
         ]);*/
 
-       $user = $request->user();
+        $user = $request->user();
 
-       $pageLimit = $request->page_limit??100;
+        $pageLimit = $request->page_limit ?? 100;
 
-       $searchTerm = $request->term;
+        $searchTerm = $request->term;
 
-       $eventId = $request->event_id;
+        $eventId = $request->event_id;
 
-       $pageNum = $request->page??1;
+        $pageNum = $request->page ?? 1;
 
-         $cacheName = "team_{$user->id}_{$allType}_{$request->event_id}_{$searchTerm}_{$pageLimit}_$pageNum";
+        $cacheName = "team_{$user->id}_{$allType}_{$request->event_id}_{$searchTerm}_{$pageLimit}_$pageNum";
 
-       if(Cache::has($cacheName)){
-          // $item = Cache::get($cacheName);
-           //return $this->sendResponse($item, 'Response');
-       }
+        if (Cache::has($cacheName)) {
+            // $item = Cache::get($cacheName);
+            // return $this->sendResponse($item, 'Response');
+        }
 
-       $teams = Team::where(function($query) use ($user, $allType, $searchTerm){
+        $teams = Team::where(function ($query) use ($user, $allType, $searchTerm) {
 
-                switch($allType){
-                    case 'own':
-                        $query->where('owner_id',$user->id);
-                        break;
-                    case 'other':
-                        $query->where('owner_id','!=',$user->id);
-                        break;
-                    case 'joined':
-                        $query->whereHas('memberships', function($q) use ($user) {
-                            $q->where('user_id', $user->id);
-                        });
-                        break;
-                }
-
-                if($searchTerm) {
-                    $query->where('name','ILIKE',"{$searchTerm}%");
-                }
-
-               return $query;
-       })
-       /*
-       whereHas('memberships', function($query) use($user) {
-                   return $query->where('user_id', $user->id);
-               })
-              ->
-       */
-       ->where(function($query) use ($request){
-           if(!$request->event_id) {
-               return $query;
-           }
-
-           return $query->where('event_id', $request->event_id);
-       })
-       ->simplePaginate($pageLimit,['id','name','public_profile','settings','owner_id','event_id'])
-       ->through(function ($team) use($user,$eventId){
-            $team->is_team_owner = $team->owner_id == $user->id;
-
-            $membershipStatus = null;
-            if($team->requests()->where(["prospective_member_id" => $user->id,"event_id" => $eventId])->count()){
-                $membershipStatus = "RequestedJoin";
-            } else if($team->memberships()->where(["user_id" => $user->id,"event_id" => $eventId])->count()){
-                $membershipStatus = "Joined";
-            } else  if($team->invites()->where(["prospective_member_id" => $user->id,"event_id" => $eventId])->count()){
-                $membershipStatus = "JoinInProcess";
+            switch ($allType) {
+                case 'own':
+                    $query->where('owner_id', $user->id);
+                    break;
+                case 'other':
+                    $query->where('owner_id', '!=', $user->id);
+                    break;
+                case 'joined':
+                    $query->whereHas('memberships', function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    });
+                    break;
             }
-            $team->membership_status = $membershipStatus;
-           unset($team->requests);
-            unset($team->memberships);
-            unset($team->invites);
-            unset($team->owner_id);
-            return $team;
-        });
+
+            if ($searchTerm) {
+                $query->where('name', 'ILIKE', "{$searchTerm}%");
+            }
+
+            return $query;
+        })
+        /*
+        whereHas('memberships', function($query) use($user) {
+                    return $query->where('user_id', $user->id);
+                })
+               ->
+        */
+            ->where(function ($query) use ($request) {
+                if (! $request->event_id) {
+                    return $query;
+                }
+
+                return $query->where('event_id', $request->event_id);
+            })
+            ->simplePaginate($pageLimit, ['id', 'name', 'public_profile', 'settings', 'owner_id', 'event_id'])
+            ->through(function ($team) use ($user, $eventId) {
+                $team->is_team_owner = $team->owner_id === $user->id;
+
+                $membershipStatus = null;
+                if ($team->requests()->where(['prospective_member_id' => $user->id, 'event_id' => $eventId])->count()) {
+                    $membershipStatus = 'RequestedJoin';
+                } elseif ($team->memberships()->where(['user_id' => $user->id, 'event_id' => $eventId])->count()) {
+                    $membershipStatus = 'Joined';
+                } elseif ($team->invites()->where(['prospective_member_id' => $user->id, 'event_id' => $eventId])->count()) {
+                    $membershipStatus = 'JoinInProcess';
+                }
+                $team->membership_status = $membershipStatus;
+                unset($team->requests);
+                unset($team->memberships);
+                unset($team->invites);
+                unset($team->owner_id);
+
+                return $team;
+            });
         Cache::put($cacheName, $teams, now()->addHours(2));
-       return $this->sendResponse($teams, 'Response');
+
+        return $this->sendResponse($teams, 'Response');
     }
 
     public function findOne(Request $request, TeamService $teamService, $id): JsonResponse
     {
-         $request->validate([
+        $request->validate([
             'event_id' => [
                 'required',
                 Rule::exists((new EventParticipation)->getTable()),
-            ]
+            ],
         ]);
 
-         $cacheName = "team_{$id}";
+        $cacheName = "team_{$id}";
 
-       if(Cache::has($cacheName)){
-           $item = Cache::get($cacheName);
-          // return $this->sendResponse($item, 'Response');
-       }
+        if (Cache::has($cacheName)) {
+            $item = Cache::get($cacheName);
+            // return $this->sendResponse($item, 'Response');
+        }
 
         $team = $teamService->find($id);
 
-        if(is_null($team)){
-            return $this->sendError('Event or Team not found.', ['error'=>'User is not associated with this event or team']);
-       }
+        if (is_null($team)) {
+            return $this->sendError('Event or Team not found.', ['error' => 'User is not associated with this event or team']);
+        }
 
         $team = $teamService->formatTeam($team, $request->user());
-         Cache::put($cacheName, $team, now()->addHours(2));
+        Cache::put($cacheName, $team, now()->addHours(2));
+
         return $this->sendResponse($team, 'Response');
     }
 
@@ -148,122 +144,122 @@ class TeamsController extends BaseController
     {
 
         $request->validate([
-            'event_id'=>'required|numeric'
+            'event_id' => 'required|numeric',
         ]);
 
-       $user = $request->user();
+        $user = $request->user();
 
-       $pageNum = $request->page??1;
+        $pageNum = $request->page ?? 1;
 
         $cacheName = "team_{$user->id}_{$request->event_id}_{$pageNum}";
 
-       if(Cache::has($cacheName)){
-           $item = Cache::get($cacheName);
-           //return $this->sendResponse($item, 'Response');
-       }
+        if (Cache::has($cacheName)) {
+            $item = Cache::get($cacheName);
+            // return $this->sendResponse($item, 'Response');
+        }
 
-       $teams = Team::where(function($query) use ($user){
-           return $query->where('owner_id',$user->id)
-           ->orWhereHas('memberships', function($query) use($user) {
-               return $query->where('user_id', $user->id);
-           });
-       })
-       ->where('event_id', $request->event_id)
-       ->simplePaginate(100,['id','name','public_profile','settings','owner_id'])
-       ->through(function ($team) use($user){
-            $team->is_team_owner = $team->owner_id == $user->id;
-            unset($team->owner_id);
-            return $team;
-        });
-       Cache::put($cacheName, $teams, now()->addHours(2));
-       return $this->sendResponse($teams, 'Response');
+        $teams = Team::where(function ($query) use ($user) {
+            return $query->where('owner_id', $user->id)
+                ->orWhereHas('memberships', function ($query) use ($user) {
+                    return $query->where('user_id', $user->id);
+                });
+        })
+            ->where('event_id', $request->event_id)
+            ->simplePaginate(100, ['id', 'name', 'public_profile', 'settings', 'owner_id'])
+            ->through(function ($team) use ($user) {
+                $team->is_team_owner = $team->owner_id === $user->id;
+                unset($team->owner_id);
+
+                return $team;
+            });
+        Cache::put($cacheName, $teams, now()->addHours(2));
+
+        return $this->sendResponse($teams, 'Response');
     }
 
     public function achievements(Request $request): JsonResponse
     {
 
         $request->validate([
-            'event_id'=>'required|numeric',
+            'event_id' => 'required|numeric',
             'team_id' => [
                 'required',
                 'numeric',
-            ]
+            ],
         ]);
 
-       $user = $request->user();
+        $user = $request->user();
 
-       $year = $request->year?$request->year:Carbon::now()->format('Y');
+        $year = $request->year ? $request->year : Carbon::now()->format('Y');
 
         $cacheName = "achievement_{$user->id}_{$request->event_id}_{$request->team_id}_{$year}";
 
-       if(Cache::has($cacheName)){
-           $item = Cache::get($cacheName);
-          // return $this->sendResponse($item, 'Response');
-       }
+        if (Cache::has($cacheName)) {
+            $item = Cache::get($cacheName);
+            // return $this->sendResponse($item, 'Response');
+        }
 
+        $team = Team::where(function ($query) use ($user) {
+            return $query->where('owner_id', $user->id)
+                ->orWhereHas('memberships', function ($query) use ($user) {
+                    return $query->where('user_id', $user->id);
+                });
+        })
+            ->where('event_id', $request->event_id)
+            ->where('id', $request->team_id)
+            ->first();
 
-       $team = Team::where(function($query) use ($user){
-           return $query->where('owner_id',$user->id)
-           ->orWhereHas('memberships', function($query) use($user) {
-               return $query->where('user_id', $user->id);
-           });
-       })
-       ->where('event_id', $request->event_id)
-       ->where('id', $request->team_id)
-       ->first();
+        //  dd($team,$user->id);
 
-     //  dd($team,$user->id);
+        if (is_null($team)) {
+            return $this->sendError('Event or Team not found.', ['error' => 'User is not associated with this event or team']);
+        }
 
-       if(is_null($team)){
-            return $this->sendError('Event or Team not found.', ['error'=>'User is not associated with this event or team']);
-       }
+        $achievements = $team->achievements()->select(['accomplishment', 'date', 'achievement'])
+            ->hasEvent($request->event_id)
+            ->latest('accomplishment')
+            ->get()
+            ->groupBy('achievement');
 
-        $achievements = $team->achievements()->select(['accomplishment','date','achievement'])
-        ->hasEvent($request->event_id)
-        ->latest('accomplishment')
-        ->get()
-        ->groupBy('achievement');
-
-         $date = Carbon::createFromDate($year, 01, 01);
+        $date = Carbon::createFromDate($year, 01, 01);
 
         $startOfYear = $date->copy()->startOfYear()->format('Y-m-d');
-        $endOfYear   = $date->copy()->endOfYear()->format('Y-m-d');
-
+        $endOfYear = $date->copy()->endOfYear()->format('Y-m-d');
 
         $point = $team->monthlyPoints()->selectRaw('SUM(amount) as totalPoint')
-        ->hasEvent($request->event_id)
-        ->whereBetween('date',[$startOfYear, $endOfYear])
-        ->first()->totalpoint;
+            ->hasEvent($request->event_id)
+            ->whereBetween('date', [$startOfYear, $endOfYear])
+            ->first()->totalpoint;
 
         $users = $team->memberships()->where('event_id', $request->event_id)->with('user')->get();
 
-        $users = $users->map(function($item) use($request, $startOfYear, $endOfYear, $year, $team){
-            $user = $item->user->only(['id','display_name']);
+        $users = $users->map(function ($item) use ($request, $startOfYear, $endOfYear, $year, $team) {
+            $user = $item->user->only(['id', 'display_name']);
 
             // Add is_admin flag
             $user['is_admin'] = $team->owner_id === $item->user->id;
 
             $point = $item->user->monthlyPoints()->selectRaw('SUM(amount) as totalPoint')
-            ->hasEvent($request->event_id)
-            ->whereBetween('date',[$startOfYear, $endOfYear])
-            ->first()->totalpoint;
+                ->hasEvent($request->event_id)
+                ->whereBetween('date', [$startOfYear, $endOfYear])
+                ->first()->totalpoint;
 
-            $yearlyPoints = compact('point','year');
+            $yearlyPoints = compact('point', 'year');
 
-           $user['achievements'] =  $item->user->achievements()->select(['accomplishment','date','achievement'])->hasEvent($request->event_id)->latest('accomplishment')->get()->groupBy('achievement');
-           $user['yearlyPoints'] = $yearlyPoints;
-           $user['recentActivity'] = $item->user->points()->where('event_id', $request->event_id)->latest()->select(['id','amount','date','modality'])->first();
+            $user['achievements'] = $item->user->achievements()->select(['accomplishment', 'date', 'achievement'])->hasEvent($request->event_id)->latest('accomplishment')->get()->groupBy('achievement');
+            $user['yearlyPoints'] = $yearlyPoints;
+            $user['recentActivity'] = $item->user->points()->where('event_id', $request->event_id)->latest()->select(['id', 'amount', 'date', 'modality'])->first();
 
-           return $user;
+            return $user;
         });
 
-        $yearlyPoints = compact('point','year');
+        $yearlyPoints = compact('point', 'year');
 
-         Cache::put($cacheName, compact('achievements','yearlyPoints','users'), now()->addHours(2));
+        Cache::put($cacheName, compact('achievements', 'yearlyPoints', 'users'), now()->addHours(2));
 
-       return $this->sendResponse(compact('achievements','yearlyPoints','users'),'Response');
+        return $this->sendResponse(compact('achievements', 'yearlyPoints', 'users'), 'Response');
 
-       return $this->sendResponse($teams, 'Response');
+        return $this->sendResponse($teams, 'Response');
     }
 
     public function inviteMembership(Request $request, MailService $mailService): JsonResponse
@@ -271,55 +267,58 @@ class TeamsController extends BaseController
 
         $request->validate([
             'emails.*' => [
-                    'required',
-                    'email',
-                    Rule::exists((new User)->getTable(),'email'),
-                    function (string $attribute, mixed $value, Closure $fail) use($request){
+                'required',
+                'email',
+                Rule::exists((new User)->getTable(), 'email'),
+                function (string $attribute, mixed $value, Closure $fail) use ($request) {
 
-                        $member = User::where('email',$value)->first();
+                    $member = User::where('email', $value)->first();
 
-                        if(!$member){
-                             return false;
-                        }
-
-                        $teamId = $request->team_id;
-
-                        $isExistingMember = Team::where(function($query) use ($request,$member){
-                           return $query->where('owner_id',$member->id)
-                           ->orWhereHas('memberships', function($query) use($request,$member) {
-                               return $query->where('user_id', $member->id)->where('event_id', $request->event_id);
-                           });
-                       })
-                       ->where('event_id', $request->event_id)->where('id',$teamId)->count();
-
-                       if($isExistingMember) {
-                            //$errors[] = "Unfortunately, user {$email} already participates in the same team.";
-                            //continue;
-                            $fail("Unfortunately, user {$value} already participates in the same team.");
-                            return false;
-                       }
-
-                        $isExistingMemberInOtherTeam = Team::where(function($query) use ($request, $member){
-                               return $query->where('owner_id',$member->id)
-                               ->orWhereHas('memberships', function($query) use($request,$member) {
-                                   return $query->where('user_id', $member->id)->where('event_id', $request->event_id);
-                               });
-                           })
-                           ->where('event_id', $request->event_id)->where('id','!=',$teamId)->count();
-
-                        if($isExistingMemberInOtherTeam) {
-                                $fail("Unfortunately, user {$value} already participates in another team.");
-                                return false;
-                           }
-
-                        $membership = $member->participations()->where(['event_id' => $request->event_id])->count();
-                           if(!$membership){
-                               $fail("Unfortunately, user {$value} is not participating in the event");
-                               return false;
-                           }
-
-                        return true;
+                    if (! $member) {
+                        return false;
                     }
+
+                    $teamId = $request->team_id;
+
+                    $isExistingMember = Team::where(function ($query) use ($request, $member) {
+                        return $query->where('owner_id', $member->id)
+                            ->orWhereHas('memberships', function ($query) use ($request, $member) {
+                                return $query->where('user_id', $member->id)->where('event_id', $request->event_id);
+                            });
+                    })
+                        ->where('event_id', $request->event_id)->where('id', $teamId)->count();
+
+                    if ($isExistingMember) {
+                        // $errors[] = "Unfortunately, user {$email} already participates in the same team.";
+                        // continue;
+                        $fail("Unfortunately, user {$value} already participates in the same team.");
+
+                        return false;
+                    }
+
+                    $isExistingMemberInOtherTeam = Team::where(function ($query) use ($request, $member) {
+                        return $query->where('owner_id', $member->id)
+                            ->orWhereHas('memberships', function ($query) use ($request, $member) {
+                                return $query->where('user_id', $member->id)->where('event_id', $request->event_id);
+                            });
+                    })
+                        ->where('event_id', $request->event_id)->where('id', '!=', $teamId)->count();
+
+                    if ($isExistingMemberInOtherTeam) {
+                        $fail("Unfortunately, user {$value} already participates in another team.");
+
+                        return false;
+                    }
+
+                    $membership = $member->participations()->where(['event_id' => $request->event_id])->count();
+                    if (! $membership) {
+                        $fail("Unfortunately, user {$value} is not participating in the event");
+
+                        return false;
+                    }
+
+                    return true;
+                },
             ],
             'event_id' => [
                 'required',
@@ -328,21 +327,20 @@ class TeamsController extends BaseController
             'team_id' => [
                 'required',
                 'numeric',
-                Rule::exists(Team::class,'id'),
+                Rule::exists(Team::class, 'id'),
             ],
         ],
-        [
-            "emails.*.exists" => "Ah Shucks! This person (:input) is either not yet registered for the this Challenge or this in the wrong email. Check with them and try again!"
-        ]);
+            [
+                'emails.*.exists' => 'Ah Shucks! This person (:input) is either not yet registered for the this Challenge or this in the wrong email. Check with them and try again!',
+            ]);
 
         $errors = [];
         $mailList = [];
 
-        foreach($request->emails as $email) {
-            $member = User::where('email',$email)->first();
+        foreach ($request->emails as $email) {
+            $member = User::where('email', $email)->first();
 
             $teamId = $request->team_id;
-
 
             /*
             $isExistingMember = Team::where(function($query) use ($request,$member){
@@ -373,14 +371,12 @@ class TeamsController extends BaseController
            }
            */
 
-           $member->invites()->where(['status' => 'invite_to_join_issued','team_id' => $teamId, 'event_id' => $request->event_id])->delete();
+            $member->invites()->where(['status' => 'invite_to_join_issued', 'team_id' => $teamId, 'event_id' => $request->event_id])->delete();
 
-
-           $invite = $member->invites()->create(['status' => 'invite_to_join_issued','team_id' => $teamId, 'event_id' => $request->event_id]);
+            $invite = $member->invites()->create(['status' => 'invite_to_join_issued', 'team_id' => $teamId, 'event_id' => $request->event_id]);
 
             $mailService->sendTeamInviteEmail($email, $teamId);
         }
-
 
         /*if(count($errors) == count($request->emails)){
              return $this->sendError('Error', ['error'=> $errors,'invitat']);
@@ -388,8 +384,8 @@ class TeamsController extends BaseController
 
         $error = collect($errors)->first();
 
-        if(count($errors)) {
-            return $this->sendError('Team membership invitation could not be sent to some users', ['error'=> $errors,'d' => $error]);//$this->sendError(['error' => $errors], 'Team membership invitation could not be sent to some users');
+        if (count($errors)) {
+            return $this->sendError('Team membership invitation could not be sent to some users', ['error' => $errors, 'd' => $error]); // $this->sendError(['error' => $errors], 'Team membership invitation could not be sent to some users');
         }
         /*
         if(count($errors)) {
@@ -404,7 +400,7 @@ class TeamsController extends BaseController
         "team_id": [
             "The team id field is required."
         ]*/
-        //participations
+        // participations
 
     }
 
@@ -413,91 +409,92 @@ class TeamsController extends BaseController
         $request->validate([
             'team_id' => [
                 'required',
-                Rule::exists(Team::class,'id'),
+                Rule::exists(Team::class, 'id'),
             ],
             'event_id' => [
                 'required',
-                Rule::exists(Event::class,'id'),
+                Rule::exists(Event::class, 'id'),
             ],
         ]);
 
         $user = $request->user();
 
-        $team = Team::where(['id' => $request->team_id,'event_id' => $request->event_id])->first();
+        $team = Team::where(['id' => $request->team_id, 'event_id' => $request->event_id])->first();
 
-        if(is_null($team)) {
-            return $this->sendError('Team does not belong to given event ID', ['error'=>'Team does not belong to given event ID']);
+        if (is_null($team)) {
+            return $this->sendError('Team does not belong to given event ID', ['error' => 'Team does not belong to given event ID']);
         }
 
-        $hasTeamMember = $team->memberships()->where(['user_id' => $user->id,'event_id' => $request->event_id])->count();
+        $hasTeamMember = $team->memberships()->where(['user_id' => $user->id, 'event_id' => $request->event_id])->count();
 
-        if($hasTeamMember) {
-            return $this->sendError('Your are already a member of team', ['error'=>'Your are already a member of team']);
+        if ($hasTeamMember) {
+            return $this->sendError('Your are already a member of team', ['error' => 'Your are already a member of team']);
         }
 
-        $hasInvite = $user->invites()->where(['team_id' => $request->team_id,'event_id' => $request->event_id])->count();
+        $hasInvite = $user->invites()->where(['team_id' => $request->team_id, 'event_id' => $request->event_id])->count();
 
-        if($hasInvite) {
-            return $this->sendError('Your invite to join team is already exist', ['error'=>'Your invite to join team is already exist']);
+        if ($hasInvite) {
+            return $this->sendError('Your invite to join team is already exist', ['error' => 'Your invite to join team is already exist']);
         }
 
-        if($team->public_profile == true) {
-            $team->memberships()->create(['event_id' => $request->event_id,'user_id' => $user->id]);
+        if ($team->public_profile === true) {
+            $team->memberships()->create(['event_id' => $request->event_id, 'user_id' => $user->id]);
 
             return $this->sendResponse([], 'You have joined the team');
         }
 
-        $hasRequest = $user->requests()->where(['team_id' => $request->team_id,'event_id' => $request->event_id])->count();
+        $hasRequest = $user->requests()->where(['team_id' => $request->team_id, 'event_id' => $request->event_id])->count();
 
-        if($hasRequest) {
-            return $this->sendError('Your request to join team is already exist', ['error'=>'Your request to join team is already exist']);
+        if ($hasRequest) {
+            return $this->sendError('Your request to join team is already exist', ['error' => 'Your request to join team is already exist']);
         }
 
-        $user->requests()->create(['team_id' => $request->team_id,'event_id' => $request->event_id,'status' => 'request_to_join_issued']);
+        $user->requests()->create(['team_id' => $request->team_id, 'event_id' => $request->event_id, 'status' => 'request_to_join_issued']);
 
         return $this->sendResponse([], 'You have requested to join the team');
 
     }
-     public function cancelJoinTeam(Request $request): JsonResponse
+
+    public function cancelJoinTeam(Request $request): JsonResponse
     {
         $request->validate([
             'team_id' => [
                 'required',
-                Rule::exists(Team::class,'id'),
+                Rule::exists(Team::class, 'id'),
             ],
             'event_id' => [
                 'required',
-                Rule::exists(Event::class,'id'),
+                Rule::exists(Event::class, 'id'),
             ],
         ]);
 
         $user = $request->user();
 
-        $team = Team::where(['id' => $request->team_id,'event_id' => $request->event_id])->first();
+        $team = Team::where(['id' => $request->team_id, 'event_id' => $request->event_id])->first();
 
-        if(is_null($team)) {
-            return $this->sendError('Team does not belong to given event ID', ['error'=>'Team does not belong to given event ID']);
+        if (is_null($team)) {
+            return $this->sendError('Team does not belong to given event ID', ['error' => 'Team does not belong to given event ID']);
         }
 
-        $hasRequest = $user->requests()->where(['team_id' => $request->team_id,'event_id' => $request->event_id])->count();
+        $hasRequest = $user->requests()->where(['team_id' => $request->team_id, 'event_id' => $request->event_id])->count();
 
-        if(!$hasRequest) {
-            return $this->sendError('No record found', ['error'=>'No record found']);
+        if (! $hasRequest) {
+            return $this->sendError('No record found', ['error' => 'No record found']);
         }
 
-
-        $user->requests()->where(['team_id' => $request->team_id,'event_id' => $request->event_id])->delete();
+        $user->requests()->where(['team_id' => $request->team_id, 'event_id' => $request->event_id])->delete();
 
         return $this->sendResponse([], 'Team join request cancelled');
 
     }
-      public function leaveTeam(Request $request): JsonResponse
+
+    public function leaveTeam(Request $request): JsonResponse
     {
         $request->validate([
             'team_id' => [
                 'required',
-                Rule::exists(Team::class,'id'),
-            ]
+                Rule::exists(Team::class, 'id'),
+            ],
         ]);
 
         $user = $request->user();
@@ -506,22 +503,24 @@ class TeamsController extends BaseController
 
         $hasTeamMember = $team->memberships()->where(['user_id' => $user->id])->count();
 
-        if(!$hasTeamMember) {
-            return $this->sendError('Team not found', ['error'=>'Team not found']);
+        if (! $hasTeamMember) {
+            return $this->sendError('Team not found', ['error' => 'Team not found']);
         }
 
         $team->memberships()->where(['user_id' => $user->id])->delete();
 
-        if($team->memberships()->count()){
-            if($team->owner_id == $user->id){
+        if ($team->memberships()->count()) {
+            if ($team->owner_id === $user->id) {
                 $member = $team->memberships()->first();
                 $team->fill(['owner_id' => $member->user_id]);
+
                 return $this->sendResponse([], 'Team admin has been reassigned');
             }
         } else {
-            $message = sprintf('You are the last one to leave team %s. Successfully deleted team %s.',$team->name, $team->name);
+            $message = sprintf('You are the last one to leave team %s. Successfully deleted team %s.', $team->name, $team->name);
             $this->deleteTeamForeignData($request->team_id);
             $team->delete();
+
             return $this->sendResponse([], $message);
 
         }
@@ -532,7 +531,7 @@ class TeamsController extends BaseController
     public function store(Request $request, $id = null): JsonResponse
     {
 
-        if($id) {
+        if ($id) {
             $request->validate([
                 'name' => 'sometimes|required|string',
                 'public_profile' => 'sometimes|required|boolean',
@@ -541,9 +540,9 @@ class TeamsController extends BaseController
             $request->validate([
                 'event_id' => [
                     'required',
-                    Rule::exists(Event::class,'id'),
+                    Rule::exists(Event::class, 'id'),
                 ],
-                'name' => ['required','string'],
+                'name' => ['required', 'string'],
                 'public_profile' => 'required|boolean',
             ]);
         }
@@ -553,54 +552,55 @@ class TeamsController extends BaseController
         $event = Event::find($request->event_id);
 
         if ($event->event_type === 'promotional') {
-            return $this->sendError('Team can not be added for promotional events.', ['error'=>'Team can not be added for promotional events']);
+            return $this->sendError('Team can not be added for promotional events.', ['error' => 'Team can not be added for promotional events']);
         }
 
         $team = $user->teams()->find($id);
 
-        if($id && !$team){
-            return $this->sendError('Team not found.', ['error'=>'Team not found']);
+        if ($id && ! $team) {
+            return $this->sendError('Team not found.', ['error' => 'Team not found']);
         }
 
-        if($team){
-            $teamData = $request->only(['name','public_profile']);
+        if ($team) {
+            $teamData = $request->only(['name', 'public_profile']);
 
-            //$teamData['settings'] = $teamData['settings']?$teamData['settings']:'{}';
-            try{
+            // $teamData['settings'] = $teamData['settings']?$teamData['settings']:'{}';
+            try {
                 $team->fill($teamData)->save();
+
                 return $this->sendResponse([], 'Team has been updated');
-            } catch(Exception $e){
-                return $this->sendError('Duplicate Entry.', ['error'=>'Team name already exists']);
+            } catch (Exception $e) {
+                return $this->sendError('Duplicate Entry.', ['error' => 'Team name already exists']);
             }
 
         }
 
-        $team = Team::where(function($query) use ($user){
-           return $query->where('owner_id',$user->id)
-           ->orWhereHas('memberships', function($query) use($user) {
-               return $query->where('user_id', $user->id);
-           });
-       })
-       ->where('event_id', $request->event_id)
-       ->first();
+        $team = Team::where(function ($query) use ($user) {
+            return $query->where('owner_id', $user->id)
+                ->orWhereHas('memberships', function ($query) use ($user) {
+                    return $query->where('user_id', $user->id);
+                });
+        })
+            ->where('event_id', $request->event_id)
+            ->first();
 
-       if(!is_null($team)){
-            return $this->sendError('Team has already been created for given event.', ['error'=>'Team has already been created for given event']);
-       }
+        if (! is_null($team)) {
+            return $this->sendError('Team has already been created for given event.', ['error' => 'Team has already been created for given event']);
+        }
 
-       $teamData = $request->only(['event_id','name','public_profile','settings']);
+        $teamData = $request->only(['event_id', 'name', 'public_profile', 'settings']);
 
-       $teamData['settings'] = $teamData['settings']?$teamData['settings']:'{}';
+        $teamData['settings'] = $teamData['settings'] ? $teamData['settings'] : '{}';
 
         $teamData['owner_id'] = $user->id;
         $team = Team::create($teamData);
 
-        $team->memberships()->create(['user_id' => $user->id,'event_id' => $team->event_id]);
+        $team->memberships()->create(['user_id' => $user->id, 'event_id' => $team->event_id]);
 
-       $data = $team->only(['id','name','public_profile','settings','owner_id']);
-       $data['is_team_owner'] = true;
+        $data = $team->only(['id', 'name', 'public_profile', 'settings', 'owner_id']);
+        $data['is_team_owner'] = true;
 
-       return $this->sendResponse($data, 'Team has been created');
+        return $this->sendResponse($data, 'Team has been created');
     }
 
     public function removeMember(Request $request): JsonResponse
@@ -609,86 +609,86 @@ class TeamsController extends BaseController
         $request->validate([
             'user_id' => [
                 'required',
-                Rule::exists(User::class,'id'),
+                Rule::exists(User::class, 'id'),
             ],
             'team_id' => [
                 'required',
-                Rule::exists(Team::class,'id'),
+                Rule::exists(Team::class, 'id'),
             ],
             'event_id' => [
                 'required',
-                Rule::exists(Event::class,'id'),
+                Rule::exists(Event::class, 'id'),
             ],
         ]);
-
 
         $user = $request->user();
 
         $team = $user->teams()->find($request->team_id);
 
-        if(is_null($team)) {
-            return $this->sendError('Team not found', ['error'=>'Team not found']);
+        if (is_null($team)) {
+            return $this->sendError('Team not found', ['error' => 'Team not found']);
         }
 
-        $hasMember = $team->memberships()->where(['event_id' => $request->event_id,'user_id' => $request->user_id])->count();
+        $hasMember = $team->memberships()->where(['event_id' => $request->event_id, 'user_id' => $request->user_id])->count();
 
-        if(!$hasMember) {
-            return $this->sendError('NOT FOUND', ['error'=>'Member not found']);
+        if (! $hasMember) {
+            return $this->sendError('NOT FOUND', ['error' => 'Member not found']);
         }
 
-        $team->memberships()->where(['event_id' => $request->event_id,'user_id' => $request->user_id])->delete();
+        $team->memberships()->where(['event_id' => $request->event_id, 'user_id' => $request->user_id])->delete();
 
         return $this->sendResponse([], 'Member removed from the team');
     }
 
-    public function joinTeamRequest(Request $request,$type): JsonResponse
+    public function joinTeamRequest(Request $request, $type): JsonResponse
     {
 
         $request->validate([
             'user_id' => [
                 'required',
-                Rule::exists(User::class,'id'),
+                Rule::exists(User::class, 'id'),
             ],
             'team_id' => [
                 'required',
-                Rule::exists(Team::class,'id'),
+                Rule::exists(Team::class, 'id'),
             ],
             'event_id' => [
                 'required',
-                Rule::exists(Event::class,'id'),
+                Rule::exists(Event::class, 'id'),
             ],
         ]);
 
-        if(!in_array($type,['accept','decline'])) {
-            return $this->sendError('Invalid Request', ['error'=>'Invalid Request']);
+        if (! in_array($type, ['accept', 'decline'])) {
+            return $this->sendError('Invalid Request', ['error' => 'Invalid Request']);
         }
 
         $user = $request->user();
 
         $team = $user->teams()->find($request->team_id);
 
-        if(is_null($team)) {
-            return $this->sendError('Team not found', ['error'=>'Team not found']);
+        if (is_null($team)) {
+            return $this->sendError('Team not found', ['error' => 'Team not found']);
         }
 
         $memberRequestUser = User::find($request->user_id);
 
-        $membershipRequest = $memberRequestUser->requests()->where(['team_id' => $request->team_id,'event_id' => $request->event_id])->first();
+        $membershipRequest = $memberRequestUser->requests()->where(['team_id' => $request->team_id, 'event_id' => $request->event_id])->first();
 
-        if(is_null($membershipRequest)) {
-            return $this->sendError('NOT FOUND', ['error'=>'Request not found']);
+        if (is_null($membershipRequest)) {
+            return $this->sendError('NOT FOUND', ['error' => 'Request not found']);
         }
 
-        if($type == 'accept') {
+        if ($type === 'accept') {
 
-            $hasMembership = $team->memberships()->where(['event_id' => $request->event_id,'user_id' => $memberRequestUser->id])->count();
+            $hasMembership = $team->memberships()->where(['event_id' => $request->event_id, 'user_id' => $memberRequestUser->id])->count();
 
-            if($hasMembership) {
-                return $this->sendError('NOT FOUND', ['error'=>'Invalid Request']);
+            if ($hasMembership) {
+                return $this->sendError('NOT FOUND', ['error' => 'Invalid Request']);
             }
 
             $membershipRequest->delete();
-            $team->memberships()->create(['event_id' => $request->event_id,'user_id' => $memberRequestUser->id]);
+            $team->memberships()->create(['event_id' => $request->event_id, 'user_id' => $memberRequestUser->id]);
+
             return $this->sendResponse([], 'Request accepted');
         }
 
@@ -699,32 +699,32 @@ class TeamsController extends BaseController
 
     public function membershipRequests(Request $request): JsonResponse
     {
-         $request->validate([
+        $request->validate([
             'team_id' => [
                 'required',
-                Rule::exists(Team::class,'id'),
+                Rule::exists(Team::class, 'id'),
             ],
             'event_id' => [
                 'required',
-                Rule::exists(Event::class,'id'),
+                Rule::exists(Event::class, 'id'),
             ],
         ]);
 
-        $pageNum = $request->page??1;
+        $pageNum = $request->page ?? 1;
 
-         $cacheName = "team_membership_request_{$request->team_id}_{$request->event_id}_{$pageNum}";
+        $cacheName = "team_membership_request_{$request->team_id}_{$request->event_id}_{$pageNum}";
 
-       if(Cache::has($cacheName)){
-           $item = Cache::get($cacheName);
-           //return $this->sendResponse($item, 'Response');
-       }
+        if (Cache::has($cacheName)) {
+            $item = Cache::get($cacheName);
+            // return $this->sendResponse($item, 'Response');
+        }
 
         $team = Team::find($request->team_id);
 
-        $memberRequests = $team->requests()->with('user',function($query){
-            return $query->select(['id','first_name','last_name','display_name','email']);
+        $memberRequests = $team->requests()->with('user', function ($query) {
+            return $query->select(['id', 'first_name', 'last_name', 'display_name', 'email']);
         })
-        ->simplePaginate(100);
+            ->simplePaginate(100);
 
         /*->through(function ($member){
             $team->user;
@@ -736,75 +736,67 @@ class TeamsController extends BaseController
             return $team;
         });;*/
 
-           Cache::put($cacheName, $memberRequests, now()->addHours(2));
+        Cache::put($cacheName, $memberRequests, now()->addHours(2));
 
         return $this->sendResponse($memberRequests, 'Response');
     }
 
     public function membershipInvites(Request $request): JsonResponse
     {
-         $request->validate([
+        $request->validate([
             'team_id' => [
                 'required',
-                Rule::exists(Team::class,'id'),
+                Rule::exists(Team::class, 'id'),
             ],
             'event_id' => [
                 'required',
-                Rule::exists(Event::class,'id'),
+                Rule::exists(Event::class, 'id'),
             ],
         ]);
 
-        $pageNum = $request->page??1;
+        $pageNum = $request->page ?? 1;
 
         $cacheName = "team_membership_invite_{$request->team_id}_{$request->event_id}_{$pageNum}";
 
-       if(Cache::has($cacheName)){
-           $item = Cache::get($cacheName);
-           //return $this->sendResponse($item, 'Response');
-       }
+        if (Cache::has($cacheName)) {
+            $item = Cache::get($cacheName);
+            // return $this->sendResponse($item, 'Response');
+        }
 
         $team = Team::find($request->team_id);
 
-        $memberRequests = $team->invites()->with('user',function($query){
-            return $query->select(['id','first_name','last_name','display_name','email']);
+        $memberRequests = $team->invites()->with('user', function ($query) {
+            return $query->select(['id', 'first_name', 'last_name', 'display_name', 'email']);
         })
-        ->simplePaginate(100);
+            ->simplePaginate(100);
 
-         Cache::put($cacheName, $memberRequests, now()->addHours(2));
+        Cache::put($cacheName, $memberRequests, now()->addHours(2));
 
         return $this->sendResponse($memberRequests, 'Response');
     }
 
-    private function deleteTeamForeignData($teamId){
-        $tables = DB::select("select table_name from information_schema.columns where column_name = 'team_id'");
-
-        foreach($tables as $table) {
-            DB::table($table->table_name)->where('team_id', $teamId)->delete();
-        }
-    }
-
     public function dissolveTeam(Request $request): JsonResponse
     {
-          $request->validate([
+        $request->validate([
             'team_id' => [
                 'required',
-                Rule::exists(Team::class,'id'),
-            ]
+                Rule::exists(Team::class, 'id'),
+            ],
         ]);
 
         $user = $request->user();
 
         $team = $user->teams()->find($request->team_id);
 
-        if(is_null($team)) {
-            return $this->sendError('Team not found', ['error'=>'Team not found']);
+        if (is_null($team)) {
+            return $this->sendError('Team not found', ['error' => 'Team not found']);
         }
 
         $this->deleteTeamForeignData($request->team_id);
 
         $team->delete();
 
-         return $this->sendResponse([], 'Team has been dissolved');
+        return $this->sendResponse([], 'Team has been dissolved');
     }
 
     public function transferTeamAdminRole(Request $request): JsonResponse
@@ -812,29 +804,29 @@ class TeamsController extends BaseController
         $request->validate([
             'team_id' => [
                 'required',
-                Rule::exists(Team::class,'id'),
+                Rule::exists(Team::class, 'id'),
             ],
             'member_id' => [
                 'required',
-                Rule::exists(User::class,'id'),
-            ]
+                Rule::exists(User::class, 'id'),
+            ],
         ]);
 
         $user = $request->user();
 
         $team = $user->teams()->find($request->team_id);
 
-        if(is_null($team)) {
-            return $this->sendError('Team not found', ['error'=>'Team not found']);
+        if (is_null($team)) {
+            return $this->sendError('Team not found', ['error' => 'Team not found']);
         }
 
         $member = $team->memberships()->where(['user_id' => $request->member_id])->first();
 
-        if(is_null($member)) {
-            return $this->sendError('User is not a member of given team', ['error'=>'User is not a member of given team']);
+        if (is_null($member)) {
+            return $this->sendError('User is not a member of given team', ['error' => 'User is not a member of given team']);
         }
 
-         $team->fill(['owner_id' => $member->user_id])->save();
+        $team->fill(['owner_id' => $member->user_id])->save();
 
         return $this->sendResponse([], 'Team admin role has been transferred');
     }
@@ -848,84 +840,82 @@ class TeamsController extends BaseController
             ],*/
             'event_id' => [
                 'required',
-                Rule::exists(Event::class,'id'),
+                Rule::exists(Event::class, 'id'),
             ],
         ]);
 
         $email = $request->email;
 
-        $users = User::select(['id','first_name','last_name','display_name','email'])
-        ->where(function($query) use($email){
+        $users = User::select(['id', 'first_name', 'last_name', 'display_name', 'email'])
+            ->where(function ($query) use ($email) {
 
-            if($email) {
-                return $query->where('email','ILIKE','%'.$email.'%');
-            }
+                if ($email) {
+                    return $query->where('email', 'ILIKE', '%'.$email.'%');
+                }
 
-            return $query;
-        })
-        ->whereDoesntHave('memberships', function($query) use($request){
-            return $query->where(['event_id' => $request->event_id]);
-        })->simplePaginate(100);
+                return $query;
+            })
+            ->whereDoesntHave('memberships', function ($query) use ($request) {
+                return $query->where(['event_id' => $request->event_id]);
+            })->simplePaginate(100);
 
         return $this->sendResponse($users, 'Response');
     }
-
 
     public function teamToFollowList(Request $request): JsonResponse
     {
         $request->validate([
             'event_id' => [
                 'required',
-                Rule::exists(Event::class,'id'),
+                Rule::exists(Event::class, 'id'),
             ],
         ]);
 
+        $user = $request->user();
 
-       $user = $request->user();
+        $pageLimit = $request->page_limit ?? 100;
 
-       $pageLimit = $request->page_limit??100;
+        $searchTerm = $request->term;
 
-       $searchTerm = $request->term;
+        $eventId = $request->event_id;
 
-       $eventId = $request->event_id;
+        $pageNum = $request->page ?? 1;
 
-       $pageNum = $request->page??1;
+        $teams = Team::where(function ($query) use ($user, $searchTerm) {
 
+            $query->where('owner_id', '!=', $user->id);
 
-       $teams = Team::where(function($query) use ($user, $searchTerm){
-
-            $query->where('owner_id','!=',$user->id);
-
-            if($searchTerm) {
-                $query->where('name','LIKE',"{$searchTerm}%");
+            if ($searchTerm) {
+                $query->where('name', 'LIKE', "{$searchTerm}%");
             }
 
-           return $query;
-       })
+            return $query;
+        })
+            ->where(function ($query) use ($request) {
 
-       ->where(function($query) use ($request){
+                return $query->where('event_id', $request->event_id);
+            })
+            ->simplePaginate($pageLimit, ['id', 'name', 'public_profile', 'settings', 'owner_id', 'event_id'])
+            ->through(function ($team) use ($user, $eventId) {
+                $team->is_team_owner = $team->owner_id === $user->id;
 
-           return $query->where('event_id', $request->event_id);
-       })
-       ->simplePaginate($pageLimit,['id','name','public_profile','settings','owner_id','event_id'])
-       ->through(function ($team) use($user,$eventId){
-            $team->is_team_owner = $team->owner_id == $user->id;
+                $followStatus = $team->public_profile ? 'follow' : 'request_follow';
 
-            $followStatus = $team->public_profile?"follow":"request_follow";
+                if ($followRequest = $team->followerRequests()->where(['prospective_follower_id' => $user->id, 'event_id' => $eventId])->first()) {
 
-            if($followRequest = $team->followerRequests()->where(["prospective_follower_id" => $user->id,"event_id" => $eventId])->first()){
-
-                if(in_array($followRequest->status, ['request_to_follow_issued', 'request_to_follow_approved'])){
-                    $followStatus = $followRequest->status;
+                    if (in_array($followRequest->status, ['request_to_follow_issued', 'request_to_follow_approved'])) {
+                        $followStatus = $followRequest->status;
+                    }
                 }
-            }
-            $team->follow_status = $followStatus;
-            $team->follow_status_text = ['follow'=>"Follow",'request_follow' => 'Request','request_to_follow_issued'=>'Requested','request_to_follow_approved'=>'Following'][$followStatus];
+                $team->follow_status = $followStatus;
+                $team->follow_status_text = ['follow' => 'Follow', 'request_follow' => 'Request', 'request_to_follow_issued' => 'Requested', 'request_to_follow_approved' => 'Following'][$followStatus];
 
-            unset($team->owner_id);
-            return $team;
-        });
-       return $this->sendResponse($teams, 'Response');
+                unset($team->owner_id);
+
+                return $team;
+            });
+
+        return $this->sendResponse($teams, 'Response');
 
     }
 
@@ -934,15 +924,15 @@ class TeamsController extends BaseController
         $request->validate([
             'team_id' => [
                 'required',
-                Rule::exists(Team::class,'id'),
+                Rule::exists(Team::class, 'id'),
             ],
             'event_id' => [
                 'required',
-                Rule::exists(Event::class,'id'),
+                Rule::exists(Event::class, 'id'),
             ],
-             'user_id' => [
+            'user_id' => [
                 'required',
-                Rule::exists(User::class,'id'),
+                Rule::exists(User::class, 'id'),
             ],
         ]);
 
@@ -950,21 +940,22 @@ class TeamsController extends BaseController
 
         $team = $user->teams()->where(['id' => $request->team_id, 'event_id' => $request->event_id])->first();
 
-        if(is_null($team)) {
-            return $this->sendError('Team not found', ['error'=>'Team not found']);
+        if (is_null($team)) {
+            return $this->sendError('Team not found', ['error' => 'Team not found']);
         }
 
         $follower = User::find($request->user_id);
 
-        $followRequest = $team->followerRequests()->where(['prospective_follower_id' => $follower->id,'event_id' => $request->event_id])->first();
+        $followRequest = $team->followerRequests()->where(['prospective_follower_id' => $follower->id, 'event_id' => $request->event_id])->first();
 
-        if(is_null($followRequest)) {
-            return $this->sendError('ERROR', ['error'=>'Follow request does not exist']);
+        if (is_null($followRequest)) {
+            return $this->sendError('ERROR', ['error' => 'Follow request does not exist']);
         }
 
-        if($type == 'accept') {
+        if ($type === 'accept') {
             $followRequest->fill(['status' => 'request_to_follow_approved'])->save();
             $team->followers()->create(['follower_id' => $follower->id, 'event_id' => $request->event_id]);
+
             return $this->sendResponse([], 'Follow request approved');
         }
 
@@ -978,31 +969,31 @@ class TeamsController extends BaseController
         $request->validate([
             'team_id' => [
                 'required',
-                Rule::exists(Team::class,'id'),
-            ]
+                Rule::exists(Team::class, 'id'),
+            ],
         ]);
 
         $user = $request->user();
 
-          $pageNum = $request->page??1;
+        $pageNum = $request->page ?? 1;
 
         $cacheName = "team_follower_{$user->id}_{$request->team_id}_{$pageNum}";
 
-       if(Cache::has($cacheName)){
-           $item = Cache::get($cacheName);
-          // return $this->sendResponse($item, 'Response');
-       }
+        if (Cache::has($cacheName)) {
+            $item = Cache::get($cacheName);
+            // return $this->sendResponse($item, 'Response');
+        }
 
         $team = $user->teams()->where(['id' => $request->team_id])->first();
 
-        if(is_null($team)) {
-            return $this->sendError('Team not found', ['error'=>'Team not found']);
+        if (is_null($team)) {
+            return $this->sendError('Team not found', ['error' => 'Team not found']);
         }
 
-        $followers = $team->followers()->with('user', function($query){
-            return $query->select(['id','first_name','last_name','display_name']);
+        $followers = $team->followers()->with('user', function ($query) {
+            return $query->select(['id', 'first_name', 'last_name', 'display_name']);
         })
-        ->simplePaginate(100);
+            ->simplePaginate(100);
 
         Cache::put($cacheName, $followers, now()->addHours(2));
 
@@ -1045,11 +1036,11 @@ class TeamsController extends BaseController
             ],
             'start_date' => [
                 'nullable',
-                'date'
+                'date',
             ],
             'end_date' => [
                 'nullable',
-                'date'
+                'date',
             ],
         ]);
 
@@ -1058,7 +1049,7 @@ class TeamsController extends BaseController
         $startDate = $request->start_date;
         $endDate = $request->end_date;
 
-        if (!$team || !Event::where('id', $eventId)->exists()) {
+        if (! $team || ! Event::where('id', $eventId)->exists()) {
             return $this->sendError('Invalid event id or team id.', ['error' => 'The provided event id or team id is not valid.']);
         }
 
@@ -1073,13 +1064,23 @@ class TeamsController extends BaseController
             })
             ->with('event:id,event_type,logo')
             ->get();
-            // Add event_type to each monthly point
+        // Add event_type to each monthly point
         $monthlyPoints->transform(function ($point) {
             $point->event_type = $point->event->event_type ?? null; // Fetch event_type from the related event
+
             return $point;
         });
 
         return $this->sendResponse($monthlyPoints, 'Monthly points retrieved successfully.');
+    }
+
+    private function deleteTeamForeignData($teamId)
+    {
+        $tables = DB::select("select table_name from information_schema.columns where column_name = 'team_id'");
+
+        foreach ($tables as $table) {
+            DB::table($table->table_name)->where('team_id', $teamId)->delete();
+        }
     }
 
     private function getTeamForUser(Request $request)
@@ -1094,12 +1095,10 @@ class TeamsController extends BaseController
             })
             ->first();
 
-        if (is_null($team))
-        {
+        if (is_null($team)) {
             return 0;
         }
 
         return $team;
     }
-
 }

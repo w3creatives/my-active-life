@@ -205,6 +205,7 @@ final class TeamService
             $message = sprintf('You are the last one to leave team %s. Successfully deleted team %s.', $team->name, $team->name);
             $this->deleteTeamForeignData($team->id);
             $team->delete();
+
             return $message;
         }
 

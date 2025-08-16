@@ -1,16 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Event;
+use App\Models\EmailTemplate;
 use App\Utilities\DataTable;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
-use App\Models\EmailTemplate;
-
-class EmailBuildersController extends Controller
+final class EmailBuildersController extends Controller
 {
     public function index(Request $request, DataTable $dataTable)
     {
@@ -18,7 +18,7 @@ class EmailBuildersController extends Controller
         if ($request->ajax()) {
             $query = EmailTemplate::select(['id', 'name', 'subject', 'created_at', 'updated_at']);
 
-            list($itemCount, $items) = $dataTable->setSearchableColumns(['name', 'subject'])->query($request, $query)->response();
+            [$itemCount, $items] = $dataTable->setSearchableColumns(['name', 'subject'])->query($request, $query)->response();
 
             $events = $items->map(function ($item) {
                 $item->created = Carbon::parse($item->created_at)->format('m/d/Y h:i A');
@@ -29,8 +29,9 @@ class EmailBuildersController extends Controller
                     $item->updated = '---';
                 }
                 $item->action = [
-                    view('admin.email-builders.actions.template', compact('item'))->render()
+                    view('admin.email-builders.actions.template', compact('item'))->render(),
                 ];
+
                 return $item;
             });
 
@@ -38,7 +39,7 @@ class EmailBuildersController extends Controller
                 'draw' => $request->get('draw'),
                 'recordsTotal' => $itemCount,
                 'recordsFiltered' => $itemCount,
-                'data' => $items
+                'data' => $items,
             ]);
         }
 
@@ -73,6 +74,7 @@ class EmailBuildersController extends Controller
         if ($emailBuilder) {
             $data['updated_at'] = Carbon::now();
             $emailBuilder->fill($data)->save();
+
             return redirect()->route('admin.email.builders')->with('alert', ['type' => 'success', 'message' => 'Email Template updated successfully']);
         }
 

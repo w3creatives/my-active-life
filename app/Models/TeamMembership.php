@@ -1,23 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class TeamMembership extends Model
+final class TeamMembership extends Model
 {
-    
     public $timestamps = false;
-    
+
     protected $guarded = [];
-    
-    public function user(){
+
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
-    
-     public function team(){
+
+    public function team()
+    {
         return $this->belongsTo(Team::class);
     }
-
 }

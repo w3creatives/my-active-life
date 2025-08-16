@@ -9,22 +9,22 @@ import { initializeTheme } from './hooks/use-appearance';
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
-    resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),
-    setup({ el, App, props }) {
-        const root = createRoot(el);
+  title: (title) => `${title} - ${appName}`,
+  resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),
+  setup({ el, App, props }) {
+    const root = createRoot(el);
 
-        root.render(
-            <>
-                <App {...props} />
-                <Toaster />
-            </>,
-        );
-    },
-    progress: {
-        color: '#107ba7',
-        showSpinner: true,
-    },
+    root.render(
+      <>
+        <App {...props} />
+        <Toaster />
+      </>,
+    );
+  },
+  progress: {
+    color: '#107ba7',
+    showSpinner: true,
+  },
 });
 
 // This will set light / dark mode on load...

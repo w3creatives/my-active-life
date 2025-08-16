@@ -22,7 +22,7 @@ final class EventTutorial extends Model
         $content = [];
 
         if (isset($this->attributes['tutorial_text'])) {
-            $content = json_decode($this->attributes['tutorial_text'],false);
+            $content = json_decode($this->attributes['tutorial_text'], false);
         }
 
         return collect($content);

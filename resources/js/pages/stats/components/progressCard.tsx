@@ -1,12 +1,10 @@
+import { MilestoneRadialChart } from '@/components/partials/charts/MilestoneRadialChart';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { type SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
-import { MilestoneRadialChart } from '@/components/partials/charts/MilestoneRadialChart';
 
 export default function ProgressCard() {
   const { auth } = usePage<SharedData>().props;
-
-
 
   return (
     <Card>

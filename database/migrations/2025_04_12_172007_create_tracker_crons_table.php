@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -17,8 +19,8 @@ return new class extends Migration
             $table->bigInteger('last_user_id')->nullable();
             $table->bigInteger('data_source_id')->nullable();
             $table->string('status')->nullable();
-            $table->timestamp('created_at')->nullable()->default(DB::raw("now()"));
-            $table->timestamp('updated_at')->nullable()->default(DB::raw("now()"));
+            $table->timestamp('created_at')->nullable()->default(DB::raw('now()'));
+            $table->timestamp('updated_at')->nullable()->default(DB::raw('now()'));
         });
     }
 

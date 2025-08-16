@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions\Team;
 
 use Lorisleiva\Actions\Concerns\AsAction;
 
-class Team
+final class Team
 {
     use AsAction;
 

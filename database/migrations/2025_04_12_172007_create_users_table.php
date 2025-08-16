@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -51,8 +53,8 @@ return new class extends Migration
 
             $table->unique(['email'], 'index_users_on_email');
         });
-        //DB::statement("alter table \"users\" add column \"gender\" gender null default 'unknown'");
-        //DB::statement("alter table \"users\" add column \"shirt_size\" shirt_size null");
+        // DB::statement("alter table \"users\" add column \"gender\" gender null default 'unknown'");
+        // DB::statement("alter table \"users\" add column \"shirt_size\" shirt_size null");
     }
 
     /**

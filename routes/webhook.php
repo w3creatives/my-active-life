@@ -59,7 +59,7 @@ Route::group(['prefix' => 'webhook'], function () {
      * Device Degregistration
      */
     Route::post('tracker/garmin/pings', [GarminAuthController::class, 'handleWebhook']);
-    Route::any('tracker/strava/pings',[TrackerLoginsController::class, 'handleWebhook'])->name('webhook.strava');
+    Route::any('tracker/strava/pings', [TrackerLoginsController::class, 'handleWebhook'])->name('webhook.strava');
     Route::post('tracker/garmin/deregistrations', [GarminAuthController::class, 'handleGarminDeregistrations']);
 
     // Route::post('test/v1/tracker/fitbit', [TestTrackersController::class,'fitbitTracker']);

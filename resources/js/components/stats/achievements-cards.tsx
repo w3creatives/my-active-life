@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCardSkeleton } from '@/components/ui/skeleton-components';
-import { TrendingUp, Calendar, Trophy } from 'lucide-react';
+import { Calendar, TrendingUp, Trophy } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface Achievement {
   date?: string;
@@ -44,14 +43,14 @@ export default function AchievementsCards() {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
   const formatMonth = (year: number, month: number) => {
     return new Date(year, month - 1).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long'
+      month: 'long',
     });
   };
 
@@ -69,7 +68,7 @@ export default function AchievementsCards() {
     return (
       <Card className="col-span-3">
         <CardContent className="p-6">
-          <div className="text-red-500 text-center">{error}</div>
+          <div className="text-center text-red-500">{error}</div>
         </CardContent>
       </Card>
     );
@@ -81,13 +80,11 @@ export default function AchievementsCards() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Best Day</CardTitle>
-          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <TrendingUp className="text-muted-foreground h-4 w-4" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            {achievements?.best_day ? achievements.best_day.miles?.toFixed(2) : '0.00'}
-          </div>
-          <p className="text-xs text-muted-foreground">
+          <div className="text-2xl font-bold">{achievements?.best_day ? achievements.best_day.miles?.toFixed(2) : '0.00'}</div>
+          <p className="text-muted-foreground text-xs">
             {achievements?.best_day?.date ? formatDate(achievements.best_day.date) : 'No data available'}
           </p>
         </CardContent>
@@ -97,13 +94,11 @@ export default function AchievementsCards() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Best Week</CardTitle>
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <Calendar className="text-muted-foreground h-4 w-4" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            {achievements?.best_week ? achievements.best_week.miles?.toFixed(2) : '0.00'}
-          </div>
-          <p className="text-xs text-muted-foreground">
+          <div className="text-2xl font-bold">{achievements?.best_week ? achievements.best_week.miles?.toFixed(2) : '0.00'}</div>
+          <p className="text-muted-foreground text-xs">
             {achievements?.best_week?.yearweek ? `Week ${achievements.best_week.yearweek}` : 'No data available'}
           </p>
         </CardContent>
@@ -113,13 +108,11 @@ export default function AchievementsCards() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Best Month</CardTitle>
-          <Trophy className="h-4 w-4 text-muted-foreground" />
+          <Trophy className="text-muted-foreground h-4 w-4" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            {achievements?.best_month ? achievements.best_month.miles?.toFixed(2) : '0.00'}
-          </div>
-          <p className="text-xs text-muted-foreground">
+          <div className="text-2xl font-bold">{achievements?.best_month ? achievements.best_month.miles?.toFixed(2) : '0.00'}</div>
+          <p className="text-muted-foreground text-xs">
             {achievements?.best_month?.year && achievements?.best_month?.month
               ? formatMonth(achievements.best_month.year, achievements.best_month.month)
               : 'No data available'}

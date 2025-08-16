@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repositories;
 
-class UserPointRepository
+final class UserPointRepository
 {
-
     public function create($user, $point, $condition = [])
     {
 

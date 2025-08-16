@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class AmerithonPathDistance extends Model
+final class AmerithonPathDistance extends Model
 {
-	use HasFactory;
+    use HasFactory;
 
-	protected $guarded = [];
-	
-	public $timestamps = false;
+    public $timestamps = false;
+
+    protected $guarded = [];
 }

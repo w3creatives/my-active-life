@@ -1,28 +1,34 @@
 <?php
+
+declare(strict_types=1);
 /**
  * @Deprecated
  * I will be removed once changes are migrated
  */
+
 namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\DataSourceProfile;
-use App\Models\UserProfilePoint;
-use Carbon\Carbon;
-use App\Services\StravaService;
 use App\Services\EventService;
 use App\Services\MailService;
+use App\Services\StravaService;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
-class TrackerLoginsController extends Controller
+final class TrackerLoginsController extends Controller
 {
     private string $apiUrl;
+
     private string $clientId;
+
     private string $redirectUrl;
+
     private string $clientSecret;
+
     private string $authTokenUrl = 'https://www.strava.com/oauth/token';
 
     /**
@@ -50,8 +56,9 @@ class TrackerLoginsController extends Controller
     public function index(Request $request, StravaService $stravaService)
     {
 
-        if ($request->get('action') == 'logout') {
+        if ($request->get('action') === 'logout') {
             $request->session()->invalidate();
+
             return redirect()->route('tracker.login');
         }
 
@@ -61,12 +68,13 @@ class TrackerLoginsController extends Controller
         if ($user) {
             return redirect()->route('tracker.user.activities');
         }
+
         return view('tracker-login', compact('authUrl', 'user'));
     }
 
     public function stravaCallback(Request $request, StravaService $stravaService)
     {
-        if ($request->get('debug') == true) {
+        if ($request->get('debug') === true) {
 
             /*
                 0 => "run"
@@ -76,7 +84,7 @@ class TrackerLoginsController extends Controller
                 4 => "other"
                 5 => "daily_steps"
             */
-            $data = $stravaService->setAccessToken("f2de4c3e7f96694c210a042a3417a7572d3ba581")->activities(request()->get('date'));
+            $data = $stravaService->setAccessToken('f2de4c3e7f96694c210a042a3417a7572d3ba581')->activities(request()->get('date'));
 
             $activities = collect($data);
 
@@ -88,9 +96,9 @@ class TrackerLoginsController extends Controller
         // $this->createSubscription();
 
         // dd($response, $request->get('state'));
-        if ($request->get('state') == 'app') {
-            if ($response == false) {
-                //error=access_denied
+        if ($request->get('state') === 'app') {
+            if ($response === false) {
+                // error=access_denied
                 /*
                 {#467 ▼ // app/Http/Controllers/TrackerLoginsController.php:44
                     +"token_type": "Bearer"
@@ -126,12 +134,12 @@ class TrackerLoginsController extends Controller
                 return response()->json(['message' => 'Unabled to complete your request'], 403);
             }
 
-            return redirect(sprintf("rte://settings/%s/%s/%s/%s/%s/1", $response->access_token, $response->refresh_token, $response->expires_in, $response->athlete->id, 'strava'));
+            return redirect(sprintf('rte://settings/%s/%s/%s/%s/%s/1', $response->access_token, $response->refresh_token, $response->expires_in, $response->athlete->id, 'strava'));
 
             return response()->json(['message' => 'Authentication completed']);
         }
 
-        if ($response == false) {
+        if ($response === false) {
             $request->session()->flash('status', ['type' => 'danger', 'message' => 'Unabled to complete your request']);
 
             return redirect()->route('tracker.login');
@@ -148,7 +156,7 @@ class TrackerLoginsController extends Controller
 
         $user = $request->session()->get('tracker_user');
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('tracker.login');
         }
 
@@ -174,11 +182,11 @@ class TrackerLoginsController extends Controller
 
             if ($request->get('hub_verify_token') === config('services.strava.webhook_verification_code')) {
                 return response()->json(['hub.challenge' => $request->get('hub_challenge')]);
-            } else {
-                Log::error('TrackerWebhooksController: Invalid Strava webhook verification token');
-
-                return response('Invalid verification token', 403);
             }
+            Log::error('TrackerWebhooksController: Invalid Strava webhook verification token');
+
+            return response('Invalid verification token', 403);
+
         }
 
         // Process webhook event (for POST requests)
@@ -199,7 +207,7 @@ class TrackerLoginsController extends Controller
 
                 // Create user participation points
                 $activity['dataSourceId'] = $sourceProfile->data_source_id;
-                //$eventService->createUserParticipationPoints($user, $activity);
+                // $eventService->createUserParticipationPoints($user, $activity);
 
                 // Create or update user profile point
                 if (isset($activity['distance']) && isset($activity['date'])) {
@@ -240,8 +248,7 @@ class TrackerLoginsController extends Controller
         Log::debug('StravaService: Processing webhook', ['data' => $data]);
 
         // Verify this is an activity creation event
-        if (! isset($data['object_type']) || $data['object_type'] !== 'activity' || ! isset($data['aspect_type']) || $data['aspect_type'] !== 'create')
-        {
+        if (! isset($data['object_type']) || $data['object_type'] !== 'activity' || ! isset($data['aspect_type']) || $data['aspect_type'] !== 'create') {
             return ['status' => 'ignored', 'reason' => 'Not an activity creation event'];
         }
 
@@ -252,8 +259,7 @@ class TrackerLoginsController extends Controller
             })
             ->first();
 
-        if (! $sourceProfile)
-        {
+        if (! $sourceProfile) {
             Log::error('StravaService: Unable to find user for owner_id', [
                 'owner_id' => $data['owner_id'],
             ]);
@@ -262,8 +268,7 @@ class TrackerLoginsController extends Controller
         }
 
         // Refresh token if needed
-        if (Carbon::parse($sourceProfile->token_expires_at)->lt(Carbon::now()))
-        {
+        if (Carbon::parse($sourceProfile->token_expires_at)->lt(Carbon::now())) {
             $this->refreshToken($sourceProfile->refresh_token, $sourceProfile);
             $sourceProfile->refresh();
         }
@@ -275,7 +280,7 @@ class TrackerLoginsController extends Controller
         try {
             $activity = $this->fetchActivity($data['object_id']);
 
-            Log::debug("Process Webhook : Fetch Activities : ", $activity);
+            Log::debug('Process Webhook : Fetch Activities : ', $activity);
 
             // Process and store the activity data
             $processedActivity = $this->processActivity($activity, $sourceProfile);
@@ -308,15 +313,14 @@ class TrackerLoginsController extends Controller
     private function refreshToken(?string $refreshToken, $sourceProfile)
     {
         Log::debug("Refresh Token: {$refreshToken}", [
-            'sourceProfile' => $sourceProfile->toArray()
+            'sourceProfile' => $sourceProfile->toArray(),
         ]);
 
-        if (! $refreshToken)
-        {
+        if (! $refreshToken) {
             return ['error' => 'No refresh token provided'];
         }
 
-        Log::debug('Sending refresh token request to: ' . $this->authTokenUrl, [
+        Log::debug('Sending refresh token request to: '.$this->authTokenUrl, [
             'client_id' => $this->clientId,
             'grant_type' => 'refresh_token',
         ]);
@@ -328,8 +332,7 @@ class TrackerLoginsController extends Controller
             'refresh_token' => $refreshToken,
         ]);
 
-        if ($response->successful())
-        {
+        if ($response->successful()) {
             $data = $response->json();
             Log::debug('Token refresh successful. Response data:', $data);
 
@@ -371,7 +374,7 @@ class TrackerLoginsController extends Controller
     {
         // Ensure accessToken is set before making the request
         if (empty($this->accessToken)) {
-            Log::error('fetchActivity: No access token available for fetching activity ' . $activityId);
+            Log::error('fetchActivity: No access token available for fetching activity '.$activityId);
             throw new Exception('No access token available.');
         }
 
@@ -419,7 +422,7 @@ class TrackerLoginsController extends Controller
         };
     }
 
-    private function createOrUpdateUserProfilePoint($user, $distance, $date, $sourceProfile, $type='webhook',$actionType="auto")
+    private function createOrUpdateUserProfilePoint($user, $distance, $date, $sourceProfile, $type = 'webhook', $actionType = 'auto')
     {
         $profilePoint = $user->profilePoints()->where('date', $date)->where('data_source_id', $sourceProfile->data_source_id)->first();
 
@@ -428,7 +431,7 @@ class TrackerLoginsController extends Controller
             "{$type}_distance_mile" => ($distance * 0.621371),
             'date' => $date,
             'data_source_id' => $sourceProfile->data_source_id,
-            'action_type' => $actionType
+            'action_type' => $actionType,
         ];
 
         if ($profilePoint) {
@@ -464,14 +467,13 @@ class TrackerLoginsController extends Controller
         return ['error' => $response->body()];
     }
 
-    private function createPoints($eventService, $user, $date, $distance, $sourceProfile, $eventId=null, $transcationId = null, $modality = "other")
+    private function createPoints($eventService, $user, $date, $distance, $sourceProfile, $eventId = null, $transcationId = null, $modality = 'other')
     {
-        if(!$distance){
+        if (! $distance) {
             return false;
         }
 
-
-        if($eventId) {
+        if ($eventId) {
             $participations = $user->participations()->where('event_id', $eventId)
                 ->where('subscription_end_date', '>=', $date)->where('subscription_start_date', '<=', $date)
                 ->get();
@@ -481,34 +483,33 @@ class TrackerLoginsController extends Controller
                 ->where('subscription_end_date', '>=', $date)->where('subscription_start_date', '<=', $date)->get();
         }
 
-        if(!$participations->count()) {
+        if (! $participations->count()) {
             return false;
         }
 
-        foreach($participations as $participation)
-        {
+        foreach ($participations as $participation) {
             $pointdata = [
                 'amount' => $distance,
                 'date' => $date,
                 'event_id' => $participation->event_id,
                 'modality' => $modality,
                 'data_source_id' => $sourceProfile->data_source_id,
-                'transaction_id' => $transcationId
+                'transaction_id' => $transcationId,
             ];
 
-            Log::debug("createPoints : foreach : ", $pointdata);
+            Log::debug('createPoints : foreach : ', $pointdata);
 
             $userPoint = $user->points()->where([
                 'date' => $date,
                 'modality' => $modality,
                 'event_id' => $participation->event_id,
                 'data_source_id' => $sourceProfile->data_source_id,
-                'transaction_id' => $transcationId
+                'transaction_id' => $transcationId,
             ])->first();
 
-            if($userPoint) {
+            if ($userPoint) {
                 $userPoint->update($pointdata);
-            } else{
+            } else {
                 $user->points()->create($pointdata);
             }
 

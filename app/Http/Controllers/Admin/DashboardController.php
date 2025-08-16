@@ -1,17 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
-class DashboardController extends Controller
+final class DashboardController extends Controller
 {
-    public  function  index(){
+    public function index()
+    {
         return view('admin.dashboard');
     }
 
-    public  function  show(){
+    public function show()
+    {
         return view('admin.show');
     }
 }

@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
 import lottie from 'lottie-web';
+import { useEffect, useRef } from 'react';
 
 type LottieGoalProps = {
   currentPoints: number;
@@ -41,11 +41,11 @@ export function LottieGoal({ currentPoints, goal }: LottieGoalProps) {
   };
 
   return (
-    <div className="text-center space-y-4">
-      <p className="inline-block text-xl font-bold font-mono m-0 bg-clip-text text-transparent" style={gradientStyle}>
+    <div className="space-y-4 text-center">
+      <p className="m-0 inline-block bg-clip-text font-mono text-xl font-bold text-transparent" style={gradientStyle}>
         2025 miles in 2025!
       </p>
-      <div ref={lottieContainer} className="w-full mx-auto" />
+      <div ref={lottieContainer} className="mx-auto w-full" />
     </div>
   );
 }

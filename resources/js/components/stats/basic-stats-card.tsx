@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCardSkeleton } from '@/components/ui/skeleton-components';
 import { Target } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface BasicStats {
   total_miles: number;
@@ -39,10 +38,10 @@ export default function BasicStatsCard() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Miles</CardTitle>
-          <Target className="h-4 w-4 text-muted-foreground" />
+          <Target className="text-muted-foreground h-4 w-4" />
         </CardHeader>
         <CardContent>
-          <div className="text-red-500 text-sm">{error}</div>
+          <div className="text-sm text-red-500">{error}</div>
         </CardContent>
       </Card>
     );
@@ -52,13 +51,11 @@ export default function BasicStatsCard() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">Total Miles</CardTitle>
-        <Target className="h-4 w-4 text-muted-foreground" />
+        <Target className="text-muted-foreground h-4 w-4" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{stats?.total_miles.toFixed(2) || '0.00'}</div>
-        <p className="text-xs text-muted-foreground">
-          Miles completed in this event
-        </p>
+        <p className="text-muted-foreground text-xs">Miles completed in this event</p>
       </CardContent>
     </Card>
   );

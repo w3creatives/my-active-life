@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions\Points;
 
 use App\Services\UserPointService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
-class CreateUserPoint
+final class CreateUserPoint
 {
     use AsAction;
 

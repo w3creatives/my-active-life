@@ -479,7 +479,6 @@ final class EventService
          * TBD - Do we need to change date as per user timezone while creating user points
          * $point['date'] = Carbon::parse($point['date'])->setTimezone($user->time_zone_name ?? 'UTC')->format('Y-m-d');
          */
-
         $condition = $skipUpdate ? [] : [
             'date' => $point['date'],
             'modality' => $point['modality'],

@@ -189,7 +189,6 @@ final class TeamsController extends Controller
                 'team_id.exists' => 'Team could not be found for selected event.',
             ]);
 
-
         dd($request->all());
     }
 }

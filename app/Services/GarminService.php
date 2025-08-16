@@ -10,7 +10,6 @@ use App\Traits\CalculateDaysTrait;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Exception;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;

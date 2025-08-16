@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +27,7 @@ return new class extends Migration
             $table->bigInteger('event_id')->nullable()->index('index_races_on_event_id');
             $table->string('social_hashtags')->nullable();
         });
-        //DB::statement("alter table \"races\" add column \"virtual_race_type\" t_virtual_race_type null default 'rte'");
+        // DB::statement("alter table \"races\" add column \"virtual_race_type\" t_virtual_race_type null default 'rte'");
     }
 
     /**

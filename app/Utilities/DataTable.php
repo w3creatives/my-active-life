@@ -1,26 +1,27 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Utilities;
 
 use Illuminate\Support\Collection;
 
-class DataTable
+final class DataTable
 {
-    protected array $searchableColumns = [];
+    private array $searchableColumns = [];
+
     private int $totalCount = 0;
 
-    protected Collection $data;
+    private Collection $data;
 
     public function setSearchableColumns(array $columns): static
     {
         $this->searchableColumns = $columns;
+
         return $this;
     }
 
     /**
-     * @param $request
-     * @param $query
      * @return $this
      */
     public function query($request, $query): static
@@ -38,12 +39,13 @@ class DataTable
                         $query->orWhere($column, 'ILIKE', "%{$searchTerm}%");
                     }
                 }
+
                 return $query;
             });
 
-            if ($orderColumn) {
-                $query = $query->orderBy($orderColumn, $orderDir);
-            }
+        if ($orderColumn) {
+            $query = $query->orderBy($orderColumn, $orderDir);
+        }
 
         $this->totalCount = $query->count();
 

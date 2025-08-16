@@ -12,8 +12,8 @@ export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => (
   <div className="bg-background min-h-screen">
     <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
       <div className="mx-auto w-full max-w-6xl">{children}</div>
-      <footer className="my-10 h-10 flex items-center">
-        <div className="w-full max-w-6xl flex flex-col-reverse md:flex-row gap-5 items-center justify-between mx-auto text-sm px-4">
+      <footer className="my-10 flex h-10 items-center">
+        <div className="mx-auto flex w-full max-w-6xl flex-col-reverse items-center justify-between gap-5 px-4 text-sm md:flex-row">
           <p className="text-muted-foreground">{new Date().getFullYear()} &copy; Tracker by Run The Edge</p>
           {/* footer menu */}
           <ul className="flex items-center gap-4">

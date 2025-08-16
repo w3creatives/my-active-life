@@ -1,16 +1,10 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { router } from '@inertiajs/react';
-import { toast } from 'sonner';
-import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface Participant {
   id: number;
@@ -66,7 +60,7 @@ export default function FollowingParticipants() {
         onFinish: () => {
           setUnfollowingId(null);
         },
-      }
+      },
     );
   }
 
@@ -80,8 +74,8 @@ export default function FollowingParticipants() {
       </div>
 
       {/* Progress Bar */}
-      <div className="flex-1 mx-6">
-        <Skeleton className="w-full h-2 rounded-full" />
+      <div className="mx-6 flex-1">
+        <Skeleton className="h-2 w-full rounded-full" />
       </div>
 
       {/* Miles & Unfollow */}
@@ -96,9 +90,7 @@ export default function FollowingParticipants() {
     <Card>
       <CardHeader>
         <CardTitle>People I Follow</CardTitle>
-        <CardDescription>
-          Here's a list of people you’re currently following.
-        </CardDescription>
+        <CardDescription>Here's a list of people you’re currently following.</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -110,22 +102,17 @@ export default function FollowingParticipants() {
             <ParticipantSkeleton />
           </div>
         ) : error ? (
-          <div className="text-red-500 text-center">{error}</div>
+          <div className="text-center text-red-500">{error}</div>
         ) : !participants || participants.data.length === 0 ? (
-          <div className="text-muted-foreground text-center">
-            You are not following anyone. Boo-hoo.
-          </div>
+          <div className="text-muted-foreground text-center">You are not following anyone. Boo-hoo.</div>
         ) : (
           <div className="space-y-4">
             {participants.data.map((person) => (
-              <div
-                key={person.id}
-                className="flex items-center justify-between border-b pb-4 last:border-b-0"
-              >
+              <div key={person.id} className="flex items-center justify-between border-b pb-4 last:border-b-0">
                 {/* Avatar + Display Name */}
                 <div className="flex items-center gap-3">
                   <div
-                    className="size-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 uppercase text-sm font-medium"
+                    className="flex size-10 items-center justify-center rounded-full bg-gray-200 text-sm font-medium text-gray-500 uppercase"
                     aria-label={`Initial of ${person.display_name}`}
                   >
                     {person.display_name?.charAt(0) || 'U'}
@@ -134,8 +121,8 @@ export default function FollowingParticipants() {
                 </div>
 
                 {/* Progress Bar */}
-                <div className="flex-1 mx-6">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="mx-6 flex-1">
+                  <div className="h-2 w-full rounded-full bg-gray-200">
                     <div
                       className="bg-gray h-2 rounded-full"
                       style={{ width: `${Math.min(person.total_miles, 100)}%` }}
@@ -149,9 +136,7 @@ export default function FollowingParticipants() {
 
                 {/* Miles & Unfollow */}
                 <div className="flex items-center gap-4">
-                  <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                    {person.total_miles} mi
-                  </div>
+                  <div className="text-muted-foreground text-sm font-medium whitespace-nowrap">{person.total_miles} mi</div>
                   <Button
                     variant="danger"
                     size="sm"

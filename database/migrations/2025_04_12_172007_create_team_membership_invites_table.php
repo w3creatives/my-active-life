@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -24,8 +26,8 @@ return new class extends Migration
             $table->unique(['prospective_member_id', 'team_id', 'event_id'], 'idx_pf_t_e_irequests');
             $table->index(['prospective_member_id', 'team_id'], 'idx_pm_t_irequests');
         });
-        //DB::statement("alter table \"team_membership_invites\" add column \"status\" t_team_request null default 'invite_to_join_issued'");
-        DB::statement("create index \"index_team_membership_invites_on_status\" on \"team_membership_invites\" (\"status\")");
+        // DB::statement("alter table \"team_membership_invites\" add column \"status\" t_team_request null default 'invite_to_join_issued'");
+        DB::statement('create index "index_team_membership_invites_on_status" on "team_membership_invites" ("status")');
     }
 
     /**

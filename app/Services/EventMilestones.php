@@ -1,14 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\Event;
-use App\Models\FitLifeActivity;
 use App\Models\User;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
 
-class EventMilestones
+final class EventMilestones
 {
     private const BASE_IMAGE_PATH = 'images';
 
@@ -17,15 +16,15 @@ class EventMilestones
     /**
      * Get all milestones for an event with images and completion status
      *
-     * @param int $eventId The event ID
-     * @param int $userId The user ID to check completion status
+     * @param  int  $eventId  The event ID
+     * @param  int  $userId  The user ID to check completion status
      * @return array Array of milestones with completion status
      */
     public function getEventMilestonesWithStatus(int $eventId, int $userId): array
     {
         $event = Event::find($eventId);
 
-        if (!$event) {
+        if (! $event) {
             return [
                 'error' => 'Event not found',
                 'status' => false,
@@ -34,7 +33,7 @@ class EventMilestones
 
         $user = User::find($userId);
 
-        if (!$user) {
+        if (! $user) {
             return [
                 'error' => 'User not found',
                 'status' => false,
@@ -46,33 +45,32 @@ class EventMilestones
             ->where('event_id', $eventId)
             ->first();
 
-        $userDistance = $userTotalPoints ? (float)$userTotalPoints->amount : 0;
+        $userDistance = $userTotalPoints ? (float) $userTotalPoints->amount : 0;
 
         $result = [];
 
         if ($event->event_type === 'fit_life') {
             // Handle FitLife event type
             return $this->getFitLifeMilestonesWithStatus($event, $user);
-        } else {
-            // Handle regular event types
-            $milestones = $event->milestones()->orderBy('distance', 'asc')->get();
+        }
+        // Handle regular event types
+        $milestones = $event->milestones()->orderBy('distance', 'asc')->get();
 
-            foreach ($milestones as $milestone) {
-                $isCompleted = $userDistance >= $milestone->distance;
+        foreach ($milestones as $milestone) {
+            $isCompleted = $userDistance >= $milestone->distance;
 
-                $milestoneData = [
-                    'id' => $milestone->id,
-                    'name' => $milestone->name,
-                    'description' => $milestone->description,
-                    'distance' => $milestone->distance,
-                    'is_completed' => $isCompleted,
-                    'logo_image_url' => $milestone->logo,
-                    'team_logo_image_url' => $milestone->team_logo,
-                    'video_url' => $milestone->video_url,
-                ];
+            $milestoneData = [
+                'id' => $milestone->id,
+                'name' => $milestone->name,
+                'description' => $milestone->description,
+                'distance' => $milestone->distance,
+                'is_completed' => $isCompleted,
+                'logo_image_url' => $milestone->logo,
+                'team_logo_image_url' => $milestone->team_logo,
+                'video_url' => $milestone->video_url,
+            ];
 
-                $result[] = $milestoneData;
-            }
+            $result[] = $milestoneData;
         }
 
         return [
@@ -84,8 +82,8 @@ class EventMilestones
     /**
      * Get FitLife milestones with completion status
      *
-     * @param Event $event The event
-     * @param User $user The user
+     * @param  Event  $event  The event
+     * @param  User  $user  The user
      * @return array Array of FitLife milestones with completion status
      */
     private function getFitLifeMilestonesWithStatus(Event $event, User $user): array
@@ -94,7 +92,7 @@ class EventMilestones
 
         // Get user's FitLife registrations for this event
         $registrations = $user->fitLifeRegistrations()
-            ->whereHas('activity', function($query) use($event) {
+            ->whereHas('activity', function ($query) use ($event) {
                 return $query->where('event_id', $event->id);
             })
             ->get();

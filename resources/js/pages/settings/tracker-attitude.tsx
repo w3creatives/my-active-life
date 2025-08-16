@@ -1,18 +1,12 @@
-import { useState } from 'react';
 import { Head } from '@inertiajs/react';
+import { useState } from 'react';
 
 import HeadingSmall from '@/components/heading-small';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { type BreadcrumbItem } from '@/types';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -21,16 +15,7 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-const attitudes = [
-  'Relaxed',
-  'Yoda',
-  'Tough Love',
-  'Positive',
-  'Cheerleader',
-  'Sci-Fi',
-  'Historian',
-  'Super Hero',
-];
+const attitudes = ['Relaxed', 'Yoda', 'Tough Love', 'Positive', 'Cheerleader', 'Sci-Fi', 'Historian', 'Super Hero'];
 
 export default function TrackerAttitude() {
   const [attitude, setAttitude] = useState('Relaxed'); // default selection

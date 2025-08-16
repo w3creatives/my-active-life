@@ -79,7 +79,7 @@ final class UsersController extends Controller
             ],
             'password' => [
                 'required_if_accepted:enabled_password',
-                Rule::excludeIf(!$request->get('enabled_password', false)),
+                Rule::excludeIf(! $request->get('enabled_password', false)),
                 Password::min(6),
             ],
             'confirm_password' => [
@@ -112,8 +112,8 @@ final class UsersController extends Controller
                     [
                         'event_id' => $event->id,
                         'subscribed' => true,
-                        'subscription_start_date' => Carbon::parse($request->input('start_date.' . $event->id))->format('Y-m-d'),
-                        'subscription_end_date' => Carbon::parse($request->input('end_date.' . $event->id))->format('Y-m-d'),
+                        'subscription_start_date' => Carbon::parse($request->input('start_date.'.$event->id))->format('Y-m-d'),
+                        'subscription_end_date' => Carbon::parse($request->input('end_date.'.$event->id))->format('Y-m-d'),
                     ]
                 );
         }
@@ -128,7 +128,7 @@ final class UsersController extends Controller
                     case 'fit_life':
                         $hasRegistration = $event->fitLifeRegistrations()->where('user_id', $user->id)->count();
 
-                        if (!$hasRegistration) {
+                        if (! $hasRegistration) {
                             $userParticipation->delete();
                         }
                         break;
@@ -136,7 +136,7 @@ final class UsersController extends Controller
                     case 'promotional':
                         $hasPoint = $user->points()->where('event_id', $event->id)->count();
 
-                        if (!$hasPoint) {
+                        if (! $hasPoint) {
                             $userParticipation->delete();
                         }
                         break;
@@ -163,14 +163,15 @@ final class UsersController extends Controller
                     'required',
                     'email',
                     'different:primary_account_email',
-                    Rule::exists('users','email')->where(function ($query) {
+                    Rule::exists('users', 'email')->where(function ($query) {
                         $query->where('super_admin', false);
                     }),
                 ],
-            ],[
+            ], [
                 'primary_account_email.exists' => 'The email of primary account doesn\'t exist.',
                 'secondary_account_email.exists' => 'The email of secondary account doesn\'t exist.',
             ]);
+
             return redirect()->route('admin.users');
             $primaryAccount = User::where('email', $request->get('primary_account_email'))->first();
             $secondaryAccount = User::where('email', $request->get('secondary_account_email'))->first();

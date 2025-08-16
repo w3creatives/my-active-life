@@ -1,15 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class EventModality extends Model
+final class EventModality extends Model
 {
     use HasFactory;
 
-	protected $guarded = [];
+    protected $guarded = [];
 
     public function event()
     {

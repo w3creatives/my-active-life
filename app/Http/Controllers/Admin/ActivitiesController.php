@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -7,10 +9,9 @@ use App\Models\Event;
 use App\Models\FitLifeActivity;
 use App\Utilities\DataTable;
 use Carbon\Carbon;
-use Exception;
 use Illuminate\Http\Request;
 
-class ActivitiesController extends Controller
+final class ActivitiesController extends Controller
 {
     public function index(Request $request, DataTable $dataTable, $eventId)
     {
@@ -19,12 +20,13 @@ class ActivitiesController extends Controller
             $query = FitLifeActivity::select(['id', 'sponsor', 'category', 'group', 'name', 'tags', 'social_hashtags', 'available_from', 'available_until', 'event_id'])
                 ->where('event_id', $eventId);
 
-            list($itemCount, $items) = $dataTable->setSearchableColumns(['name', '$item'])->query($request, $query)->response();
+            [$itemCount, $items] = $dataTable->setSearchableColumns(['name', '$item'])->query($request, $query)->response();
 
             $items = $items->map(function ($item) {
                 $item->action = [
                     view('admin.activities.actions.activity', compact('item'))->render(),
                 ];
+
                 return $item;
             });
 
@@ -37,9 +39,10 @@ class ActivitiesController extends Controller
         }
         $event = Event::type('fit_life')->find($eventId);
 
-        if (!$event) {
+        if (! $event) {
             return redirect()->back()->with('alert', ['type' => 'danger', 'message' => 'Invalid event.']);
         }
+
         return view('admin.activities.list', compact('event'));
     }
 
@@ -50,15 +53,16 @@ class ActivitiesController extends Controller
 
         $sports = [];
 
-        if($activity){
-            $sports = explode(',',str_replace(['{','}'],'',$activity->sports));
+        if ($activity) {
+            $sports = explode(',', str_replace(['{', '}'], '', $activity->sports));
         }
 
-        return view('admin.activities.create', compact('eventId', 'activityId', 'activity','sports'));
+        return view('admin.activities.create', compact('eventId', 'activityId', 'activity', 'sports'));
 
     }
 
-    public  function store(Request $request, $eventId, $activityId = null){
+    public function store(Request $request, $eventId, $activityId = null)
+    {
 
         $request->validate([
             'sponsor' => 'required',
@@ -80,11 +84,11 @@ class ActivitiesController extends Controller
             'tags', 'social_hashtags', 'sports',
         ]);
 
-        $data['description'] = json_encode(['description' => $request->get('description'),'about_title' => $request->get('about_title'), 'about_description' => $request->get('about_description')]);
+        $data['description'] = json_encode(['description' => $request->get('description'), 'about_title' => $request->get('about_title'), 'about_description' => $request->get('about_description')]);
 
         $data['available_from'] = Carbon::parse($data['available_from'])->format('Y-m-d');
         $data['available_until'] = Carbon::parse($data['available_until'])->format('Y-m-d');
-        $data['sports'] = sprintf('{%s}',implode(',',array_map('trim',$data['sports'])));
+        $data['sports'] = sprintf('{%s}', implode(',', array_map('trim', $data['sports'])));
 
         $data['data'] = json_encode(['prize' => ['url' => $request->get('prize_url'), 'description' => $request->get('prize_description')]]);
 
@@ -94,20 +98,23 @@ class ActivitiesController extends Controller
 
         if ($activity) {
             $activity->fill($data)->save();
+
             return redirect()->route('admin.events.activities', $eventId)->with('alert', ['type' => 'success', 'message' => 'Activity updated.']);
         }
 
         $event->fitActivities()->create($data);
+
         return redirect()->route('admin.events.activities', $eventId)->with('alert', ['type' => 'success', 'message' => 'Activity created.']);
     }
 
-    public function destroy(Request $request, $eventId, $activityId){
+    public function destroy(Request $request, $eventId, $activityId)
+    {
 
         $event = Event::find($eventId);
 
         $activity = $event->fitActivities()->find($activityId);
 
-        if(!$activity){
+        if (! $activity) {
             return redirect()->route('admin.events.activities', $eventId)->with('alert', ['type' => 'danger', 'message' => 'Invalid activity.']);
         }
 

@@ -7,92 +7,92 @@ import { Link } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
 
 const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Profile',
-        href: '/settings/profile',
-        icon: null,
-    },
-    {
-        title: 'Password',
-        href: '/settings/password',
-        icon: null,
-    },
-    {
-        title: 'Device Syncing',
-        href: '/settings/device-sync',
-        icon: null,
-    },
-    {
-        title: 'Manual Entry',
-        href: '/settings/manual-entry',
-        icon: null,
-    },
-    {
-        title: 'Privacy',
-        href: '/settings/privacy',
-        icon: null,
-    },
-    {
-      title: 'Import Previous Years',
-      href: '/settings/import-previous-years',
-      icon: null,
-    },
-    {
-      title: 'RTY Goals',
-      href: '/settings/rty-goals',
-      icon: null,
-    },
-    {
-      title: 'Tracker Attitude',
-      href: '/settings/tracker-attitude',
-      icon: null,
-    },
-    {
-        title: 'Appearance',
-        href: '/settings/appearance',
-        icon: null,
-    },
+  {
+    title: 'Profile',
+    href: '/settings/profile',
+    icon: null,
+  },
+  {
+    title: 'Password',
+    href: '/settings/password',
+    icon: null,
+  },
+  {
+    title: 'Device Syncing',
+    href: '/settings/device-sync',
+    icon: null,
+  },
+  {
+    title: 'Manual Entry',
+    href: '/settings/manual-entry',
+    icon: null,
+  },
+  {
+    title: 'Privacy',
+    href: '/settings/privacy',
+    icon: null,
+  },
+  {
+    title: 'Import Previous Years',
+    href: '/settings/import-previous-years',
+    icon: null,
+  },
+  {
+    title: 'RTY Goals',
+    href: '/settings/rty-goals',
+    icon: null,
+  },
+  {
+    title: 'Tracker Attitude',
+    href: '/settings/tracker-attitude',
+    icon: null,
+  },
+  {
+    title: 'Appearance',
+    href: '/settings/appearance',
+    icon: null,
+  },
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
-    // When server-side rendering, we only render the layout on the client...
-    if (typeof window === 'undefined') {
-        return null;
-    }
+  // When server-side rendering, we only render the layout on the client...
+  if (typeof window === 'undefined') {
+    return null;
+  }
 
-    const currentPath = window.location.pathname;
+  const currentPath = window.location.pathname;
 
-    return (
-        <div className="px-4 py-6">
-            <Heading title="Settings" description="Manage your profile and account settings" />
+  return (
+    <div className="px-4 py-6">
+      <Heading title="Settings" description="Manage your profile and account settings" />
 
-            <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
-                <aside className="w-full max-w-xl lg:w-48">
-                    <nav className="flex flex-col space-y-1 space-x-0">
-                        {sidebarNavItems.map((item) => (
-                            <Button
-                                key={item.href}
-                                size="sm"
-                                variant="link"
-                                asChild
-                                className={cn('w-full justify-start text-black dark:text-white', {
-                                    'bg-primary text-white': currentPath === item.href,
-                                })}
-                            >
-                                <Link href={item.href} prefetch>
-                                    {item.title}
-                                </Link>
-                            </Button>
-                        ))}
-                    </nav>
-                </aside>
+      <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
+        <aside className="w-full max-w-xl lg:w-48">
+          <nav className="flex flex-col space-y-1 space-x-0">
+            {sidebarNavItems.map((item) => (
+              <Button
+                key={item.href}
+                size="sm"
+                variant="link"
+                asChild
+                className={cn('w-full justify-start text-black dark:text-white', {
+                  'bg-primary text-white': currentPath === item.href,
+                })}
+              >
+                <Link href={item.href} prefetch>
+                  {item.title}
+                </Link>
+              </Button>
+            ))}
+          </nav>
+        </aside>
 
-                <Separator className="my-6 md:hidden" />
+        <Separator className="my-6 md:hidden" />
 
-                <div className="w-full flex-1">
-                    <section className="w-full space-y-12">{children}</section>
-                </div>
-            </div>
+        <div className="w-full flex-1">
+          <section className="w-full space-y-12">{children}</section>
         </div>
-    );
+      </div>
+    </div>
+  );
 }

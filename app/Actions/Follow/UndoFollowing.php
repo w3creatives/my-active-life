@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions\Follow;
 
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use App\Models\User;
 use App\Models\Event;
 use App\Models\Team;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
-class UndoFollowing
+final class UndoFollowing
 {
     /**
      * Handle the unfollowing logic for both users and teams.
@@ -21,7 +23,8 @@ class UndoFollowing
 
         if ($type === 'user') {
             return $this->unfollowUser($request, $user);
-        } elseif ($type === 'team') {
+        }
+        if ($type === 'team') {
             return $this->unfollowTeam($request, $user);
         }
 

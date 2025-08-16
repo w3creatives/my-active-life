@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Models\DataSourceProfile;
@@ -11,7 +13,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class ProcessUserDistanceTracker implements ShouldQueue
+final class ProcessUserDistanceTracker implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -20,7 +22,7 @@ class ProcessUserDistanceTracker implements ShouldQueue
      */
     public function __construct()
     {
-        Log::info('ProcessUserDistanceTracker: Job queued at ' . Carbon::now()->toDateTimeString());
+        Log::info('ProcessUserDistanceTracker: Job queued at '.Carbon::now()->toDateTimeString());
     }
 
     /**
@@ -28,9 +30,9 @@ class ProcessUserDistanceTracker implements ShouldQueue
      */
     public function handle(): void
     {
-        Log::info('ProcessUserDistanceTracker: Starting job at ' . Carbon::now()->toDateTimeString());
-        Log::info('ProcessUserDistanceTracker: Queue connection: ' . config('queue.default') . ', Queue name: ' . ($this->queue ?? 'default'));
-        
+        Log::info('ProcessUserDistanceTracker: Starting job at '.Carbon::now()->toDateTimeString());
+        Log::info('ProcessUserDistanceTracker: Queue connection: '.config('queue.default').', Queue name: '.($this->queue ?? 'default'));
+
         $profiles = DataSourceProfile::whereHas('source', function ($query) {
             return $query->where('short_name', 'fitbit');
         })
@@ -45,7 +47,7 @@ class ProcessUserDistanceTracker implements ShouldQueue
             })
             ->get();
 
-        Log::info('ProcessUserDistanceTracker: Found ' . $profiles->count() . ' profiles to process');
+        Log::info('ProcessUserDistanceTracker: Found '.$profiles->count().' profiles to process');
 
         foreach ($profiles as $profile) {
             // Dispatch a job for each profile to process in parallel

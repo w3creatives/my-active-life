@@ -1,26 +1,13 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Search, Lock, LockOpen } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
-import { toast } from 'sonner';
 import axios from 'axios';
+import { Lock, LockOpen, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface Team {
   id: number;
@@ -81,9 +68,7 @@ export default function FollowTeam() {
       {
         preserveScroll: true,
         onSuccess: () => {
-          const message = isPublic
-            ? `You are now following ${teamName}.`
-            : `Follow request sent to ${teamName}.`;
+          const message = isPublic ? `You are now following ${teamName}.` : `Follow request sent to ${teamName}.`;
           toast.success(message);
           // Refresh the data after successful follow
           fetchTeams();
@@ -95,7 +80,7 @@ export default function FollowTeam() {
         onFinish: () => {
           setFollowingId(null);
         },
-      }
+      },
     );
   }
 
@@ -118,7 +103,7 @@ export default function FollowTeam() {
 
   // Skeleton component for individual team rows
   const TeamRowSkeleton = () => (
-    <div className="grid grid-cols-5 items-center px-4 py-3 border-b text-sm">
+    <div className="grid grid-cols-5 items-center border-b px-4 py-3 text-sm">
       <div>
         <Skeleton className="h-4 w-32" />
       </div>
@@ -142,7 +127,16 @@ export default function FollowTeam() {
       <CardHeader>
         <CardTitle>Choose Teams To Follow</CardTitle>
         <CardDescription>
-          If you want to follow a team, browse below and follow. If a team has a private profile, you must be approved to follow them. Because, <a href='https://open.spotify.com/user/i8jbm6uxgffk9f29pvtiwvq21/playlist/6MfRx31RscWGG3gUQ1R3Wm' target="_blank" rel="noreferrer" className="underline text-blue-600">privacy/GDPR</a>...
+          If you want to follow a team, browse below and follow. If a team has a private profile, you must be approved to follow them. Because,{' '}
+          <a
+            href="https://open.spotify.com/user/i8jbm6uxgffk9f29pvtiwvq21/playlist/6MfRx31RscWGG3gUQ1R3Wm"
+            target="_blank"
+            rel="noreferrer"
+            className="text-blue-600 underline"
+          >
+            privacy/GDPR
+          </a>
+          ...
         </CardDescription>
       </CardHeader>
 
@@ -160,10 +154,7 @@ export default function FollowTeam() {
             />
           </div>
           <div className="relative w-full max-w-50">
-            <Select
-              value={perPageTeam}
-              onValueChange={setPerPageTeam}
-            >
+            <Select value={perPageTeam} onValueChange={setPerPageTeam}>
               <SelectTrigger className="h-full">
                 <SelectValue placeholder="Records per page" />
               </SelectTrigger>
@@ -178,8 +169,8 @@ export default function FollowTeam() {
         </div>
 
         {/* Team Listing */}
-        <div className="border rounded-md">
-          <div className="grid grid-cols-5 px-4 py-2 border-b bg-muted text-muted-foreground text-sm font-medium">
+        <div className="rounded-md border">
+          <div className="bg-muted text-muted-foreground grid grid-cols-5 border-b px-4 py-2 text-sm font-medium">
             <div>Name</div>
             <div>Privacy</div>
             <div>Members</div>
@@ -199,27 +190,20 @@ export default function FollowTeam() {
           ) : error ? (
             <div className="p-8 text-center text-red-500">{error}</div>
           ) : !teams || teams.data.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground">No teams found.</div>
+            <div className="text-muted-foreground p-4 text-center">No teams found.</div>
           ) : (
             teams.data.map((team) => (
-              <div
-                key={team.id}
-                className="grid grid-cols-5 items-center px-4 py-3 border-b text-sm"
-              >
+              <div key={team.id} className="grid grid-cols-5 items-center border-b px-4 py-3 text-sm">
                 <div>{team.name}</div>
                 <div className="flex items-center">
-                  {team.public_profile ? (
-                    <LockOpen className="text-gray-500 size-5" />
-                  ) : (
-                    <Lock className="text-gray-500 size-5" />
-                  )}
+                  {team.public_profile ? <LockOpen className="size-5 text-gray-500" /> : <Lock className="size-5 text-gray-500" />}
                 </div>
                 <div>{team.total_members ?? '-'}</div>
                 <div>{team.total_miles?.toFixed(1) ?? '-'}</div>
                 <div className="text-right">
-                  {(team.following_status_text === 'Follow' || team.following_status_text === 'Request Follow') ? (
+                  {team.following_status_text === 'Follow' || team.following_status_text === 'Request Follow' ? (
                     <Button
-                      variant={team.public_profile ? "default" : "yellow"}
+                      variant={team.public_profile ? 'default' : 'yellow'}
                       size="sm"
                       onClick={() => handleFollow(team.id, team.name, team.public_profile)}
                       disabled={followingId === team.id}
@@ -246,18 +230,10 @@ export default function FollowTeam() {
           </div>
         ) : (
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => handlePagination((teams?.current_page || 1) - 1)}
-              disabled={!teams?.prev_page_url}
-            >
+            <Button variant="outline" onClick={() => handlePagination((teams?.current_page || 1) - 1)} disabled={!teams?.prev_page_url}>
               Previous
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => handlePagination((teams?.current_page || 1) + 1)}
-              disabled={!teams?.next_page_url}
-            >
+            <Button variant="outline" onClick={() => handlePagination((teams?.current_page || 1) + 1)} disabled={!teams?.next_page_url}>
               Next
             </Button>
           </div>

@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 
 final class UserService
@@ -104,10 +103,10 @@ final class UserService
                     $user->participations()->create([
                         'event_id' => $event->id,
                         'subscription_start_date' => $event->start_date,
-                        'subscription_end_date' => $event->end_date
+                        'subscription_end_date' => $event->end_date,
                     ]);
 
-                    if($event->id == 2) {
+                    if ($event->id === 2) {
                         $user->participations()->where(['event_id' => $event->id])->update(['subscription_start_date' => Carbon::now()->format('Y-m-d')]);
                     }
                 }

@@ -1,19 +1,17 @@
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Mail, MailOpen } from 'lucide-react';
-import { HTMLAttributes } from 'react';
 import { Link } from '@inertiajs/react';
+import { Mail } from 'lucide-react';
+import { HTMLAttributes } from 'react';
 
 export default function MessageCenter({ className = '', ...props }: HTMLAttributes<HTMLDivElement>) {
-
   return (
     <div className={className} {...props}>
-        <Link href={route('user.conversations')}>
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md">
-                <Mail className="h-5 w-5" />
-                <span className="sr-only">Toggle theme</span>
-            </Button>
-        </Link>
+      <Link href={route('user.conversations')}>
+        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md">
+          <Mail className="h-5 w-5" />
+          <span className="sr-only">Toggle theme</span>
+        </Button>
+      </Link>
       {/*<DropdownMenu>*/}
       {/*  <DropdownMenuTrigger asChild>*/}
       {/*    <Link href={route('user.conversations')}>*/}
