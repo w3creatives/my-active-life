@@ -179,6 +179,10 @@ Route::middleware(['auth'])->group(function () {
 
     // Teams route
     Route::get('/teams', [TeamsController::class, 'index'])->name('teams');
+    Route::post('/teams/create', [TeamsController::class, 'store'])->name('teams.create');
+    Route::get('/teams/members', [TeamsController::class, 'teamMembers'])->name('teams.members');
+    Route::post('/teams/leave-team', [TeamsController::class, 'leaveTeam'])->name('teams.leave-team');
+
 });
 
 require __DIR__.'/settings.php';

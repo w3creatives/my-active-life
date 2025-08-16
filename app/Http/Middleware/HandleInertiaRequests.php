@@ -47,6 +47,7 @@ final class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'alert' => $request->session()->get('alert'),
             'auth' => [
                 'user' => $request->user(),
                 'total_points' => function () use ($request) {
