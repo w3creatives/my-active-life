@@ -182,6 +182,18 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/teams/create', [TeamsController::class, 'store'])->name('teams.create');
     Route::get('/teams/members', [TeamsController::class, 'teamMembers'])->name('teams.members');
     Route::post('/teams/leave-team', [TeamsController::class, 'leaveTeam'])->name('teams.leave-team');
+    Route::post('/teams/invite-members', [TeamsController::class, 'inviteMembers'])->name('teams.invite-members');
+    
+    // Team invite management routes
+    Route::get('/teams/invites', [TeamsController::class, 'viewInvites'])->name('teams.invites');
+    Route::post('/teams/invites/cancel', [TeamsController::class, 'cancelInvite'])->name('teams.cancel-invite');
+    Route::post('/teams/invites/resend', [TeamsController::class, 'resendInvite'])->name('teams.resend-invite');
+    Route::post('/teams/invites/cancel-expired', [TeamsController::class, 'cancelExpiredInvites'])->name('teams.cancel-expired-invites');
+    Route::get('/teams/invites/stats', [TeamsController::class, 'inviteStats'])->name('teams.invite-stats');
+    
+    // Team invite response routes
+    Route::get('/teams/accept-invite', [TeamsController::class, 'acceptInvite'])->name('teams.accept-invite');
+    Route::get('/teams/decline-invite', [TeamsController::class, 'declineInvite'])->name('teams.decline-invite');
 
 });
 
