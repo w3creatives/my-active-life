@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { router, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 import { type SharedData } from '@/types';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function InviteMembers() {
   const { errors } = usePage<SharedData>().props;
@@ -92,83 +93,85 @@ export default function InviteMembers() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900">People to Invite</h2>
-        <p className="text-gray-600">
-          Add email addresses to invite new members to your team. You can add as many as you need using the "Add Another Email" button below.
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        {emails.map((email, index) => {
-          const fieldError = errors[`emails.${index}`];
-          return (
-            <div key={index} className="space-y-1">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className={`h-4 w-4 ${fieldError ? 'text-red-400' : 'text-gray-400'}`} />
+    <Card>
+      <CardHeader>
+        <CardTitle>People to Invite</CardTitle>
+        <CardDescription>Add email addresses to invite new members to your team. You can add as many as you need using the "Add Another Email" button below.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-6">
+          <div className="space-y-4">
+            {emails.map((email, index) => {
+              const fieldError = errors[`emails.${index}`];
+              return (
+                <div key={index} className="space-y-1">
+                  <div className="relative">
+                    <div className="left-0 absolute inset-y-0 flex items-center pl-3 pointer-events-none">
+                      <Mail className={`h-4 w-4 ${fieldError ? 'text-red-400' : 'text-gray-400'}`} />
+                    </div>
+                    <Input
+                      type="email"
+                      placeholder="Email"
+                      value={email}
+                      onChange={(e) => handleEmailChange(index, e.target.value)}
+                      className={`pl-10 pr-10 ${fieldError ? 'border-red-500 focus-visible:border-red-500' : ''}`}
+                    />
+                    {emails.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeEmailField(index)}
+                        className="right-0 absolute inset-y-0 flex items-center pr-3 text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  {fieldError && (
+                    <p className="text-red-600 text-sm">{fieldError}</p>
+                  )}
                 </div>
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => handleEmailChange(index, e.target.value)}
-                  className={`pl-10 pr-10 ${fieldError ? 'border-red-500 focus-visible:border-red-500' : ''}`}
-                />
-                {emails.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeEmailField(index)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500 transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-              {fieldError && (
-                <p className="text-sm text-red-600">{fieldError}</p>
-              )}
-            </div>
-          );
-        })}
-      </div>
+              );
+            })}
+          </div>
 
-      <div className="flex justify-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={addEmailField}
-          disabled={emails.length >= 20}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Add Another Email ({emails.length}/20)
-        </Button>
-        {emails.some(email => email.trim() !== '') && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={clearAllEmails}
-            className="flex items-center gap-2 text-gray-600"
+          <div className="flex justify-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addEmailField}
+              disabled={emails.length >= 20}
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Another Email ({emails.length}/20)
+            </Button>
+            {emails.some(email => email.trim() !== '') && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={clearAllEmails}
+                className="flex items-center gap-2 text-gray-600"
+              >
+                Clear All
+              </Button>
+            )}
+          </div>
+
+          <Button 
+            variant="default"
+            onClick={handleInvite}
+            className="w-full"
           >
-            Clear All
+            Invite New Members
           </Button>
-        )}
-      </div>
 
-      <Button 
-        onClick={handleInvite}
-        className="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-3 px-4 rounded-md transition-colors"
-      >
-        Invite New Members
-      </Button>
-
-      <div className="text-sm text-gray-500 bg-gray-50 p-4 rounded-md">
-        <p>
-          Just a heads up, only a team captain can approve requests to join the team. Any team member can invite new team members. When participants accept the invitation they will show up automagically in your team.
-        </p>
-      </div>
-    </div>
+          <div className="bg-gray-50 p-4 rounded-md text-gray-500 text-sm">
+            <p>
+              Just a heads up, only a team captain can approve requests to join the team. Any team member can invite new team members. When participants accept the invitation they will show up automagically in your team.
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

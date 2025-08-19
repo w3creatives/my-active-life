@@ -195,6 +195,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/teams/accept-invite', [TeamsController::class, 'acceptInvite'])->name('teams.accept-invite');
     Route::get('/teams/decline-invite', [TeamsController::class, 'declineInvite'])->name('teams.decline-invite');
 
+    // Team admin control routes
+    Route::post('/teams/dissolve', [TeamsController::class, 'dissolveTeam'])->name('teams.dissolve');
+    Route::post('/teams/transfer-admin-role', [TeamsController::class, 'transferTeamAdminRole'])->name('teams.transfer-admin-role');
+
 });
 
 require __DIR__.'/settings.php';

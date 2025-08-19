@@ -8,6 +8,10 @@ use App\Mail\SendTeamInvite;
 use App\Models\Event;
 use App\Models\Team;
 use App\Models\TeamMembership;
+use App\Models\TeamMembershipInvite;
+use App\Models\TeamMembershipRequest;
+use App\Models\TeamPointMonthly;
+use App\Models\TeamPointTotal;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\JsonResponse;
@@ -159,7 +163,7 @@ final class TeamsController extends Controller
         ]);
     }
 
-    public function leaveTeam(Request $request): JsonResponse
+    public function leaveTeam(Request $request): RedirectResponse
     {
         $user = $request->user();
 
@@ -192,7 +196,30 @@ final class TeamsController extends Controller
                 'team_id.exists' => 'Team could not be found for selected event.',
             ]);
 
-        dd($request->all());
+        $team = Team::find($request->team_id);
+
+        // Remove user from team membership
+        $team->memberships()->where(['user_id' => $user->id, 'event_id' => $request->event_id])->delete();
+
+        // If this was the last member and the user was the owner, delete the team
+        if ($team->memberships()->count() === 0) {
+            if ($team->owner_id === $user->id) {
+                $this->deleteTeamForeignData($request->team_id);
+                $team->delete();
+                return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => 'You were the last member and team owner. The team has been deleted.']);
+            }
+        } else {
+            // If the leaving user was the owner, transfer ownership to the first remaining member
+            if ($team->owner_id === $user->id) {
+                $newOwner = $team->memberships()->first();
+                if ($newOwner) {
+                    $team->fill(['owner_id' => $newOwner->user_id])->save();
+                    return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => 'You have left the team. Team ownership has been transferred to another member.']);
+                }
+            }
+        }
+
+        return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => 'You have successfully left the team.']);
     }
 
     public function inviteMembers(Request $request): RedirectResponse
@@ -599,5 +626,93 @@ final class TeamsController extends Controller
         $invite->update(['status' => 'declined']);
 
         return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => "You have declined the invitation to join {$team->name}."]);
+    }
+
+    /**
+     * Dissolve a team (delete it completely)
+     */
+    public function dissolveTeam(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'team_id' => 'required|exists:teams,id',
+        ]);
+
+        $user = $request->user();
+        $team = $user->teams()->find($request->team_id);
+
+        if (is_null($team)) {
+            return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Team not found.']);
+        }
+
+        // Check if user is the team owner
+        if ($team->owner_id !== $user->id) {
+            return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Only team owners can dissolve teams.']);
+        }
+
+        // Delete team foreign data and the team itself
+        $this->deleteTeamForeignData($request->team_id);
+        $team->delete();
+
+        return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => 'Team has been dissolved successfully.']);
+    }
+
+    /**
+     * Transfer team admin role to another member
+     */
+    public function transferTeamAdminRole(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'team_id' => 'required|exists:teams,id',
+            'member_id' => 'required|exists:users,id',
+        ]);
+
+        $user = $request->user();
+        $team = $user->teams()->find($request->team_id);
+
+        if (is_null($team)) {
+            return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Team not found.']);
+        }
+
+        // Check if user is the team owner
+        if ($team->owner_id !== $user->id) {
+            return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Only team owners can transfer admin role.']);
+        }
+
+        // Check if the member exists in the team
+        $member = $team->memberships()->where(['user_id' => $request->member_id])->first();
+
+        if (is_null($member)) {
+            return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'User is not a member of this team.']);
+        }
+
+        // Transfer admin role
+        $team->fill(['owner_id' => $member->user_id])->save();
+
+        return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => 'Team admin role has been transferred successfully.']);
+    }
+
+    /**
+     * Delete team foreign data (helper method)
+     */
+    private function deleteTeamForeignData($teamId): void
+    {
+        // Delete team memberships
+        TeamMembership::where('team_id', $teamId)->delete();
+        
+        // Delete team invites
+        TeamMembershipInvite::where('team_id', $teamId)->delete();
+        
+        // Delete team requests
+        TeamMembershipRequest::where('team_id', $teamId)->delete();
+        
+        // Delete team follows
+        \App\Models\TeamFollow::where('team_id', $teamId)->delete();
+        
+        // Delete team follow requests
+        \App\Models\TeamFollowRequest::where('team_id', $teamId)->delete();
+        
+        // Delete team points
+        TeamPointTotal::where('team_id', $teamId)->delete();
+        TeamPointMonthly::where('team_id', $teamId)->delete();
     }
 }

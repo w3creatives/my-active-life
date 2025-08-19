@@ -5,7 +5,9 @@ import { Head, usePage, Link } from '@inertiajs/react';
 import TeamMembers from './components/team-members';
 import InviteMembers from './components/invite-members';
 import { Button } from '@/components/ui/button';
-import { Mail, Users } from 'lucide-react';
+import { Mail, Users, ChartPie } from 'lucide-react';
+import PageContent from '@/components/atoms/page-content';
+import AdminControls from './components/admin-controls';
 
 export default function FollowPage() {
   const { team } = usePage<SharedData>().props;
@@ -14,24 +16,32 @@ export default function FollowPage() {
   return (
     <AppLayout>
       <Head title="Teams" />
-      <div className="flex flex-col gap-6 p-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-4xl font-normal">{teamData?.name || 'Join Or Create Your Team'}</h1>
+      <PageContent>
+        <div className="flex justify-between items-center">
+          <h1 className="font-normal text-4xl">{teamData?.name || 'Join Or Create Your Team'}</h1>
           {teamData && (
             <div className="flex gap-2">
               <Link href={route('teams.invites')}>
                 <Button variant="outline" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
+                  <Mail className="w-4 h-4" />
                   View Invites
+                </Button>
+              </Link>
+              <Link href={route('teams.invites')}>
+                <Button variant="default" className="flex items-center gap-2">
+                  <ChartPie className="w-4 h-4" />
+                  Show Stats
                 </Button>
               </Link>
             </div>
           )}
         </div>
-        <TeamMembers />
         <CreateTeam />
-        <InviteMembers />
-      </div>
+        {teamData && <TeamMembers />}
+        {teamData && <InviteMembers />}
+        {/* Admin Controls Section - Only shown for team owners */}
+        {teamData && <AdminControls />}
+      </PageContent>
     </AppLayout>
   );
 }
