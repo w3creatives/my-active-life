@@ -148,7 +148,19 @@ final class TeamsController extends Controller
 
         $eventId = $user->preferred_event_id;
 
+        $searchTerm = $request->input('searchUser');
+
         $members = TeamMembership::where(['team_id' => $request->input('teamId'), 'event_id' => $eventId])
+            ->whereHas('user', function ($query) use ($searchTerm) {
+                if($searchTerm)
+                {
+                    $query->where('email', 'ILIKE', "%{$searchTerm}%")
+                    ->orWhere('first_name', 'ILIKE', "%{$searchTerm}%")
+                    ->orWhere('last_name', 'ILIKE', "%{$searchTerm}%")
+                    ->orWhere('display_name', 'ILIKE', "%{$searchTerm}%");
+                }
+                return $query;
+            })
             ->limit($request->input('perPage', 5))->paginate()
             ->through(function ($teamMember) use ($eventId) {
                 $totalMiles = $teamMember->user->totalPoints()->where('event_id', $eventId)->sum('amount');
