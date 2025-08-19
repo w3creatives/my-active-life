@@ -8,13 +8,14 @@ use App\Mail\SendTeamInvite;
 use App\Models\Event;
 use App\Models\Team;
 use App\Models\TeamMembership;
-use App\Services\TeamService;
 use App\Models\TeamMembershipInvite;
 use App\Models\TeamMembershipRequest;
 use App\Models\TeamPointMonthly;
 use App\Models\TeamPointTotal;
 use App\Models\User;
+use App\Services\TeamService;
 use Closure;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,8 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Log;
+use Validator;
 
 final class TeamsController extends Controller
 {
@@ -203,7 +206,7 @@ final class TeamsController extends Controller
 
         return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => $response]);
 
-        //return response()->json(['message' => $response]);
+        // return response()->json(['message' => $response]);
         /*$team = Team::find($request->team_id);
 
         // Remove user from team membership
@@ -242,12 +245,12 @@ final class TeamsController extends Controller
                 });
         })->where('event_id', $eventId)->first();
 
-        if (!$team) {
+        if (! $team) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Team not found.']);
         }
 
         // Basic validation first
-        $basicValidator = \Validator::make($request->all(), [
+        $basicValidator = Validator::make($request->all(), [
             'emails.*' => [
                 'required',
                 'email',
@@ -269,7 +272,7 @@ final class TeamsController extends Controller
             }
 
             $member = User::where('email', $email)->first();
-            if (!$member) {
+            if (! $member) {
                 continue;
             }
 
@@ -283,6 +286,7 @@ final class TeamsController extends Controller
 
             if ($isExistingMember) {
                 $errors["emails.{$index}"] = "Unfortunately, user {$email} already participates in the same team.";
+
                 continue;
             }
 
@@ -296,17 +300,19 @@ final class TeamsController extends Controller
 
             if ($isExistingMemberInOtherTeam) {
                 $errors["emails.{$index}"] = "Unfortunately, user {$email} already participates in another team.";
+
                 continue;
             }
 
             $membership = $member->participations()->where(['event_id' => $eventId])->count();
-            if (!$membership) {
+            if (! $membership) {
                 $errors["emails.{$index}"] = "Unfortunately, user {$email} is not participating in the event";
+
                 continue;
             }
         }
 
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             return back()->withErrors($errors)->withInput();
         }
 
@@ -323,26 +329,26 @@ final class TeamsController extends Controller
             $member->invites()->where([
                 'status' => 'invite_to_join_issued',
                 'team_id' => $team->id,
-                'event_id' => $eventId
+                'event_id' => $eventId,
             ])->delete();
 
             // Create new invite
             $invite = $member->invites()->create([
                 'status' => 'invite_to_join_issued',
                 'team_id' => $team->id,
-                'event_id' => $eventId
+                'event_id' => $eventId,
             ]);
 
             // Send email using Laravel's Mail facade
             try {
                 Mail::to($member->email)->send(new SendTeamInvite($member, $team, $user));
                 $successCount++;
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Log the error but continue with other emails
-                \Log::error('Failed to send team invite email', [
+                Log::error('Failed to send team invite email', [
                     'email' => $member->email,
                     'team_id' => $team->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
                 // Still count as success since the invite was created
                 $successCount++;
@@ -375,7 +381,7 @@ final class TeamsController extends Controller
                 });
         })->where('event_id', $eventId)->first();
 
-        if (!$team) {
+        if (! $team) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Team not found.']);
         }
 
@@ -387,7 +393,7 @@ final class TeamsController extends Controller
                 return [
                     'id' => $invite->id,
                     'user_id' => $invite->prospective_member_id,
-                    'user_name' => $invite->user->display_name ?? $invite->user->first_name . ' ' . $invite->user->last_name,
+                    'user_name' => $invite->user->display_name ?? $invite->user->first_name.' '.$invite->user->last_name,
                     'user_email' => $invite->user->email,
                     'status' => $invite->status,
                     'created_at' => $invite->created_at->format('M j, Y g:i A'),
@@ -420,7 +426,7 @@ final class TeamsController extends Controller
                 });
         })->where('event_id', $eventId)->first();
 
-        if (!$team) {
+        if (! $team) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Team not found.']);
         }
 
@@ -429,7 +435,7 @@ final class TeamsController extends Controller
             ->where('status', 'invite_to_join_issued')
             ->first();
 
-        if (!$invite) {
+        if (! $invite) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Invite not found or already processed.']);
         }
 
@@ -457,7 +463,7 @@ final class TeamsController extends Controller
                 });
         })->where('event_id', $eventId)->first();
 
-        if (!$team) {
+        if (! $team) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Team not found.']);
         }
 
@@ -467,20 +473,22 @@ final class TeamsController extends Controller
             ->where('status', 'invite_to_join_issued')
             ->first();
 
-        if (!$invite) {
+        if (! $invite) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Invite not found or already processed.']);
         }
 
         // Send the email again using Laravel's Mail facade
         try {
             Mail::to($invite->user->email)->send(new SendTeamInvite($invite->user, $team, $user));
+
             return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => 'Team invite has been resent.']);
-        } catch (\Exception $e) {
-            \Log::error('Failed to resend team invite email', [
+        } catch (Exception $e) {
+            Log::error('Failed to resend team invite email', [
                 'email' => $invite->user->email,
                 'team_id' => $team->id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Failed to resend invite email. Please try again.']);
         }
     }
@@ -500,7 +508,7 @@ final class TeamsController extends Controller
                 });
         })->where('event_id', $eventId)->first();
 
-        if (!$team) {
+        if (! $team) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Team not found.']);
         }
 
@@ -527,7 +535,7 @@ final class TeamsController extends Controller
                 });
         })->where('event_id', $eventId)->first();
 
-        if (!$team) {
+        if (! $team) {
             return response()->json(['error' => 'Team not found.'], 404);
         }
 
@@ -563,7 +571,7 @@ final class TeamsController extends Controller
         $user = User::findOrFail($request->user_id);
 
         // Verify token
-        $expectedToken = hash('sha256', $team->id . $user->id . config('app.key'));
+        $expectedToken = hash('sha256', $team->id.$user->id.config('app.key'));
         if ($request->token !== $expectedToken) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Invalid or expired invitation link.']);
         }
@@ -574,7 +582,7 @@ final class TeamsController extends Controller
             ->where('status', 'invite_to_join_issued')
             ->first();
 
-        if (!$invite) {
+        if (! $invite) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Invitation not found or already processed.']);
         }
 
@@ -615,7 +623,7 @@ final class TeamsController extends Controller
         $user = User::findOrFail($request->user_id);
 
         // Verify token
-        $expectedToken = hash('sha256', $team->id . $user->id . config('app.key'));
+        $expectedToken = hash('sha256', $team->id.$user->id.config('app.key'));
         if ($request->token !== $expectedToken) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Invalid or expired invitation link.']);
         }
@@ -626,7 +634,7 @@ final class TeamsController extends Controller
             ->where('status', 'invite_to_join_issued')
             ->first();
 
-        if (!$invite) {
+        if (! $invite) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Invitation not found or already processed.']);
         }
 

@@ -1,35 +1,35 @@
+import PageContent from '@/components/atoms/page-content';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import CreateTeam from '@/pages/teams/components/create-team';
 import { type SharedData } from '@/types';
-import { Head, usePage, Link } from '@inertiajs/react';
-import TeamMembers from './components/team-members';
-import InviteMembers from './components/invite-members';
-import { Button } from '@/components/ui/button';
-import { Mail, Users, ChartPie } from 'lucide-react';
-import PageContent from '@/components/atoms/page-content';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { ChartPie, Mail } from 'lucide-react';
 import AdminControls from './components/admin-controls';
+import InviteMembers from './components/invite-members';
+import TeamMembers from './components/team-members';
 
 export default function FollowPage() {
   const { team } = usePage<SharedData>().props;
   const teamData = team as { name?: string } | null;
-  
+
   return (
     <AppLayout>
       <Head title="Teams" />
       <PageContent>
-        <div className="flex justify-between items-center">
-          <h1 className="font-normal text-4xl">{teamData?.name || 'Join Or Create Your Team'}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-4xl font-normal">{teamData?.name || 'Join Or Create Your Team'}</h1>
           {teamData && (
             <div className="flex gap-2">
               <Link href={route('teams.invites')}>
                 <Button variant="outline" className="flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
+                  <Mail className="h-4 w-4" />
                   View Invites
                 </Button>
               </Link>
               <Link href={route('teams.invites')}>
                 <Button variant="default" className="flex items-center gap-2">
-                  <ChartPie className="w-4 h-4" />
+                  <ChartPie className="h-4 w-4" />
                   Show Stats
                 </Button>
               </Link>

@@ -98,7 +98,7 @@ final class TeamRepository
     {
         $team->memberships()->where(['user_id' => $user->id])->delete();
 
-        if (!$team->memberships()->count()) {
+        if (! $team->memberships()->count()) {
             $message = sprintf('You are the last one to leave team %s. Successfully deleted team %s.', $team->name, $team->name);
             $this->deleteTeamForeignData($team->id);
             $team->delete();

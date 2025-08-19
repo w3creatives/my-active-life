@@ -5,7 +5,7 @@ import { Head, usePage } from '@inertiajs/react';
 
 export default function TeamInvitesPage() {
   const { team, pendingInvites } = usePage<SharedData>().props;
-  
+
   return (
     <AppLayout>
       <Head title="Team Invites" />

@@ -51,13 +51,13 @@ final class SendTeamInvite extends Mailable
                 'acceptUrl' => route('teams.accept-invite', [
                     'team_id' => $this->team->id,
                     'user_id' => $this->invitedUser->id,
-                    'token' => $this->generateInviteToken()
+                    'token' => $this->generateInviteToken(),
                 ]),
                 'declineUrl' => route('teams.decline-invite', [
                     'team_id' => $this->team->id,
                     'user_id' => $this->invitedUser->id,
-                    'token' => $this->generateInviteToken()
-                ])
+                    'token' => $this->generateInviteToken(),
+                ]),
             ]
         );
     }
@@ -77,6 +77,6 @@ final class SendTeamInvite extends Mailable
      */
     private function generateInviteToken(): string
     {
-        return hash('sha256', $this->team->id . $this->invitedUser->id . config('app.key'));
+        return hash('sha256', $this->team->id.$this->invitedUser->id.config('app.key'));
     }
 }

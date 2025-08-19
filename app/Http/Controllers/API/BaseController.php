@@ -7,7 +7,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 
-class BaseController extends Controller
+final class BaseController extends Controller
 {
     /**
      * success response method.

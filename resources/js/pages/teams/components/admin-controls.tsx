@@ -1,15 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { type SharedData } from '@/types';
-import { AlertTriangle, Users, Crown } from 'lucide-react';
-import { useForm, usePage } from '@inertiajs/react';
-import { FormEventHandler, useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { router, useForm, usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { router } from '@inertiajs/react';
+import { AlertTriangle, Crown, Users } from 'lucide-react';
+import { FormEventHandler, useState } from 'react';
+import { toast } from 'sonner';
 
 interface TeamMember {
   id: number;
@@ -90,9 +87,9 @@ export default function AdminControls() {
     }
 
     post(route('teams.transfer-admin-role'), {
-      data: { 
+      data: {
         team_id: teamData.id,
-        member_id: selectedMemberId 
+        member_id: selectedMemberId,
       },
       preserveScroll: true,
       onSuccess: () => {
@@ -114,25 +111,18 @@ export default function AdminControls() {
   };
 
   return (
-    <Card className="bg-red-50 border-red-200">
+    <Card className="border-red-200 bg-red-50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-red-800">
-          <AlertTriangle className="w-5 h-5" />
+          <AlertTriangle className="h-5 w-5" />
           Other Admin Controls
         </CardTitle>
-        <CardDescription className="text-red-700">
-          These actions are irreversible and will affect all team members.
-        </CardDescription>
+        <CardDescription className="text-red-700">These actions are irreversible and will affect all team members.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex sm:flex-row flex-col gap-3">
-          <Button
-            variant="danger"
-            onClick={handleDissolveTeam}
-            disabled={processing}
-            className="flex items-center gap-2"
-          >
-            <AlertTriangle className="w-4 h-4" />
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Button variant="danger" onClick={handleDissolveTeam} disabled={processing} className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4" />
             Dissolve Team
           </Button>
 
@@ -141,69 +131,61 @@ export default function AdminControls() {
               <Button
                 variant="outline"
                 onClick={openTransferDialog}
-                className="flex items-center gap-2 hover:bg-orange-50 border-orange-300 text-orange-700"
+                className="flex items-center gap-2 border-orange-300 text-orange-700 hover:bg-orange-50"
               >
-                <Crown className="w-4 h-4" />
+                <Crown className="h-4 w-4" />
                 Transfer Admin Role
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <Crown className="w-5 h-5" />
+                  <Crown className="h-5 w-5" />
                   Transfer Admin Role
                 </DialogTitle>
                 <DialogDescription>
                   Select a team member to transfer the admin role to. You will no longer be the team admin after this action.
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="space-y-4">
                 {loadingMembers ? (
                   <div className="py-4 text-center">
-                    <div className="mx-auto border-gray-900 border-b-2 rounded-full w-8 h-8 animate-spin"></div>
-                    <p className="mt-2 text-gray-600 text-sm">Loading team members...</p>
+                    <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
+                    <p className="mt-2 text-sm text-gray-600">Loading team members...</p>
                   </div>
                 ) : teamMembers && teamMembers.data.length > 0 ? (
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                  <div className="max-h-60 space-y-2 overflow-y-auto">
                     {teamMembers.data.map((member) => (
                       <div
                         key={member.id}
-                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                          selectedMemberId === member.id
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300'
+                        className={`flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors ${
+                          selectedMemberId === member.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
                         }`}
                         onClick={() => setSelectedMemberId(member.id)}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="flex justify-center items-center bg-gray-100 rounded-full w-8 h-8">
-                            <Users className="w-4 h-4 text-gray-600" />
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
+                            <Users className="h-4 w-4 text-gray-600" />
                           </div>
                           <div>
-                            <p className="font-medium text-sm">{member.name}</p>
-                            <p className="text-gray-500 text-xs">{member.miles} miles</p>
+                            <p className="text-sm font-medium">{member.name}</p>
+                            <p className="text-xs text-gray-500">{member.miles} miles</p>
                           </div>
                         </div>
-                        {selectedMemberId === member.id && (
-                          <Crown className="w-4 h-4 text-blue-600" />
-                        )}
+                        {selectedMemberId === member.id && <Crown className="h-4 w-4 text-blue-600" />}
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="py-4 text-center">
-                    <p className="text-gray-600 text-sm">No team members found</p>
+                    <p className="text-sm text-gray-600">No team members found</p>
                   </div>
                 )}
 
                 {selectedMemberId && (
                   <div className="flex gap-2 pt-4">
-                    <Button
-                      onClick={handleTransferAdminRole}
-                      disabled={processing}
-                      className="flex-1"
-                    >
+                    <Button onClick={handleTransferAdminRole} disabled={processing} className="flex-1">
                       {processing ? 'Transferring...' : 'Transfer Admin Role'}
                     </Button>
                     <Button
