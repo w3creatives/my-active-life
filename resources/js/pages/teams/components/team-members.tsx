@@ -31,6 +31,7 @@ interface Pagination<T> {
 
 export default function TeamMembers() {
   const { team, auth } = usePage<SharedData>().props;
+  const teamData = team as any; // Type assertion to avoid TypeScript errors
 
   const [users, setUsers] = useState<Pagination<User> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,6 +40,7 @@ export default function TeamMembers() {
   const [perPage, setperPage] = useState('5');
   const [currentPage, setCurrentPage] = useState(1);
   const [followingId, setFollowingId] = useState<number | null>(null);
+  const [leavingTeam, setLeavingTeam] = useState(false);
 
   const fetchUsers = async (page: number = currentPage) => {
     try {
@@ -46,7 +48,7 @@ export default function TeamMembers() {
       const params = new URLSearchParams();
       if (searchUser) params.append('searchUser', searchUser);
       if (perPage) params.append('perPage', perPage);
-      params.append('teamId', team?.id);
+      params.append('teamId', teamData?.id);
       params.append('page', page.toString());
 
       const response = await axios.get(route('teams.members') + '?' + params.toString());
@@ -60,27 +62,38 @@ export default function TeamMembers() {
     }
   };
 
-  function handleLeaveTeam(member: object) {
+  function handleLeaveTeam(member: any) {
     // Prevent multiple clicks
-    if (auth.user.id !== member.id) {
+    if (auth.user.id !== member.id || leavingTeam) {
       return;
     }
 
+    // Show confirmation dialog
+    if (!confirm('Are you sure you want to leave this team? This action cannot be undone.')) {
+      return;
+    }
+
+    setLeavingTeam(true);
+
     router.post(
       route('teams.leave-team'),
-      { ...member },
+      {
+        team_id: teamData?.id,
+        user_id: member.id,
+        event_id: teamData?.event_id
+      },
       {
         preserveScroll: true,
         onSuccess: () => {
-         toast.success(message);
-          // Refresh the data after successful follow
-          fetchUsers();
+          toast.success('You have successfully left the team.');
+          // Redirect to teams page since user is no longer a member
+          router.visit(route('teams'));
         },
         onError: (errors) => {
-          const errorMessage = errors.error || `Failed to complete request. Please try again.`;
+          const errorMessage = errors.error || 'Failed to leave team. Please try again.';
           toast.error(errorMessage);
+          setLeavingTeam(false);
         },
-        onFinish: () => {},
       },
     );
   }
@@ -104,20 +117,20 @@ export default function TeamMembers() {
 
   // Skeleton component for individual user rows
   const UserRowSkeleton = () => (
-    <div className="flex flex-wrap border-b p-4 text-sm lg:items-center">
-      <div className="flex w-3/4 items-center gap-3 lg:w-1/3">
-        <Skeleton className="h-10 w-10 rounded-full" />
+    <div className="flex flex-wrap lg:items-center p-4 border-b text-sm">
+      <div className="flex items-center gap-3 w-3/4 lg:w-1/3">
+        <Skeleton className="rounded-full w-10 h-10" />
         <div className="space-y-1">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-3 w-32" />
+          <Skeleton className="w-24 h-4" />
+          <Skeleton className="w-32 h-3" />
         </div>
       </div>
 
       <div className="w-1/4 lg:w-1/3">
-        <Skeleton className="h-4 w-12" />
+        <Skeleton className="w-12 h-4" />
       </div>
-      <div className="mt-2 w-full lg:mt-0 lg:w-1/3 lg:text-right">
-        <Skeleton className="h-8 w-16" />
+      <div className="mt-2 lg:mt-0 w-full lg:w-1/3 lg:text-right">
+        <Skeleton className="w-16 h-8" />
       </div>
     </div>
   );
@@ -131,13 +144,13 @@ export default function TeamMembers() {
 
       <CardContent className="space-y-6">
         {/* Search & Per Page Selector */}
-        <div className="flex min-h-12 gap-5">
+        <div className="flex gap-5 min-h-12">
           <div className="relative w-full">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <Search className="top-1/2 left-3 absolute w-4 h-4 text-muted-foreground -translate-y-1/2" />
             <Input
               type="search"
               placeholder="Search..."
-              className="h-full pl-10"
+              className="pl-10 h-full"
               value={searchUser}
               onChange={(e) => setSearchUser(e.target.value)}
             />
@@ -159,8 +172,8 @@ export default function TeamMembers() {
         </div>
 
         {/* User Listing */}
-        <div className="rounded-md border">
-          <div className="bg-muted text-muted-foreground grid grid-cols-3 border-b px-4 py-2 text-sm font-medium md:grid-cols-3">
+        <div className="border rounded-md">
+          <div className="grid grid-cols-3 md:grid-cols-3 bg-muted px-4 py-2 border-b font-medium text-muted-foreground text-sm">
             <div>Member Name</div>
             <div>Miles</div>
             <div className="md:text-right">Action</div>
@@ -174,14 +187,14 @@ export default function TeamMembers() {
               <UserRowSkeleton />
             </>
           ) : error ? (
-            <div className="p-8 text-center text-red-500">{error}</div>
+            <div className="p-8 text-red-500 text-center">{error}</div>
           ) : !users || users.data.length === 0 ? (
-            <div className="text-muted-foreground p-8 text-center">No team members found.</div>
+            <div className="p-8 text-muted-foreground text-center">No team members found.</div>
           ) : (
             users.data.map((member) => (
-              <div key={member.id} className="flex flex-wrap border-b p-4 text-sm lg:items-center">
-                <div className="flex w-3/4 items-center gap-3 lg:w-1/3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 font-bold text-gray-500">
+              <div key={member.id} className="flex flex-wrap lg:items-center p-4 border-b text-sm">
+                <div className="flex items-center gap-3 w-3/4 lg:w-1/3">
+                  <div className="flex justify-center items-center bg-gray-200 rounded-full w-10 h-10 font-bold text-gray-500">
                     {member.name.charAt(0)}
                   </div>
                   <div>
@@ -190,10 +203,15 @@ export default function TeamMembers() {
                 </div>
 
                 <div className="w-1/4 lg:w-1/3">{member.miles}</div>
-                <div className="mt-2 w-full lg:mt-0 lg:w-1/3 lg:text-right">
+                <div className="mt-2 lg:mt-0 w-full lg:w-1/3 lg:text-right">
                   {member.id === auth.user.id && (
-                    <Button variant="danger" size="sm" onClick={() => handleLeaveTeam(member)}>
-                      Leave Team
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleLeaveTeam(member)}
+                      disabled={leavingTeam}
+                    >
+                      {leavingTeam ? 'Leaving...' : 'Leave Team'}
                     </Button>
                   )}
                 </div>
@@ -206,8 +224,8 @@ export default function TeamMembers() {
       <CardFooter className="justify-end">
         {loading ? (
           <div className="flex gap-2">
-            <Skeleton className="h-10 w-20" />
-            <Skeleton className="h-10 w-16" />
+            <Skeleton className="w-20 h-10" />
+            <Skeleton className="w-16 h-10" />
           </div>
         ) : (
           <div className="flex gap-2">

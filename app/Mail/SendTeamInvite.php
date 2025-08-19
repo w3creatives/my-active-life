@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Models\Team;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -18,8 +19,11 @@ final class SendTeamInvite extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(public User $user)
-    {
+    public function __construct(
+        public User $invitedUser,
+        public Team $team,
+        public User $inviter
+    ) {
         //
     }
 
@@ -29,7 +33,7 @@ final class SendTeamInvite extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Send Password Reset Opt',
+            subject: "You're invited to join {$this->team->name} team!",
         );
     }
 
@@ -39,7 +43,22 @@ final class SendTeamInvite extends Mailable
     public function content(): Content
     {
         return new Content(
-            markdown: 'mail.send-password-reset-opt',
+            markdown: 'mail.team-invite',
+            with: [
+                'invitedUser' => $this->invitedUser,
+                'team' => $this->team,
+                'inviter' => $this->inviter,
+                'acceptUrl' => route('teams.accept-invite', [
+                    'team_id' => $this->team->id,
+                    'user_id' => $this->invitedUser->id,
+                    'token' => $this->generateInviteToken()
+                ]),
+                'declineUrl' => route('teams.decline-invite', [
+                    'team_id' => $this->team->id,
+                    'user_id' => $this->invitedUser->id,
+                    'token' => $this->generateInviteToken()
+                ])
+            ]
         );
     }
 
@@ -51,5 +70,13 @@ final class SendTeamInvite extends Mailable
     public function attachments(): array
     {
         return [];
+    }
+
+    /**
+     * Generate a simple invite token for security
+     */
+    private function generateInviteToken(): string
+    {
+        return hash('sha256', $this->team->id . $this->invitedUser->id . config('app.key'));
     }
 }
