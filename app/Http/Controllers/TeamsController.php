@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Team;
 use App\Models\TeamMembership;
+use App\Services\TeamService;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -156,7 +157,7 @@ final class TeamsController extends Controller
         ]);
     }
 
-    public function leaveTeam(Request $request): JsonResponse
+    public function leaveTeam(Request $request, TeamService $teamService): JsonResponse
     {
         $user = $request->user();
 
@@ -189,6 +190,10 @@ final class TeamsController extends Controller
                 'team_id.exists' => 'Team could not be found for selected event.',
             ]);
 
-        dd($request->all());
+        $team = Team::find($request->input('team_id'));
+
+        $response = $teamService->leaveTeam($team, $user);
+
+        return response()->json(['message' => $response]);
     }
 }

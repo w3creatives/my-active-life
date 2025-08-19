@@ -192,32 +192,6 @@ final class TeamService
 
     public function leaveTeam($team, $user)
     {
-        $team->memberships()->where(['user_id' => $user->id])->delete();
-
-        if ($team->memberships()->count()) {
-            if ($team->owner_id === $user->id) {
-                $member = $team->memberships()->first();
-                $team->fill(['owner_id' => $member->user_id]);
-
-                return 'Team admin has been reassigned';
-            }
-        } else {
-            $message = sprintf('You are the last one to leave team %s. Successfully deleted team %s.', $team->name, $team->name);
-            $this->deleteTeamForeignData($team->id);
-            $team->delete();
-
-            return $message;
-        }
-
-        return 'You have successfully left your team.';
-    }
-
-    private function deleteTeamForeignData($teamId): void
-    {
-        $tables = DB::select("select table_name from information_schema.columns where column_name = 'team_id'");
-
-        foreach ($tables as $table) {
-            DB::table($table->table_name)->where('team_id', $teamId)->delete();
-        }
+        return $this->teamRepository->leaveTeam($team, $user);
     }
 }

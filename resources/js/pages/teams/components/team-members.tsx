@@ -72,8 +72,7 @@ export default function TeamMembers() {
       {
         preserveScroll: true,
         onSuccess: () => {
-          const message = isPublic ? `You are now following ${displayName}.` : `Follow request sent to ${displayName}.`;
-          toast.success(message);
+         toast.success(message);
           // Refresh the data after successful follow
           fetchUsers();
         },
