@@ -152,12 +152,11 @@ final class TeamsController extends Controller
 
         $members = TeamMembership::where(['team_id' => $request->input('teamId'), 'event_id' => $eventId])
             ->whereHas('user', function ($query) use ($searchTerm) {
-                if($searchTerm)
-                {
+                if ($searchTerm) {
                     $query->where('email', 'ILIKE', "%{$searchTerm}%")
-                    ->orWhere('first_name', 'ILIKE', "%{$searchTerm}%")
-                    ->orWhere('last_name', 'ILIKE', "%{$searchTerm}%")
-                    ->orWhere('display_name', 'ILIKE', "%{$searchTerm}%");
+                        ->orWhere('first_name', 'ILIKE', "%{$searchTerm}%")
+                        ->orWhere('last_name', 'ILIKE', "%{$searchTerm}%")
+                        ->orWhere('display_name', 'ILIKE', "%{$searchTerm}%");
                 }
                 return $query;
             })
@@ -197,7 +196,7 @@ final class TeamsController extends Controller
 
                     $isTeamMember = $team->memberships()->where('event_id', $request->input('event_id'))->where('user_id', $user->id)->count();
 
-                    if (! $isTeamMember) {
+                    if (!$isTeamMember) {
                         $fail('You are not a member of this team.');
 
                         return false;
@@ -257,7 +256,7 @@ final class TeamsController extends Controller
                 });
         })->where('event_id', $eventId)->first();
 
-        if (! $team) {
+        if (!$team) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Team not found.']);
         }
 
@@ -284,7 +283,7 @@ final class TeamsController extends Controller
             }
 
             $member = User::where('email', $email)->first();
-            if (! $member) {
+            if (!$member) {
                 continue;
             }
 
@@ -317,14 +316,14 @@ final class TeamsController extends Controller
             }
 
             $membership = $member->participations()->where(['event_id' => $eventId])->count();
-            if (! $membership) {
+            if (!$membership) {
                 $errors["emails.{$index}"] = "Unfortunately, user {$email} is not participating in the event";
 
                 continue;
             }
         }
 
-        if (! empty($errors)) {
+        if (!empty($errors)) {
             return back()->withErrors($errors)->withInput();
         }
 
@@ -393,7 +392,7 @@ final class TeamsController extends Controller
                 });
         })->where('event_id', $eventId)->first();
 
-        if (! $team) {
+        if (!$team) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Team not found.']);
         }
 
@@ -405,7 +404,7 @@ final class TeamsController extends Controller
                 return [
                     'id' => $invite->id,
                     'user_id' => $invite->prospective_member_id,
-                    'user_name' => $invite->user->display_name ?? $invite->user->first_name.' '.$invite->user->last_name,
+                    'user_name' => $invite->user->display_name ?? $invite->user->first_name . ' ' . $invite->user->last_name,
                     'user_email' => $invite->user->email,
                     'status' => $invite->status,
                     'created_at' => $invite->created_at->format('M j, Y g:i A'),
@@ -438,7 +437,7 @@ final class TeamsController extends Controller
                 });
         })->where('event_id', $eventId)->first();
 
-        if (! $team) {
+        if (!$team) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Team not found.']);
         }
 
@@ -447,7 +446,7 @@ final class TeamsController extends Controller
             ->where('status', 'invite_to_join_issued')
             ->first();
 
-        if (! $invite) {
+        if (!$invite) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Invite not found or already processed.']);
         }
 
@@ -475,7 +474,7 @@ final class TeamsController extends Controller
                 });
         })->where('event_id', $eventId)->first();
 
-        if (! $team) {
+        if (!$team) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Team not found.']);
         }
 
@@ -485,7 +484,7 @@ final class TeamsController extends Controller
             ->where('status', 'invite_to_join_issued')
             ->first();
 
-        if (! $invite) {
+        if (!$invite) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Invite not found or already processed.']);
         }
 
@@ -520,7 +519,7 @@ final class TeamsController extends Controller
                 });
         })->where('event_id', $eventId)->first();
 
-        if (! $team) {
+        if (!$team) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Team not found.']);
         }
 
@@ -547,7 +546,7 @@ final class TeamsController extends Controller
                 });
         })->where('event_id', $eventId)->first();
 
-        if (! $team) {
+        if (!$team) {
             return response()->json(['error' => 'Team not found.'], 404);
         }
 
@@ -583,7 +582,7 @@ final class TeamsController extends Controller
         $user = User::findOrFail($request->user_id);
 
         // Verify token
-        $expectedToken = hash('sha256', $team->id.$user->id.config('app.key'));
+        $expectedToken = hash('sha256', $team->id . $user->id . config('app.key'));
         if ($request->token !== $expectedToken) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Invalid or expired invitation link.']);
         }
@@ -594,7 +593,7 @@ final class TeamsController extends Controller
             ->where('status', 'invite_to_join_issued')
             ->first();
 
-        if (! $invite) {
+        if (!$invite) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Invitation not found or already processed.']);
         }
 
@@ -635,7 +634,7 @@ final class TeamsController extends Controller
         $user = User::findOrFail($request->user_id);
 
         // Verify token
-        $expectedToken = hash('sha256', $team->id.$user->id.config('app.key'));
+        $expectedToken = hash('sha256', $team->id . $user->id . config('app.key'));
         if ($request->token !== $expectedToken) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Invalid or expired invitation link.']);
         }
@@ -646,7 +645,7 @@ final class TeamsController extends Controller
             ->where('status', 'invite_to_join_issued')
             ->first();
 
-        if (! $invite) {
+        if (!$invite) {
             return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Invitation not found or already processed.']);
         }
 
@@ -742,5 +741,31 @@ final class TeamsController extends Controller
         // Delete team points
         TeamPointTotal::where('team_id', $teamId)->delete();
         TeamPointMonthly::where('team_id', $teamId)->delete();
+    }
+
+    public function findTeamstoJoin(Request $request): JsonResponse
+    {
+
+        $user = $request->user();
+
+        $eventId = $user->preferred_event_id;
+
+        $teams = Team::where('event_id', $eventId)
+            ->limit($request->input('perPage', 5))->paginate()
+            ->through(function ($team) use ($eventId) {
+                $totalMiles = $team->totalPoints()->where('event_id', $eventId)->sum('amount');
+                $totalMembers = $team->memberships()->where('event_id', $eventId)->count();
+                return [
+                    'id' => $team->id,
+                    'name' => $team->name,
+                    'mileage' => round((float)$totalMiles,1),
+                    'members' => $totalMembers,
+                    'public_profile' => $team->public_profile,
+                ];
+            });
+
+        return response()->json([
+            'teams' => $teams,
+        ]);
     }
 }

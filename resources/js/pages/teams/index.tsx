@@ -8,6 +8,7 @@ import { ChartPie, Mail } from 'lucide-react';
 import AdminControls from './components/admin-controls';
 import InviteMembers from './components/invite-members';
 import TeamMembers from './components/team-members';
+import TeamToJoin from '@/pages/teams/components/team-to-join';
 
 export default function FollowPage() {
   const { team } = usePage<SharedData>().props;
@@ -37,6 +38,7 @@ export default function FollowPage() {
           )}
         </div>
         <CreateTeam />
+          {!teamData && <TeamToJoin />}
         {teamData && <TeamMembers />}
         {teamData && <InviteMembers />}
         {/* Admin Controls Section - Only shown for team owners */}
