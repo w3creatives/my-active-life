@@ -752,20 +752,99 @@ final class TeamsController extends Controller
 
         $teams = Team::where('event_id', $eventId)
             ->limit($request->input('perPage', 5))->paginate()
-            ->through(function ($team) use ($eventId) {
+            ->through(function ($team) use ($eventId, $user) {
+
                 $totalMiles = $team->totalPoints()->where('event_id', $eventId)->sum('amount');
                 $totalMembers = $team->memberships()->where('event_id', $eventId)->count();
+
+                $membershipStatus = 'Request Join';
+                $hoverStatusText = 'Request Join';
+
+                if ($team->requests()->where(['prospective_member_id' => $user->id, 'event_id' => $eventId])->count())
+                {
+                    $membershipStatus = 'Requested Join';
+                    $hoverStatusText = 'Cancel Requested';
+                }
+
                 return [
                     'id' => $team->id,
                     'name' => $team->name,
                     'mileage' => round((float)$totalMiles,1),
                     'members' => $totalMembers,
                     'public_profile' => $team->public_profile,
+                    'membership' => [
+                        'status' => str_replace([' '],[''],$membershipStatus),
+                        'text' => $membershipStatus,
+                        'hover_status' => str_replace([' '],[''],$hoverStatusText),
+                        'hover_text' => $hoverStatusText,
+                    ],
                 ];
             });
 
         return response()->json([
             'teams' => $teams,
         ]);
+    }
+
+    public function teamJoinRequest(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'team_id' => [
+                'required',
+                Rule::exists(Team::class, 'id'),
+                function (string $attribute, mixed $value, Closure $fail) use ($request, $user) {
+                    $team = Team::where(['id' => $request->input('team_id')])->first();
+
+                    $userEventParticipation = $user->participations()->where(['event_id' => $team->event_id])->count();
+
+                    if (!$userEventParticipation) {
+                        $fail('You are not participating in team event.');
+                        return false;
+                    }
+
+                    $isTeamMember = $team->memberships()->create(['event_id' => $team->event_id, 'user_id' => $user->id])->count();
+
+                    if($isTeamMember)
+                    {
+                        $fail('You are already participation in another team.');
+                        return false;
+                    }
+
+                    $hasInvite = $user->invites()->where(['user_id' => $team->user_id, 'event_id' => $team->event_id])->count();
+
+                    if ($hasInvite) {
+                        $fail('Your already invited to join team is already exist for other team.');
+                        return false;
+                    }
+
+                    $hasRequest = $user->requests()->where('team_id','!=',$team->team_id)->where(['event_id' => $team->event_id])->count();
+                    if ($hasRequest) {
+                        $fail('You already have a request to join to another team.');
+                        return false;
+                    }
+                    return true;
+                },
+            ]
+        ]);
+
+        $team = Team::find($request->input('team_id'));
+
+//        if ($team->public_profile === true) {
+//            $team->memberships()->create(['event_id' => $team->team_id, 'user_id' => $user->id]);
+//            return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => 'You have joined the team']);
+//        }
+
+        $teamRequest = $user->requests()->where(['team_id' => $team->team_id, 'event_id' => $team->event_id])->first();
+
+        if ($teamRequest) {
+            $teamRequest->delete();
+            return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => 'You have canceled join request']);
+        }
+
+        $user->requests()->create(['team_id' => $team->team_id, 'event_id' => $team->event_id, 'status' => 'request_to_join_issued']);
+
+        return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => 'You have requested to join the team']);
     }
 }

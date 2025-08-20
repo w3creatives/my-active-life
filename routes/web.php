@@ -184,6 +184,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/teams/leave-team', [TeamsController::class, 'leaveTeam'])->name('teams.leave-team');
     Route::post('/teams/invite-members', [TeamsController::class, 'inviteMembers'])->name('teams.invite-members');
     Route::get('/teams/team-to-join', [TeamsController::class, 'findTeamstoJoin'])->name('teams.team-to-join');
+    Route::post('/teams/team-to-join-request', [TeamsController::class, 'teamJoinRequest'])->name('teams.team-to-join-request');
 
     // Team invite management routes
     Route::get('/teams/invites', [TeamsController::class, 'viewInvites'])->name('teams.invites');

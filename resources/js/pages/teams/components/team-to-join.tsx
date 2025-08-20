@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { SharedData } from '@/types';
 import { router, usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { Search } from 'lucide-react';
+import { Lock, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -28,7 +28,6 @@ interface Pagination<T> {
     next_page_url: string | null;
     prev_page_url: string | null;
 }
-
 export default function TeamToJoin() {
     const { auth } = usePage<SharedData>().props;
 
@@ -38,6 +37,7 @@ export default function TeamToJoin() {
     const [searchUser, setSearchUser] = useState('');
     const [perPage, setperPage] = useState('5');
     const [currentPage, setCurrentPage] = useState(1);
+    const [teamJoinActionProcessing, setTeamJoinActionProcessing] = useState(false);
 
     const fetchTeams = async (page: number = currentPage) => {
         try {
@@ -75,23 +75,38 @@ export default function TeamToJoin() {
         fetchTeams(page);
     };
 
+    const handleTeamJoinAction = (team : object) => {
+        setTeamJoinActionProcessing(true);
+            axios.post(route('teams.team-to-join-request'), {
+                action: team.membership.status,
+                team_id: team.id
+            })
+                .then(response => {
+                    setTeamJoinActionProcessing(false);
+                })
+                .catch((error) => {
+                    setTeamJoinActionProcessing(false);
+                toast.error( error.response.data.message);
+            });
+}
+
     // Skeleton component for individual user rows
     const UserRowSkeleton = () => (
         <div className="flex flex-wrap border-b p-4 text-sm lg:items-center">
-            <div className="flex w-3/4 items-center gap-3 lg:w-1/3">
+            <div className="flex w-3/4 items-center gap-3 lg:w-1/4">
                 <Skeleton className="h-10 w-10 rounded-full" />
                 <div className="space-y-1">
                     <Skeleton className="h-4 w-24" />
                     <Skeleton className="h-3 w-32" />
                 </div>
             </div>
-            <div className="w-1/4 lg:w-1/3">
+            <div className="w-1/4 lg:w-1/4">
                 <Skeleton className="h-4 w-12" />
             </div>
-            <div className="w-1/4 lg:w-1/3">
+            <div className="w-1/4 lg:w-1/4">
                 <Skeleton className="h-4 w-12" />
             </div>
-            <div className="mt-2 w-full lg:mt-0 lg:w-1/3 lg:text-right">
+            <div className="mt-2 w-full lg:mt-0 lg:w-1/4 lg:text-right">
                 <Skeleton className="h-8 w-16" />
             </div>
         </div>
@@ -157,22 +172,19 @@ export default function TeamToJoin() {
                     ) : (
                         users.data.map((member) => (
                             <div key={member.id} className="flex flex-wrap border-b p-4 text-sm lg:items-center">
-                                <div className="flex w-3/4 items-center gap-3 lg:w-1/3">
+                                <div className="flex w-3/4 items-center gap-3 lg:w-1/4">
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 font-bold text-gray-500">
                                         {member.name.charAt(0)}
                                     </div>
                                     <div>
                                         <div className="font-medium">{member.name}</div>
                                     </div>
+                                    <div><Lock /></div>
                                 </div>
-                                <div className="w-1/4 lg:w-1/3">{member.members}</div>
-                                <div className="w-1/4 lg:w-1/3">{member.mileage}</div>
-                                <div className="mt-2 w-full lg:mt-0 lg:w-1/3 lg:text-right">
-                                    {member.id === auth.user.id && (
-                                        <Button variant="destructive" size="sm" onClick={() => handleLeaveTeam(member)} disabled={leavingTeam}>
-                                            {leavingTeam ? 'Leaving...' : 'Leave Team'}
-                                        </Button>
-                                    )}
+                                <div className="w-1/4 lg:w-1/4">{member.members}</div>
+                                <div className="w-1/4 lg:w-1/4">{member.mileage}</div>
+                                <div className="mt-2 w-full lg:mt-0 lg:w-1/4 lg:text-right">
+                                    <Button onClick={() => handleTeamJoinAction(member)} disabled={teamJoinActionProcessing}>{member.membership.text}</Button>
                                 </div>
                             </div>
                         ))
