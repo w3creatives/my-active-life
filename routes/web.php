@@ -200,6 +200,7 @@ Route::middleware(['auth'])->group(function () {
     // Team admin control routes
     Route::post('/teams/dissolve', [TeamsController::class, 'dissolveTeam'])->name('teams.dissolve');
     Route::post('/teams/transfer-admin-role', [TeamsController::class, 'transferTeamAdminRole'])->name('teams.transfer-admin-role');
+    Route::post('/teams/member/remove', [TeamsController::class, 'removeMember'])->name('teams.remove-member');
 
 });
 

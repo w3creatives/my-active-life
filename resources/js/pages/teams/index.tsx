@@ -18,19 +18,19 @@ export default function FollowPage() {
     <AppLayout>
       <Head title="Teams" />
       <PageContent>
-        <div className="flex items-center justify-between">
-          <h1 className="text-4xl font-normal">{teamData?.name || 'Join Or Create Your Team'}</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="font-normal text-4xl">{teamData?.name || 'Join Or Create Your Team'}</h1>
           {teamData && (
             <div className="flex gap-2">
               <Link href={route('teams.invites')}>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
+                <Button variant="outline-primary" className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
                   View Invites
                 </Button>
               </Link>
-              <Link href={route('teams.invites')}>
+              <Link href={route('stats')}>
                 <Button variant="default" className="flex items-center gap-2">
-                  <ChartPie className="h-4 w-4" />
+                  <ChartPie className="w-4 h-4" />
                   Show Stats
                 </Button>
               </Link>
