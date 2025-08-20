@@ -719,6 +719,47 @@ final class TeamsController extends Controller
     }
 
     /**
+     * Remove a member from the team
+     */
+    public function removeMember(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'team_id' => 'required|exists:teams,id',
+            'member_id' => 'required|exists:users,id',
+            'event_id' => 'required|exists:events,id',
+        ]);
+
+        $user = $request->user();
+        $team = $user->teams()->find($request->team_id);
+
+        if (is_null($team)) {
+            return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Team not found.']);
+        }
+
+        // Check if user is the team owner
+        if ($team->owner_id !== $user->id) {
+            return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Only team owners can remove members.']);
+        }
+
+        // Check if trying to remove the team owner
+        if ($request->member_id == $user->id) {
+            return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Team owners cannot remove themselves. Use "Leave Team" instead.']);
+        }
+
+        // Check if the member exists in the team
+        $member = $team->memberships()->where(['user_id' => $request->member_id, 'event_id' => $request->event_id])->first();
+
+        if (is_null($member)) {
+            return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'User is not a member of this team.']);
+        }
+
+        // Remove the member
+        $member->delete();
+
+        return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => 'Team member has been removed successfully.']);
+    }
+
+    /**
      * Delete team foreign data (helper method)
      */
     private function deleteTeamForeignData($teamId): void

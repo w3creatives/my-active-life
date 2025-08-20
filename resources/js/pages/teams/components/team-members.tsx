@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { SharedData } from '@/types';
 import { router, usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { Search } from 'lucide-react';
+import { Crown, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -41,6 +41,7 @@ export default function TeamMembers() {
   const [currentPage, setCurrentPage] = useState(1);
   const [followingId, setFollowingId] = useState<number | null>(null);
   const [leavingTeam, setLeavingTeam] = useState(false);
+  const [removingMember, setRemovingMember] = useState<number | null>(null);
 
   const fetchUsers = async (page: number = currentPage) => {
     try {
@@ -96,6 +97,43 @@ export default function TeamMembers() {
         },
       },
     );
+  }
+
+  function handleRemoveMember(member: any) {
+    // Prevent multiple clicks
+    if (removingMember === member.id) {
+      return;
+    }
+
+    // Show confirmation dialog
+    if (!confirm(`Are you sure you want to remove ${member.name} from the team? This action cannot be undone.`)) {
+      return;
+    }
+
+    setRemovingMember(member.id);
+
+    router.post(
+      route('teams.remove-member'),
+      {
+        team_id: teamData?.id,
+        member_id: member.id,
+        event_id: teamData?.event_id,
+      },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          toast.success(`${member.name} has been removed from the team.`);
+          // Refresh the team members list
+          fetchUsers(currentPage);
+        },
+        onError: (errors) => {
+          const errorMessage = errors.error || 'Failed to remove team member. Please try again.';
+          toast.error(errorMessage);
+        },
+      },
+    ).finally(() => {
+      setRemovingMember(null);
+    });
   }
 
   useEffect(() => {
@@ -198,17 +236,34 @@ export default function TeamMembers() {
                     {member.name.charAt(0)}
                   </div>
                   <div>
-                    <div className="font-medium">{member.name}</div>
+                    <div className="font-medium flex items-center gap-2">
+                      {member.name}
+                      {member.id === teamData?.owner_id && (
+                        <Crown className="h-4 w-4 text-yellow-600" title="Team Admin" />
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <div className="w-1/4 lg:w-1/3">{member.miles}</div>
                 <div className="mt-2 w-full lg:mt-0 lg:w-1/3 lg:text-right">
-                  {member.id === auth.user.id && (
-                    <Button variant="destructive" size="sm" onClick={() => handleLeaveTeam(member)} disabled={leavingTeam}>
-                      {leavingTeam ? 'Leaving...' : 'Leave Team'}
-                    </Button>
-                  )}
+                  <div className="flex gap-2 justify-end">
+                    {member.id === auth.user.id ? (
+                      <Button variant="destructive" size="sm" onClick={() => handleLeaveTeam(member)} disabled={leavingTeam}>
+                        {leavingTeam ? 'Leaving...' : 'Leave Team'}
+                      </Button>
+                    ) : teamData?.owner_id === auth.user.id ? (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleRemoveMember(member)} 
+                        disabled={removingMember === member.id}
+                        className="border-red-300 text-red-700 hover:bg-red-50"
+                      >
+                        {removingMember === member.id ? 'Removing...' : 'Remove Member'}
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             ))
