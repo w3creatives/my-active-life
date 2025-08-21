@@ -103,7 +103,7 @@ final class UserPointsController extends BaseController
         });
 
         $points->through(function ($item, $key) use ($event, $user, $points) {
-
+            $bibs_url = null;
             if ($event->event_type === 'promotional') {
                 $userStreak = $user->userStreaks()->where('event_id', $item->id)->where('date', $item->date)->first();
 
@@ -143,7 +143,7 @@ final class UserPointsController extends BaseController
 
                 $item->milestone = $milestone;
 
-                $item->bibs_url = null;
+                $item->bibs_url = $bibs_url;
 
                 return $item;
             }
@@ -163,8 +163,6 @@ final class UserPointsController extends BaseController
             // if(is_null($milestone)) {
             // $milestone = $event->milestones()->selectRaw('name,description,distance,data')->where('distance','<=', $item->total_mile)->orderBy('distance','DESC')->first();
             // }
-
-            $bibs_url = null;
 
             if ($milestone) {
                 if ($event->bibs_name) {
