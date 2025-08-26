@@ -58,13 +58,19 @@
                         </div>
                         <div class="mb-4">
                             <h5 class="m-0 me-2">Assign Events</h5>
+                            @if($user)
+                            <div class="form-check mt-4">
+                                <input class="form-check-input show-assigned" type="checkbox" value="1" id="show-assigned" checked>
+                                <label class="form-check-label" for="show-assigned"> Show Assigned Only </label>
+                            </div>
+                            @endif
                             <div class="table-responsive overflow-hidden" style="height: 300px" id="table-scrollable">
                                 <table class="table card-table">
                                     <thead>
                                     <tr>
                                         <th>Name</th>
-                                        <th>Subscription Start Date</th>
-                                        <th>Subscription End Date</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
                                         <th>Event Start/End Date</th>
                                     </tr>
                                     </thead>
@@ -74,7 +80,7 @@
                                             $subscriptionStartDate = $event->hasUserParticipation($user,false, 'subscription_start_date');
                                             $subscriptionEndDate = $event->hasUserParticipation($user,false, 'subscription_end_date');
                                         @endphp
-                                        <tr>
+                                        <tr class="{{ $event->hasUserParticipation($user)?'user-assigned':'user-unassigned' }}">
                                             <td class="w-50 ps-0 pt-0">
                                                 <div class="d-flex justify-content-start align-items-center">
                                                     <div class="form-check mt-4">
@@ -169,6 +175,17 @@
                         passwordFieldGroup.addClass('d-none');
                     }
                 }).trigger('change');
+
+                if($('.show-assigned').length) {
+                    $('.show-assigned').change(function(){
+                        let userUnassignedItems = $('.user-unassigned');
+                        if($(this).is(':checked')) {
+                            userUnassignedItems.addClass('d-none');
+                        } else {
+                            userUnassignedItems.removeClass('d-none');
+                        }
+                    }).trigger('change');
+                }
 
                 // Fetch all the forms we want to apply custom Bootstrap validation styles to
                 var forms = document.querySelectorAll('.needs-validation');
