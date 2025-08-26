@@ -25,7 +25,7 @@ final class AdminMiddleware
         // Check if user is a super admin
         if (! $request->user()->isSuperAdmin()) {
             // Redirect to home with an error message
-            return redirect()->route('home')->with('error', 'You do not have permission to access this area.');
+            return redirect()->route('dashboard')->with('error', 'You do not have permission to access this area.');
         }
 
         return $next($request);
