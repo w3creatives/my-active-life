@@ -9,7 +9,7 @@
             </div>
         </div>
         <div class="card-datatable text-nowrap">
-            <table class="datatables-ajax table table-bordered report-table" data-ajax-url="{{ route('admin.reports.events',$table['type']) }}" id="{{ $table['id'] }}" data-columns='[{ "data":"id", "name":"id" },{ "data":"name", "name":"name" },{ "data":"event_type_text", "name":"event_type_text" },{ "data":"start_date", "name":"start_date" },{ "data":"end_date", "name":"end_date" },{ "data":"participations_count","name":"participations_count","sortable":false}]'>
+            <table class="datatables-ajax table table-bordered report-table" data-ajax-url="{{ route('admin.reports.events',$table['type']) }}" id="{{ $table['id'] }}" data-columns='[{ "data":"id", "name":"id" },{ "data":"name", "name":"name" },{ "data":"event_type", "name":"event_type" },{ "data":"start_date", "name":"start_date" },{ "data":"end_date", "name":"end_date" },{ "data":"participations_count","name":"participations_count","sortable":false},{ "data":"action","name":"action","sortable":false}]'>
                 <thead>
                 <tr>
                     <th>ID</th>
@@ -18,6 +18,7 @@
                     <th>Start Date</th>
                     <th>End Date</th>
                     <th>User Count</th>
+                    <th></th>
                 </tr>
                 </thead>
                 <tbody>

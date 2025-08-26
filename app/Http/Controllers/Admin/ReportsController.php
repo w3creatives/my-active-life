@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\EventUserParticipationExport;
 use App\Http\Controllers\Controller;
 use App\Models\DataSource;
 use App\Models\DatasourcePointTracker;
@@ -100,6 +101,11 @@ final class ReportsController extends Controller
 
             [$itemCount, $items] = $dataTable->setSearchableColumns(['name', 'event_type'])->query($request, $query)->response();
 
+            $items = $items->map(function ($item) {
+                $item->event_type = ucwords(str_replace('_', ' ', $item->event_type));
+                $item->action = [view('admin.reports.actions.event', compact('item'))->render()];
+                return $item;
+            });
             return response()->json([
                 'draw' => $request->get('draw'),
                 'recordsTotal' => $itemCount,
@@ -136,5 +142,11 @@ final class ReportsController extends Controller
                 'data' => $items,
             ]);
         }
+    }
+
+    public function exportEventUserParticipations(Request $request)
+    {
+        $event = Event::find($request->route()->parameter('eventId'));
+        return (new EventUserParticipationExport($event->id))->download($event->name.'-report.xlsx');
     }
 }
