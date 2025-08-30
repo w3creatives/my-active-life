@@ -6,6 +6,7 @@ namespace App\Repositories;
 
 use App\Models\Team;
 use Illuminate\Support\Facades\DB;
+
 final class TeamRepository
 {
     public function find($id)

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { User, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -22,6 +22,13 @@ export default function Dashboard() {
   const [date, setDate] = useState<Date>(new Date());
   const [dataFor, setDataFor] = useState('you');
   const [userGoal, setUserGoal] = useState(0);
+
+  console.log(auth.preferred_event);
+
+  if (!auth.preferred_event) {
+    router.visit(route('preferred.event'));
+    return null;
+  }
 
   // Get the event goal from user settings
   useEffect(

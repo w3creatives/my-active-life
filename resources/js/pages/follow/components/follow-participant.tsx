@@ -122,7 +122,7 @@ export default function FollowParticipant() {
         <Skeleton className="h-4 w-12" />
       </div>
       <div className="mt-2 w-full lg:mt-0 lg:w-1/5 lg:text-right">
-        <Skeleton className="h-8 w-16" />
+        <Skeleton className="h-8 w-28" />
       </div>
     </div>
   );
@@ -238,10 +238,10 @@ export default function FollowParticipant() {
           </div>
         ) : (
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => handlePagination((users?.current_page || 1) - 1)} disabled={!users?.prev_page_url}>
+            <Button variant="default" onClick={() => handlePagination((users?.current_page || 1) - 1)} disabled={!users?.prev_page_url}>
               Previous
             </Button>
-            <Button variant="outline" onClick={() => handlePagination((users?.current_page || 1) + 1)} disabled={!users?.next_page_url}>
+            <Button variant="default" onClick={() => handlePagination((users?.current_page || 1) + 1)} disabled={!users?.next_page_url}>
               Next
             </Button>
           </div>

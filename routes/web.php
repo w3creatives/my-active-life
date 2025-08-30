@@ -140,6 +140,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/stats', [DashboardController::class, 'stats'])->name('stats');
     Route::get('/tutorials', [DashboardController::class, 'tutorials'])->name('tutorials');
     Route::get('/follow', [DashboardController::class, 'follow'])->name('follow');
+    Route::get('/trophy-case', [DashboardController::class, 'trophyCase'])->name('trophyCase');
+    Route::get('/preferred-event', [DashboardController::class, 'preferredEvent'])->name('preferred.event');
 
     Route::post('/unfollow/{type}', [DashboardController::class, 'unfollow'])->name('unfollow');
     Route::post('/follow/{type}', [DashboardController::class, 'follow_request'])->name('follow.request');
@@ -196,6 +198,11 @@ Route::middleware(['auth'])->group(function () {
     // Team invite response routes
     Route::get('/teams/accept-invite', [TeamsController::class, 'acceptInvite'])->name('teams.accept-invite');
     Route::get('/teams/decline-invite', [TeamsController::class, 'declineInvite'])->name('teams.decline-invite');
+
+    // User team invitation management routes
+    Route::get('/user/team/invitations', [TeamsController::class, 'getUserTeamInvitations'])->name('user.team.invitations');
+    Route::post('/user/team/invitation/accept', [TeamsController::class, 'acceptTeamInvitation'])->name('user.team.invitation.accept');
+    Route::post('/user/team/invitation/decline', [TeamsController::class, 'declineTeamInvitation'])->name('user.team.invitation.decline');
 
     // Team admin control routes
     Route::post('/teams/dissolve', [TeamsController::class, 'dissolveTeam'])->name('teams.dissolve');

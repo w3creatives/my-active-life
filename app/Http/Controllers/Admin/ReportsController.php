@@ -104,8 +104,10 @@ final class ReportsController extends Controller
             $items = $items->map(function ($item) {
                 $item->event_type = ucwords(str_replace('_', ' ', $item->event_type));
                 $item->action = [view('admin.reports.actions.event', compact('item'))->render()];
+
                 return $item;
             });
+
             return response()->json([
                 'draw' => $request->get('draw'),
                 'recordsTotal' => $itemCount,
@@ -147,6 +149,7 @@ final class ReportsController extends Controller
     public function exportEventUserParticipations(Request $request)
     {
         $event = Event::find($request->route()->parameter('eventId'));
+
         return (new EventUserParticipationExport($event->id))->download($event->name.'-report.xlsx');
     }
 }

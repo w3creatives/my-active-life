@@ -14,7 +14,7 @@ final class SessionsController extends BaseController
     public function login(Request $request): JsonResponse
     {
 
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+        if (Auth::attempt(['email' => mb_strtolower($request->email), 'password' => $request->password])) {
             $user = Auth::user();
 
             $hasTeam = Team::where(function ($query) use ($user) {

@@ -19,7 +19,7 @@ const mainNavItems: NavItem[] = [
   },
   {
     title: 'Trophy Case',
-    href: '/',
+    href: '/trophy-case',
     icon: Trophy,
   },
   {

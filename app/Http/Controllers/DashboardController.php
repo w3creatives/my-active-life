@@ -14,6 +14,7 @@ use App\Services\MailboxerService;
 use App\Services\TeamService;
 use App\Services\UserService;
 use App\Traits\RTEHelpers;
+use App\Traits\UserEventParticipationTrait;
 use App\Traits\UserPointFetcher;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +26,7 @@ use Inertia\Response;
 
 final class DashboardController extends Controller
 {
-    use RTEHelpers, UserPointFetcher;
+    use RTEHelpers, UserEventParticipationTrait, UserPointFetcher;
 
     /**
      * Display the dashboard page.
@@ -78,6 +79,33 @@ final class DashboardController extends Controller
 
         return Inertia::render('follow/index', [
             'filters' => $filters,
+        ]);
+    }
+
+    public function preferredEvent(): Response
+    {
+        $user = Auth::user();
+
+        $participations = $this->userParticipations($user);
+        $events = $participations->map(function ($participation) use ($user) {
+            $event = $participation->event;
+
+            return [
+                'id' => $event->id,
+                'name' => $event->name,
+                'description' => $event->description,
+                'logo_url' => $event->logo_url,
+                'start_date' => $event->start_date,
+                'end_date' => $event->end_date,
+                'event_type' => $event->event_type,
+                'is_past' => $event->isPastEvent(),
+                'is_preferred' => $user->preferred_event_id === $event->id,
+                'participation_id' => $participation->id,
+            ];
+        });
+
+        return Inertia::render('preferred-event/index', [
+            'events' => $events,
         ]);
     }
 
@@ -547,6 +575,37 @@ final class DashboardController extends Controller
 
         return response()->json([
             'teams' => $teams->get(),
+        ]);
+    }
+
+    /**
+     * Get user's participated events.
+     */
+    public function getUserParticipatedEvents(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $participations = $this->userParticipations($user);
+
+        $events = $participations->map(function ($participation) {
+            $event = $participation->event;
+
+            return [
+                'id' => $event->id,
+                'name' => $event->name,
+                'description' => $event->description,
+                'logo_url' => $event->logo_url,
+                'start_date' => $event->start_date,
+                'end_date' => $event->end_date,
+                'event_type' => $event->event_type,
+                'is_past' => $event->isPastEvent(),
+                'is_preferred' => $user->preferred_event_id === $event->id,
+                'participation_id' => $participation->id,
+            ];
+        });
+
+        return response()->json([
+            'events' => $events,
         ]);
     }
 }
