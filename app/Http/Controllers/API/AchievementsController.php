@@ -20,24 +20,24 @@ final class AchievementsController extends BaseController
     {
 
         $request->validate([
-            'event_id' => [
+            "event_id" =>  [
                 'required',
-                Rule::exists(Event::class, 'id'),
+                Rule::exists(Event::class,'id'),
             ],
-            'action' => 'required|in:user,team',
+            "action" => "required|in:user,team"
         ]);
 
-        $isTeamAction = $request->action === 'team';
-
-        $startOfMonth = Carbon::now()->startOfMonth()->format('Y-m-d');
-        $endOfMonth = Carbon::now()->endOfMonth()->format('Y-m-d');
-
-        $startOfWeek = Carbon::now()->startOfWeek()->format('Y-m-d');
-        $endOfWeek = Carbon::now()->endOfWeek()->format('Y-m-d');
-
-        $today = Carbon::now()->format('Y-m-d');
+        $isTeamAction = $request->action == 'team';
 
         $user = $request->user();
+
+        $startOfMonth =  Carbon::now()->setTimezone($user->time_zone_name??'UTC')->startOfMonth()->format('Y-m-d');
+        $endOfMonth =  Carbon::now()->setTimezone($user->time_zone_name??'UTC')->endOfMonth()->format('Y-m-d');
+
+        $startOfWeek = Carbon::now()->setTimezone($user->time_zone_name??'UTC')->startOfWeek()->format('Y-m-d');
+        $endOfWeek = Carbon::now()->setTimezone($user->time_zone_name??'UTC')->endOfWeek()->format('Y-m-d');
+
+        $today = Carbon::now()->setTimezone($user->time_zone_name??'UTC')->format('Y-m-d');
 
         $cacheName = "user_achievement_{$user->id}_{$request->action}_{$request->event_id}_{$startOfMonth}_{$endOfMonth}_{$startOfWeek}_{$endOfWeek}_{$request->team_id}";
 
