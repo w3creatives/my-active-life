@@ -93,17 +93,17 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
 
   const trophyStats = useMemo(() => {
     if (!trophyData?.milestones) return { earned: 0, total: 0, percentage: 0 };
-    
+
     const earned = trophyData.milestones.filter(m => m.is_completed).length;
     const total = trophyData.milestones.length;
     const percentage = total > 0 ? (earned / total) * 100 : 0;
-    
+
     return { earned, total, percentage };
   }, [trophyData?.milestones]);
 
   const achievementItems = useMemo(() => {
     if (!trophyData?.achievements) return [];
-    
+
     return [
       {
         title: 'Best Day',
@@ -113,7 +113,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
         gradient: 'from-emerald-500 to-teal-600',
       },
       {
-        title: 'Best Week', 
+        title: 'Best Week',
         icon: Calendar,
         value: trophyData.achievements.best_week?.accomplishment || 0,
         date: trophyData.achievements.best_week?.date,
@@ -132,7 +132,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
   const shareAchievement = (milestone: Milestone) => {
     const text = `I just earned the ${milestone.name} milestone in ${trophyData?.event.name}! 🏆`;
     const url = window.location.href;
-    
+
     if (navigator.share) {
       navigator.share({
         title: milestone.name,
@@ -340,7 +340,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                               <img
                                 src={showTeamView ? (milestone.team_logo_image_url || milestone.logo_image_url) : milestone.logo_image_url}
                                 alt={milestone.name}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-contain"
                                 loading="lazy"
                               />
                             ) : (
@@ -349,14 +349,14 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                               </div>
                             )}
                           </div>
-                          
+
                           {milestone.is_completed && (
                             <div className="absolute -top-2 -right-2 bg-green-500 rounded-full p-1 shadow-lg">
                               <Trophy className="h-3 w-3 text-white" />
                             </div>
                           )}
                         </div>
-                        
+
                         <div className="mt-2 text-center">
                           <p className="text-xs font-medium truncate px-1">
                             {milestone.name}
@@ -379,7 +379,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                           {milestone.distance} mile milestone
                         </DialogDescription>
                       </DialogHeader>
-                      
+
                       <div className="space-y-4">
                         {/* Trophy Image */}
                         <div className="flex justify-center">
@@ -397,7 +397,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                                 </div>
                               )}
                             </div>
-                            
+
                             {milestone.is_completed && (
                               <Badge className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-green-500 hover:bg-green-600">
                                 <Trophy className="h-3 w-3 mr-1" />
@@ -439,7 +439,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                             <Share2 className="h-4 w-4 mr-2" />
                             Share
                           </Button>
-                          
+
                           <Button variant="outline" size="sm" asChild>
                             <a href="#" target="_blank" rel="noopener noreferrer">
                               <ExternalLink className="h-4 w-4 mr-2" />

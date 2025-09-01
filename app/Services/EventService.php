@@ -439,7 +439,7 @@ final class EventService
 
     public function deleteSourceSyncedMile($user, $dataSourceId)
     {
-        //$participations = $user->participations()->get();
+        // $participations = $user->participations()->get();
 
         $date = Carbon::now();
 
