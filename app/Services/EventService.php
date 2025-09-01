@@ -439,7 +439,12 @@ final class EventService
 
     public function deleteSourceSyncedMile($user, $dataSourceId)
     {
-        $participations = $user->participations()->get();
+        //$participations = $user->participations()->get();
+
+        $date = Carbon::now();
+
+        $participations = $user->participations()
+            ->where('subscription_end_date', '>=', $date)->where('subscription_start_date', '<=', $date)->get();
 
         foreach ($participations as $participation) {
             $user->points()->where('event_id', $participation->event->id)->where('data_source_id', $dataSourceId)->delete();
