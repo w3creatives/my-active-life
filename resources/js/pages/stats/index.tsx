@@ -10,6 +10,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Last30days from '@/pages/stats/components/last30days';
 import MonthlyPoints from '@/pages/stats/components/monthlyPoints';
 import ProgressCard from '@/pages/stats/components/progressCard';
+import EventProgressGauge from '@/pages/stats/components/EventProgressGauge';
+import NextMilestone from '@/pages/stats/components/NextMilestone';
+import PersonalBests from '@/pages/stats/components/PersonalBests';
+import MileageByActivityType from '@/pages/stats/components/MileageByActivityType';
+import AmerithonMap from '@/pages/stats/components/AmerithonMap';
 import { User, Users } from 'lucide-react';
 import { useState } from 'react';
 
@@ -24,8 +29,32 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
+interface EventProgress {
+  eventName: string;
+  totalDistance: number;
+  coveredDistance: number;
+  userGoal?: number;
+}
+
+interface NextMilestone {
+  id: number;
+  name: string;
+  distance: number;
+  description?: string;
+  logo?: string;
+  data?: any;
+  userDistance: number;
+  previousMilestoneDistance: number;
+  eventName: string;
+}
+
+interface StatsPageProps extends SharedData {
+  eventProgress: EventProgress;
+  nextMilestone: NextMilestone | null;
+}
+
 export default function Stats() {
-  const { auth } = usePage<SharedData>().props;
+  const { auth, eventProgress, nextMilestone } = usePage<StatsPageProps>().props;
   const [dataFor, setDataFor] = useState('you');
 
   return (
@@ -49,55 +78,45 @@ export default function Stats() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <EventProgressGauge
+            eventName={eventProgress.eventName}
+            totalDistance={eventProgress.totalDistance}
+            coveredDistance={eventProgress.coveredDistance}
+            userGoal={eventProgress.userGoal}
+          />
+
+          <NextMilestone
+            milestone={nextMilestone}
+            userDistance={nextMilestone?.userDistance || eventProgress.coveredDistance}
+            previousMilestoneDistance={nextMilestone?.previousMilestoneDistance || 0}
+            eventName={nextMilestone?.eventName || eventProgress.eventName}
+          />
+
           <ProgressCard />
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Your Next Bib</CardTitle>
-              <CardDescription></CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="text-4xl font-bold">1,234.56</div>
-              <div className="text-muted-foreground">
-                <p>Miles completed in this year</p>
-              </div>
-              <div className="mt-6 rounded-lg p-4 shadow-sm">
-                <h4 className="text-muted-foreground text-sm">Next Bib</h4>
-                <div className="flex items-center gap-5">
-                  <img src="/static/Logo-Amerithon.png" className="size-25 object-contain" alt="" />
-                  <h3 className="text-2xl font-semibold">RTY 2025 Mile 1500</h3>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Are You On Target?</CardTitle>
-              <CardDescription></CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="text-4xl font-bold">1,234.56</div>
-              <div className="text-muted-foreground space-y-2">
-                <p>Nicely done! You are ahead! Even more ice-cream for you! You are predicted to finish approximately on September 26th, 2025.</p>
-                <p>Um, let's do the numbers...</p>
-                <p>WOW! Looks like this challenge is too easy for you! Sign up for Amerithon right away!</p>
-                <p>
-                  If you were to decrease your average daily mileage from 7.55 miles per day to 3.39 miles per day, you would still reach your goal on
-                  December 31st, 2025.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-1">
-          <BasicStatsCard />
-          <AchievementsCards />
+          {/*<BasicStatsCard />*/}
+          {/*<AchievementsCards />*/}
+
+          {/* Conditionally show Amerithon Map for Amerithon events */}
+          {auth.preferred_event.name.toLowerCase().includes('amerithon') && (
+            <AmerithonMap />
+          )}
 
           <Last30days />
-          <MonthlyPoints />
+
+          <div className="grid grid-cols-1 lg:grid-cols-[40%_60%] gap-6">
+            <PersonalBests />
+            <MonthlyPoints />
+          </div>
+
+          {/* Conditionally show Activity Type breakdown for Amerithon and JOGLE events */}
+          {(auth.preferred_event.name.toLowerCase().includes('amerithon') ||
+            auth.preferred_event.name.toLowerCase().includes('jogle')) && (
+            <MileageByActivityType />
+          )}
         </div>
       </div>
     </AppLayout>

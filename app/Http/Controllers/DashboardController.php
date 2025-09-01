@@ -8,11 +8,14 @@ use App\Actions\EventTutorials\GetEventTutorials;
 use App\Actions\Follow\RequestFollow;
 use App\Actions\Follow\UndoFollowing;
 use App\Models\Event;
+use App\Models\EventMilestone;
 use App\Models\Team;
 use App\Services\EventService;
 use App\Services\MailboxerService;
 use App\Services\TeamService;
 use App\Services\UserService;
+use App\Repositories\UserRepository;
+use App\Repositories\UserPointRepository;
 use App\Traits\RTEHelpers;
 use App\Traits\UserEventParticipationTrait;
 use App\Traits\UserPointFetcher;
@@ -38,7 +41,67 @@ final class DashboardController extends Controller
 
     public function stats(): Response
     {
-        return Inertia::render('stats/index');
+        $user = auth()->user();
+
+        // Get current event
+        $currentEvent = null;
+        if ($user->preferred_event_id) {
+            $currentEvent = Event::find($user->preferred_event_id);
+        }
+
+        if (!$currentEvent) {
+            return redirect()->route('preferred.event');
+        }
+
+        // Get user's total distance for current event
+        $userTotalDistance = $user->points()
+            ->where('event_id', $currentEvent->id)
+            ->sum('amount');
+
+        // Get user's goal for this event
+        $userGoal = null;
+        $userSettings = json_decode($user->settings, true) ?? [];
+        $rtyGoals = $userSettings['rty_goals'] ?? [];
+        $eventSlug = strtolower(str_replace(' ', '-', $currentEvent->name));
+
+        foreach ($rtyGoals as $goal) {
+            if (isset($goal[$eventSlug])) {
+                $userGoal = (float) $goal[$eventSlug];
+                break;
+            }
+        }
+
+        // Find next milestone
+        $nextMilestone = EventMilestone::where('event_id', $currentEvent->id)
+            ->where('distance', '>', $userTotalDistance)
+            ->orderBy('distance')
+            ->first();
+
+        // Find previous milestone for progress calculation
+        $previousMilestone = EventMilestone::where('event_id', $currentEvent->id)
+            ->where('distance', '<=', $userTotalDistance)
+            ->orderBy('distance', 'desc')
+            ->first();
+
+        return Inertia::render('stats/index', [
+            'eventProgress' => [
+                'eventName' => $currentEvent->name,
+                'totalDistance' => (float) $currentEvent->total_points,
+                'coveredDistance' => $userTotalDistance,
+                'userGoal' => $userGoal,
+            ],
+            'nextMilestone' => $nextMilestone ? [
+                'id' => $nextMilestone->id,
+                'name' => $nextMilestone->name,
+                'distance' => (float) $nextMilestone->distance,
+                'description' => $nextMilestone->description,
+                'logo' => $nextMilestone->logo,
+                'data' => json_decode($nextMilestone->data, true),
+                'userDistance' => $userTotalDistance,
+                'previousMilestoneDistance' => $previousMilestone ? (float) $previousMilestone->distance : 0,
+                'eventName' => $currentEvent->name,
+            ] : null,
+        ]);
     }
 
     public function tutorials(): Response
@@ -58,9 +121,46 @@ final class DashboardController extends Controller
         ]);
     }
 
-    public function trophyCase(): Response
+    public function trophyCase(Request $request): Response
     {
-        return Inertia::render('trophy-case/index');
+        $user = $request->user();
+        $eventId = $user->preferred_event_id ?? $user->event_participations()->first()?->event_id;
+        
+        if (!$eventId) {
+            return Inertia::render('trophy-case/index', [
+                'trophyData' => null,
+                'error' => 'No event participation found'
+            ]);
+        }
+
+        $event = Event::find($eventId);
+        $eventMilestonesService = new \App\Services\EventMilestones();
+        
+        // Get milestones with completion status
+        $milestonesData = $eventMilestonesService->getEventMilestonesWithStatus($eventId, $user->id);
+        
+        // Get user achievements data for personal bests
+        $userService = new UserService(new UserRepository, new UserPointRepository);
+        
+        $startOfMonth = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->startOfMonth()->format('Y-m-d');
+        $endOfMonth = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->endOfMonth()->format('Y-m-d');
+        $startOfWeek = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->startOfWeek()->format('Y-m-d');
+        $endOfWeek = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->endOfWeek()->format('Y-m-d');
+        $today = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->format('Y-m-d');
+        
+        [$achievementData, $totalPoints, $yearwisePoints] = $userService->achievements($event, [$today, $startOfMonth, $endOfMonth, $startOfWeek, $endOfWeek], $user);
+        
+        $trophyData = [
+            'event' => $event,
+            'milestones' => $milestonesData['status'] ? $milestonesData['milestones'] : [],
+            'achievements' => $achievementData,
+            'total_distance' => $totalPoints,
+            'user_distance' => $user->totalPoints()->where('event_id', $eventId)->sum('amount'),
+        ];
+
+        return Inertia::render('trophy-case/index', [
+            'trophyData' => $trophyData,
+        ]);
     }
 
     public function teams(): Response
@@ -278,7 +378,7 @@ final class DashboardController extends Controller
         $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
         $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
 
-        $event = Event::get()->where('id', 64)->first();
+        $event = Event::get()->where('id', 60)->first();
         $eventId = $event->id;
         $eventName = $event->name;
 

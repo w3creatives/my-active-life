@@ -167,6 +167,6 @@ final class UserService
 
     public function total(int $eventId, User $user): int
     {
-        return $user->totalPoints()->where('event_id', $eventId)->sum('amount');
+        return (int) $user->totalPoints()->where('event_id', $eventId)->sum('amount');
     }
 }

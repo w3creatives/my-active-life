@@ -109,6 +109,11 @@ Route::middleware('auth:api')->group(function () {
     Route::get('user/team/membership/invites', [UserPointsController::class, 'membershipInvites']);
     Route::post('user/team/membership-request/{type}', [UserPointsController::class, 'membershipInviteAction']);
 
+    // User team invitations
+    Route::get('user/team/invitations', [UserPointsController::class, 'getUserTeamInvitations'])->name('api.user.team.invitations');
+    Route::post('user/team/invitation/accept', [UserPointsController::class, 'acceptTeamInvitation'])->name('api.user.team.invitation.accept');
+    Route::post('user/team/invitation/decline', [UserPointsController::class, 'declineTeamInvitation'])->name('api.user.team.invitation.decline');
+
     Route::get('source/profiles', [ProfilesController::class, 'sourceProfile']);
     Route::get('user/source/profiles', [ProfilesController::class, 'userSourceProfile']);
     Route::post('user/source/profiles/create', [ProfilesController::class, 'create']);
