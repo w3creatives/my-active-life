@@ -4,8 +4,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { Bar, BarChart, CartesianGrid, Legend, Line, XAxis, YAxis } from 'recharts';
+import { useEffect, useState, useMemo } from 'react';
+import { Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 export const description = 'A bar chart';
 
@@ -20,10 +20,16 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+type Last30DaysData = {
+  label: string;
+  daily_total: number;
+  seven_day_avg?: number;
+};
+
 export default function Last30days() {
   const { auth } = usePage<SharedData>().props;
   const [loading, setLoading] = useState(true);
-  const [last30days, setLast30days] = useState([]);
+  const [last30days, setLast30days] = useState<Last30DaysData[]>([]);
 
   useEffect(() => {
     const fetchMonthlies = async () => {
@@ -38,11 +44,32 @@ export default function Last30days() {
         setLoading(false);
       } catch (err) {
         console.error('Error fetching monthlies:', err);
+        setLoading(false);
       }
     };
 
     fetchMonthlies();
   }, []);
+
+  // Process data to calculate proper 7-day average starting from day 7
+  const chartData = useMemo(() => {
+    return last30days.map((item: Last30DaysData, index: number) => {
+      let sevenDayAvg = null;
+      
+      // Only calculate 7-day average starting from day 7 (index 6)
+      if (index >= 6) {
+        const last7Days = last30days.slice(index - 6, index + 1);
+        const sum = last7Days.reduce((total, day) => total + parseFloat(day.daily_total.toString()), 0);
+        sevenDayAvg = sum / 7;
+      }
+
+      return {
+        ...item,
+        daily_total: parseFloat(item.daily_total.toString()),
+        seven_day_avg: sevenDayAvg,
+      };
+    });
+  }, [last30days]);
 
   return (
     <>
@@ -53,7 +80,7 @@ export default function Last30days() {
             <Skeleton className="h-4 w-full" />
           </CardHeader>
           <CardContent>
-            <div className="flex h-60 w-full items-end gap-2 px-4">
+            <div className="flex h-80 w-full items-end gap-2 px-4">
               {[40, 60, 30, 50, 70, 20, 60, 80, 55, 45, 35, 65].map((height, idx) => (
                 <Skeleton key={idx} className="w-18 rounded-md" style={{ height: `${height}%` }} />
               ))}
@@ -72,44 +99,65 @@ export default function Last30days() {
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig}>
-              <BarChart
-                accessibilityLayer
-                data={last30days.map((item) => ({
-                  ...item,
-                  daily_total: parseFloat(item.daily_total),
-                  seven_day_avg: parseFloat(item.seven_day_avg || 0),
-                }))}
+              <ComposedChart
+                width={800}
+                height={320}
+                data={chartData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
               >
-                <CartesianGrid vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="label"
-                  tickLine={true}
+                  tickLine={false}
                   tickMargin={10}
-                  axisLine={true}
-                  tickCount={12}
-                  tickFormatter={(value) => value.slice(0, 10)}
-                  allowDataOverflow={true}
+                  axisLine={false}
+                  tickFormatter={(value) => {
+                    // Format date to show month/day
+                    const date = new Date(value);
+                    return `${date.getMonth() + 1}/${date.getDate()}`;
+                  }}
+                  interval="preserveStartEnd"
                 />
                 <YAxis
                   tickLine={false}
-                  axisLine={true}
+                  axisLine={false}
                   tickMargin={10}
-                  unit="mi"
-                  domain={[0, 'auto']} // This ensures Y-axis grows based on max value
+                  label={{ value: 'Miles', angle: -90, position: 'insideLeft' }}
+                  domain={[0, 'auto']}
                 />
-                <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                <Bar dataKey="daily_total" fill="var(--color-primary)" radius={4} name="Daily Miles" />
+                <ChartTooltip 
+                  content={<ChartTooltipContent />}
+                  formatter={(value, name) => [
+                    typeof value === 'number' ? value.toFixed(2) : value,
+                    name
+                  ]}
+                  labelFormatter={(label) => {
+                    const date = new Date(label);
+                    return date.toLocaleDateString('en-US', { 
+                      weekday: 'short', 
+                      month: 'short', 
+                      day: 'numeric' 
+                    });
+                  }}
+                />
+                <Legend />
+                <Bar 
+                  dataKey="daily_total" 
+                  fill="var(--color-primary)" 
+                  name="Daily Miles"
+                  radius={[2, 2, 0, 0]}
+                />
                 <Line
                   type="monotone"
                   dataKey="seven_day_avg"
-                  stroke="var(--color-secondary, #f7a35c)"
-                  strokeWidth={2.5}
-                  dot={{ r: 3, fill: 'var(--color-secondary, #f7a35c)' }}
-                  activeDot={{ r: 5 }}
+                  stroke="#f7a35c"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#f7a35c' }}
+                  activeDot={{ r: 6, fill: '#f7a35c' }}
                   name="7-Day Average"
+                  connectNulls={false}
                 />
-                <Legend />
-              </BarChart>
+              </ComposedChart>
             </ChartContainer>
           </CardContent>
           <CardFooter className="flex-col items-start gap-2 text-sm"></CardFooter>

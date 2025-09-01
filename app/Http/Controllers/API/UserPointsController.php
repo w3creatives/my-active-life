@@ -819,6 +819,114 @@ final class UserPointsController extends BaseController
         return $this->sendResponse($membershipRequests, 'Response');
     }
 
+    /**
+     * Get user's pending team invitations
+     */
+    public function getUserTeamInvitations(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $eventId = $user->preferred_event_id;
+
+        $invitations = $user->invites()
+            ->with(['team:id,name,event_id', 'team.event:id,name'])
+            ->where('event_id', $eventId)
+            ->where('status', 'invite_to_join_issued')
+            ->get()
+            ->map(function ($invite) {
+                return [
+                    'id' => $invite->id,
+                    'team_id' => $invite->team_id,
+                    'team_name' => $invite->team->name,
+                    'event_id' => $invite->event_id,
+                    'event_name' => $invite->team->event->name ?? 'Current Challenge',
+                    'created_at' => $invite->created_at->format('M j, Y g:i A'),
+                    'status' => $invite->status,
+                ];
+            });
+
+        return $this->sendResponse($invitations, 'User team invitations retrieved successfully');
+    }
+
+    /**
+     * Accept a team invitation
+     */
+    public function acceptTeamInvitation(Request $request): JsonResponse
+    {
+        $request->validate([
+            'team_id' => [
+                'required',
+                Rule::exists(Team::class, 'id'),
+            ],
+            'event_id' => [
+                'required',
+                Rule::exists(Event::class, 'id'),
+            ],
+        ]);
+
+        $user = $request->user();
+
+        $invitation = $user->invites()
+            ->where(['team_id' => $request->team_id, 'event_id' => $request->event_id])
+            ->where('status', 'invite_to_join_issued')
+            ->first();
+
+        if (is_null($invitation)) {
+            return $this->sendError('Team invitation not found', ['error' => 'Team invitation not found']);
+        }
+
+        $team = $invitation->team;
+
+        if (is_null($team)) {
+            return $this->sendError('Team not found', ['error' => 'Team not found']);
+        }
+
+        // Check if user is already a member
+        $hasMembership = $team->memberships()->where(['event_id' => $request->event_id, 'user_id' => $user->id])->count();
+
+        if ($hasMembership) {
+            return $this->sendError('Already a member', ['error' => 'You are already a member of this team']);
+        }
+
+        // Add user to team and delete invitation
+        $invitation->delete();
+        $team->memberships()->create(['event_id' => $request->event_id, 'user_id' => $user->id]);
+
+        return $this->sendResponse([], 'Team invitation accepted successfully');
+    }
+
+    /**
+     * Decline a team invitation
+     */
+    public function declineTeamInvitation(Request $request): JsonResponse
+    {
+        $request->validate([
+            'team_id' => [
+                'required',
+                Rule::exists(Team::class, 'id'),
+            ],
+            'event_id' => [
+                'required',
+                Rule::exists(Event::class, 'id'),
+            ],
+        ]);
+
+        $user = $request->user();
+
+        $invitation = $user->invites()
+            ->where(['team_id' => $request->team_id, 'event_id' => $request->event_id])
+            ->where('status', 'invite_to_join_issued')
+            ->first();
+
+        if (is_null($invitation)) {
+            return $this->sendError('Team invitation not found', ['error' => 'Team invitation not found']);
+        }
+
+        // Delete the invitation
+        $invitation->delete();
+
+        return $this->sendResponse([], 'Team invitation declined successfully');
+    }
+
     public function membershipInviteAction(Request $request, $type): JsonResponse
     {
 
