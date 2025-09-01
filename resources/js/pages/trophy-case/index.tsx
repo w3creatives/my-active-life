@@ -75,6 +75,13 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
   const [showTeamView, setShowTeamView] = useState(false);
   const [selectedTrophy, setSelectedTrophy] = useState<Milestone | null>(null);
 
+  const isMilestoneCompleted = function(milestone: Milestone): boolean {
+
+      if(showTeamView) {
+          return milestone.is_team_completed;
+      }
+      return milestone.is_completed;
+  }
   const formatDistance = (distance: number) => {
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
@@ -93,17 +100,16 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
 
   const trophyStats = useMemo(() => {
     if (!trophyData?.milestones) return { earned: 0, total: 0, percentage: 0 };
-    
-    const earned = trophyData.milestones.filter(m => m.is_completed).length;
+
+    const earned = trophyData.milestones.filter(m => showTeamView?m.is_team_completed:m.is_completed).length;
     const total = trophyData.milestones.length;
     const percentage = total > 0 ? (earned / total) * 100 : 0;
-    
     return { earned, total, percentage };
-  }, [trophyData?.milestones]);
+  }, [trophyData?.milestones, showTeamView]);
 
   const achievementItems = useMemo(() => {
     if (!trophyData?.achievements) return [];
-    
+
     return [
       {
         title: 'Best Day',
@@ -113,7 +119,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
         gradient: 'from-emerald-500 to-teal-600',
       },
       {
-        title: 'Best Week', 
+        title: 'Best Week',
         icon: Calendar,
         value: trophyData.achievements.best_week?.accomplishment || 0,
         date: trophyData.achievements.best_week?.date,
@@ -132,7 +138,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
   const shareAchievement = (milestone: Milestone) => {
     const text = `I just earned the ${milestone.name} milestone in ${trophyData?.event.name}! 🏆`;
     const url = window.location.href;
-    
+
     if (navigator.share) {
       navigator.share({
         title: milestone.name,
@@ -182,7 +188,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
             </div>
 
             {/* Toggle Switch for Team View */}
-            <Card className="w-fit">
+              { trophyData.team && <Card className="w-fit">
               <CardContent className="flex items-center space-x-3 p-4">
                 <Label htmlFor="team-view" className="text-sm font-medium">
                   Personal
@@ -196,11 +202,11 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                   Team
                 </Label>
               </CardContent>
-            </Card>
+            </Card>}
           </div>
 
           {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/*<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
@@ -256,10 +262,10 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </div>*/ }
 
           {/* Personal Achievements */}
-          <Card>
+            {/*<Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-amber-500" />
@@ -304,7 +310,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
               </div>
             </CardContent>
           </Card>
-
+            */ }
           {/* Trophy Grid */}
           <Card>
             <CardHeader>
@@ -330,7 +336,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                     <DialogTrigger asChild>
                       <div
                         className={`group cursor-pointer transition-all duration-300 hover:scale-105 ${
-                          !milestone.is_completed ? 'grayscale opacity-30 hover:grayscale-0 hover:opacity-100' : ''
+                          !isMilestoneCompleted(milestone) ? 'grayscale opacity-30 hover:grayscale-0 hover:opacity-100' : ''
                         }`}
                         onClick={() => setSelectedTrophy(milestone)}
                       >
@@ -349,14 +355,14 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                               </div>
                             )}
                           </div>
-                          
-                          {milestone.is_completed && (
+
+                          {isMilestoneCompleted(milestone) && (
                             <div className="absolute -top-2 -right-2 bg-green-500 rounded-full p-1 shadow-lg">
                               <Trophy className="h-3 w-3 text-white" />
                             </div>
                           )}
                         </div>
-                        
+
                         <div className="mt-2 text-center">
                           <p className="text-xs font-medium truncate px-1">
                             {milestone.name}
@@ -379,7 +385,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                           {milestone.distance} mile milestone
                         </DialogDescription>
                       </DialogHeader>
-                      
+
                       <div className="space-y-4">
                         {/* Trophy Image */}
                         <div className="flex justify-center">
@@ -397,8 +403,8 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                                 </div>
                               )}
                             </div>
-                            
-                            {milestone.is_completed && (
+
+                            {isMilestoneCompleted(milestone) && (
                               <Badge className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-green-500 hover:bg-green-600">
                                 <Trophy className="h-3 w-3 mr-1" />
                                 Earned
@@ -434,12 +440,12 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                             variant="outline"
                             size="sm"
                             onClick={() => shareAchievement(milestone)}
-                            disabled={!milestone.is_completed}
+                            disabled={!isMilestoneCompleted(milestone)}
                           >
                             <Share2 className="h-4 w-4 mr-2" />
                             Share
                           </Button>
-                          
+
                           <Button variant="outline" size="sm" asChild>
                             <a href="#" target="_blank" rel="noopener noreferrer">
                               <ExternalLink className="h-4 w-4 mr-2" />
@@ -448,7 +454,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                           </Button>
                         </div>
 
-                        {milestone.is_completed && (
+                        {isMilestoneCompleted(milestone) && (
                           <div className="text-center pt-2">
                             <p className="text-xs text-green-600 dark:text-green-400 font-medium">
                               🎉 Congratulations on earning this milestone!

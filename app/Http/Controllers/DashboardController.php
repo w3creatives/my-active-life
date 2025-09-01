@@ -125,7 +125,7 @@ final class DashboardController extends Controller
     {
         $user = $request->user();
         $eventId = $user->preferred_event_id ?? $user->event_participations()->first()?->event_id;
-        
+
         if (!$eventId) {
             return Inertia::render('trophy-case/index', [
                 'trophyData' => null,
@@ -135,27 +135,35 @@ final class DashboardController extends Controller
 
         $event = Event::find($eventId);
         $eventMilestonesService = new \App\Services\EventMilestones();
-        
+
+        $team = Team::where(function ($query) use ($user) {
+            return $query->where('owner_id', $user->id)
+                ->orWhereHas('memberships', function ($query) use ($user) {
+                    return $query->where('user_id', $user->id);
+                });
+        })->where('event_id', $eventId)->first();
+
         // Get milestones with completion status
         $milestonesData = $eventMilestonesService->getEventMilestonesWithStatus($eventId, $user->id);
-        
+
         // Get user achievements data for personal bests
         $userService = new UserService(new UserRepository, new UserPointRepository);
-        
+
         $startOfMonth = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->startOfMonth()->format('Y-m-d');
         $endOfMonth = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->endOfMonth()->format('Y-m-d');
         $startOfWeek = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->startOfWeek()->format('Y-m-d');
         $endOfWeek = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->endOfWeek()->format('Y-m-d');
         $today = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->format('Y-m-d');
-        
+
         [$achievementData, $totalPoints, $yearwisePoints] = $userService->achievements($event, [$today, $startOfMonth, $endOfMonth, $startOfWeek, $endOfWeek], $user);
-        
+
         $trophyData = [
             'event' => $event,
             'milestones' => $milestonesData['status'] ? $milestonesData['milestones'] : [],
             'achievements' => $achievementData,
             'total_distance' => $totalPoints,
             'user_distance' => $user->totalPoints()->where('event_id', $eventId)->sum('amount'),
+            'team' => $team
         ];
 
         return Inertia::render('trophy-case/index', [
