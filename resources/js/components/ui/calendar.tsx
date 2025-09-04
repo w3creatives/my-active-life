@@ -152,21 +152,26 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
     setActiveModality(modality);
   };
 
+    const fetchUserPoints = async () => {
+        setLoading(true);
+        try {
+            const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+            const response = await axios.get(route('user.points', { date: formattedDate }));
+            setUserPoints(response.data.points);
+            setEventInfo(response.data.event);
+        } catch (error) {
+            console.error('Error fetching user points:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const refreshCalendar = () => {
+        fetchUserPoints();
+    }
+
   // Fetch user points data
   useEffect(() => {
-    const fetchUserPoints = async () => {
-      setLoading(true);
-      try {
-        const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-        const response = await axios.get(route('user.points', { date: formattedDate }));
-        setUserPoints(response.data.points);
-        setEventInfo(response.data.event);
-      } catch (error) {
-        console.error('Error fetching user points:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
 
     fetchUserPoints();
   }, [currentYear, currentMonth]);
@@ -308,6 +313,7 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
         date={selectedDate}
         eventId={eventInfo?.id || null}
         activeModality={activeModality}
+        refreshCalendar={refreshCalendar}
       />
     </div>
   );

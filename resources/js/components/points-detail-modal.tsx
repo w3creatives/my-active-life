@@ -28,7 +28,7 @@ interface PointsResponse {
   };
 }
 
-export function PointsDetailModal({ isOpen, onClose, date, eventId, activeModality }: PointsDetailModalProps) {
+export function PointsDetailModal({ isOpen, onClose, date, eventId, activeModality, refreshCalendar }: PointsDetailModalProps) {
   const [pointsData, setPointsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -76,12 +76,14 @@ export function PointsDetailModal({ isOpen, onClose, date, eventId, activeModali
           onClose();
           return;
       }
+
       setProcessing(true);
-      axios.post(route('user.add.manual.points'), {points:pointFormData, date, eventId})
+      axios.post(route('user.add.manual.points'), {points:pointFormData, date:format(date, 'yyyy-mm-dd'), eventId})
           .then((response) => {
               toast.success(response.data.message);
               setPointFormData({});
               setProcessing(true);
+              refreshCalendar();
               onClose();
           })
           .catch((error) => {
