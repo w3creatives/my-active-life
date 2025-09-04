@@ -152,6 +152,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/user-stats', [DashboardController::class, 'getUserStats'])->name('user.stats');
     Route::post('/add-points', [DashboardController::class, 'addPoints'])->name('user.add-points');
 
+    Route::post('/add-manual-points', [DashboardController::class, 'addManualPoints'])->name('user.add.manual.points');
+
     Route::get('/conversations', [DashboardController::class, 'conversations'])->name('user.conversations');
     Route::get('/conversations/new', [DashboardController::class, 'newConversation'])->name('user.conversations.new');
 

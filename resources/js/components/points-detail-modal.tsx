@@ -1,12 +1,12 @@
+import DatasourcePoint from '@/components/datasource-point';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 interface PointsDetailModalProps {
   isOpen: boolean;
@@ -17,37 +17,22 @@ interface PointsDetailModalProps {
 }
 
 interface PointItem {
-  id: number;
-  amount: string;
-  date: string;
-  user_id: number;
+  points: string;
   data_source_id: number;
-  event_id: number;
-  created_at: string;
-  updated_at: string;
   modality: string;
-  transaction_id: string | null;
-  note: string | null;
 }
 
 interface PointsResponse {
-  points: {
+  items: {
     [key: string]: PointItem[];
   };
 }
 
-// Map data source IDs to their names
-const DATA_SOURCES = {
-  '1': 'manual',
-  '2': 'fitbit',
-  '3': 'garmin',
-  '4': 'strava',
-  '5': 'apple',
-};
-
 export function PointsDetailModal({ isOpen, onClose, date, eventId, activeModality }: PointsDetailModalProps) {
-  const [pointsData, setPointsData] = useState<PointsResponse | null>(null);
+  const [pointsData, setPointsData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [pointFormData, setPointFormData] = useState({});
 
   // Fetch point details when the modal opens
   useEffect(() => {
@@ -65,7 +50,8 @@ export function PointsDetailModal({ isOpen, onClose, date, eventId, activeModali
         }),
       )
       .then((response) => {
-        setPointsData(response.data);
+
+        setPointsData(response.data.items);
       })
       .catch((error) => {
         console.error('Error fetching point details:', error);
@@ -75,41 +61,34 @@ export function PointsDetailModal({ isOpen, onClose, date, eventId, activeModali
       });
   }, [isOpen, date, eventId, activeModality]);
 
+  const handlePointChange = (value, item) => {
+
+      let data = pointFormData;
+      data[item.modality] = value > 0?value : item.points;
+     setPointFormData(data);
+    }
+
   const handleSave = () => {
-    // TODO: Implement save functionality
-    console.log('Changes saved');
-    onClose();
+
+      if(Object.keys(pointFormData).length === 0) {
+          toast.error('No manual points to save');
+          setPointFormData({});
+          onClose();
+          return;
+      }
+      setProcessing(true);
+      axios.post(route('user.add.manual.points'), {points:pointFormData, date, eventId})
+          .then((response) => {
+              toast.success(response.data.message);
+              setPointFormData({});
+              setProcessing(true);
+              onClose();
+          })
+          .catch((error) => {
+              toast.error(error.response.data.message);
+              setProcessing(true);
+          });
   };
-
-  // Helper function to get point amount by data source and modality
-  const getPointAmount = (dataSourceId: string, modality: string): number => {
-    if (!pointsData?.points[dataSourceId]) return 0;
-
-    const point = pointsData.points[dataSourceId].find((p) => p.modality === modality);
-    return point ? parseFloat(point.amount) : 0;
-  };
-
-  // Helper function to check if a data source has any points
-  const hasDataSourcePoints = (dataSourceId: string): boolean => {
-    return pointsData?.points[dataSourceId]?.length > 0;
-  };
-
-  // Helper function to check if a modality has a non-zero value for a data source
-  const hasModalityValue = (dataSourceId: string, modality: string): boolean => {
-    return getPointAmount(dataSourceId, modality) > 0;
-  };
-
-  // Format number to 2 decimal places
-  const formatValue = (value: number): string => {
-    return value.toFixed(2);
-  };
-
-  // Get all modalities that have values for a data source
-  const getActiveModalities = (dataSourceId: string): string[] => {
-    const modalities = ['run', 'walk', 'bike', 'swim', 'other'];
-    return modalities.filter((modality) => hasModalityValue(dataSourceId, modality));
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="flex max-h-[95vh] flex-col sm:max-w-3xl" aria-describedby="points-detail-description">
@@ -141,121 +120,23 @@ export function PointsDetailModal({ isOpen, onClose, date, eventId, activeModali
             </div>
           ) : (
             <div className="space-y-10 py-4 pr-2">
-              {/* Garmin Section */}
-              {hasDataSourcePoints('3') && getActiveModalities('3').length > 0 && (
-                <div className="space-y-4">
-                  <h2 className="text-xl">Activities Synced From Garmin</h2>
-                  <hr />
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-                    {getActiveModalities('3').map((modality) => (
-                      <div key={`garmin-${modality}`} className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium">{modality.charAt(0).toUpperCase() + modality.slice(1)}</Label>
-                        </div>
-                        <div className="flex items-center">
-                          <Input type="number" step="0.01" defaultValue={formatValue(getPointAmount('3', modality))} className="w-full" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Fitbit Section */}
-              {hasDataSourcePoints('2') && getActiveModalities('2').length > 0 && (
-                <div className="space-y-4">
-                  <h2 className="text-xl">Activities Synced From Fitbit</h2>
-                  <hr />
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-                    {getActiveModalities('2').map((modality) => (
-                      <div key={`fitbit-${modality}`} className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium">{modality.charAt(0).toUpperCase() + modality.slice(1)}</Label>
-                        </div>
-                        <div className="flex items-center">
-                          <Input type="number" step="0.01" defaultValue={formatValue(getPointAmount('2', modality))} className="w-full" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Strava Section */}
-              {hasDataSourcePoints('4') && getActiveModalities('4').length > 0 && (
-                <div className="space-y-4">
-                  <h2 className="text-xl">Activities Synced From Strava</h2>
-                  <hr />
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-                    {getActiveModalities('4').map((modality) => (
-                      <div key={`strava-${modality}`} className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium">{modality.charAt(0).toUpperCase() + modality.slice(1)}</Label>
-                        </div>
-                        <div className="flex items-center">
-                          <Input type="number" step="0.01" defaultValue={formatValue(getPointAmount('4', modality))} className="w-full" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Apple Section */}
-              {hasDataSourcePoints('5') && getActiveModalities('5').length > 0 && (
-                <div className="space-y-4">
-                  <h2 className="text-xl">Activities Synced From Apple</h2>
-                  <hr />
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-                    {getActiveModalities('5').map((modality) => (
-                      <div key={`apple-${modality}`} className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium">{modality.charAt(0).toUpperCase() + modality.slice(1)}</Label>
-                        </div>
-                        <div className="flex items-center">
-                          <Input type="number" step="0.01" defaultValue={formatValue(getPointAmount('5', modality))} className="w-full" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Manual Section */}
-              {hasDataSourcePoints('1') && getActiveModalities('1').length > 0 && (
-                <div className="space-y-4">
-                  <h2 className="text-xl">Manually Entered Distances</h2>
-                  <hr />
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-                    {getActiveModalities('1').map((modality) => (
-                      <div key={`manual-${modality}`} className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium">{modality.charAt(0).toUpperCase() + modality.slice(1)}</Label>
-                        </div>
-                        <div className="flex items-center">
-                          <Input type="number" step="0.01" defaultValue={formatValue(getPointAmount('1', modality))} className="w-full" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Show message if no data */}
-              {pointsData && Object.keys(pointsData.points).length === 0 && (
-                <div className="py-8 text-center">
-                  <p className="text-gray-500">No activity data found for this date.</p>
-                </div>
-              )}
+              {pointsData?.garmin && <DatasourcePoint type="garmin" title="Activities Synced From Garmin" items={pointsData?.garmin} handlePointChange={handlePointChange}/>}
+              {pointsData?.strava && <DatasourcePoint type="strava" title="Activities Synced From Strava" items={pointsData?.strava} handlePointChange={handlePointChange}/>}
+              {pointsData?.fitbit && <DatasourcePoint type="fitbit" title="Activities Synced From Fitbit" items={pointsData?.fitbit} handlePointChange={handlePointChange}/>}
+              {pointsData?.apple && <DatasourcePoint type="apple" title="Activities Synced From Apple" items={pointsData?.apple} handlePointChange={handlePointChange}/>}
+              {pointsData?.manual && <DatasourcePoint type="manual" title="Manually Entered Distances" items={pointsData.manual} handlePointChange={handlePointChange}/>}
             </div>
           )}
         </ScrollArea>
 
         <DialogFooter className="mt-4 gap-2 border-t pt-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={() => {
+              onClose();
+              setPointFormData({});
+          }}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={loading}>
+          <Button onClick={handleSave} disabled={loading || processing}>
             Save Changes
           </Button>
         </DialogFooter>

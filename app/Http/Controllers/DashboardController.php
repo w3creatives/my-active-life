@@ -7,23 +7,26 @@ namespace App\Http\Controllers;
 use App\Actions\EventTutorials\GetEventTutorials;
 use App\Actions\Follow\RequestFollow;
 use App\Actions\Follow\UndoFollowing;
+use App\Models\DataSource;
 use App\Models\Event;
 use App\Models\EventMilestone;
 use App\Models\Team;
+use App\Repositories\UserPointRepository;
+use App\Repositories\UserRepository;
 use App\Services\EventService;
 use App\Services\MailboxerService;
 use App\Services\TeamService;
 use App\Services\UserService;
-use App\Repositories\UserRepository;
-use App\Repositories\UserPointRepository;
 use App\Traits\RTEHelpers;
 use App\Traits\UserEventParticipationTrait;
 use App\Traits\UserPointFetcher;
 use Carbon\Carbon;
+use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -49,7 +52,7 @@ final class DashboardController extends Controller
             $currentEvent = Event::find($user->preferred_event_id);
         }
 
-        if (!$currentEvent) {
+        if (! $currentEvent) {
             return redirect()->route('preferred.event');
         }
 
@@ -62,7 +65,7 @@ final class DashboardController extends Controller
         $userGoal = null;
         $userSettings = json_decode($user->settings, true) ?? [];
         $rtyGoals = $userSettings['rty_goals'] ?? [];
-        $eventSlug = strtolower(str_replace(' ', '-', $currentEvent->name));
+        $eventSlug = mb_strtolower(str_replace(' ', '-', $currentEvent->name));
 
         foreach ($rtyGoals as $goal) {
             if (isset($goal[$eventSlug])) {
@@ -126,10 +129,10 @@ final class DashboardController extends Controller
         $user = $request->user();
         $eventId = $user->preferred_event_id ?? $user->event_participations()->first()?->event_id;
 
-        if (!$eventId) {
+        if (! $eventId) {
             return Inertia::render('trophy-case/index', [
                 'trophyData' => null,
-                'error' => 'No event participation found'
+                'error' => 'No event participation found',
             ]);
         }
 
@@ -163,7 +166,7 @@ final class DashboardController extends Controller
             'achievements' => $achievementData,
             'total_distance' => $totalPoints,
             'user_distance' => $user->totalPoints()->where('event_id', $eventId)->sum('amount'),
-            'team' => $team
+            'team' => $team,
         ];
 
         return Inertia::render('trophy-case/index', [
@@ -422,18 +425,16 @@ final class DashboardController extends Controller
         $user = $request->user();
         $date = $request->input('date', now()->format('Y-m-d'));
 
-        $eventId = 64;
+        $eventId = $request->get('event_id');
 
         $pointsCacheKey = "user_daily_points_{$user->id}_{$date}_{$eventId}";
         Cache::forget($pointsCacheKey);
 
         $dailyPoints = Cache::remember($pointsCacheKey, now()->addMinutes(15), function () use ($user, $date, $eventId) {
-            return $this->fetchUserDailyPoints($user, $date, $eventId, true);
+            return $this->fetchUserDailyPoints($user, $date, (int) $eventId, true);
         });
 
-        return response()->json([
-            'points' => $dailyPoints,
-        ]);
+        return response()->json($dailyPoints);
     }
 
     /**
@@ -715,5 +716,46 @@ final class DashboardController extends Controller
         return response()->json([
             'events' => $events,
         ]);
+    }
+
+    public function addManualPoints(Request $request, EventService $eventService): JsonResponse
+    {
+
+        $user = $request->user();
+
+        $request->validate([
+            'eventId' => [
+                'required',
+                Rule::exists(Event::class, 'id'),
+                function (string $attribute, mixed $value, Closure $fail) use ($request, $user) {
+                    $userEventParticipation = $user->participations()->where(['event_id' => $request->eventId])->count();
+
+                    if (! $userEventParticipation) {
+                        $fail('You are not participating in this event.');
+
+                        return false;
+                    }
+
+                    return true;
+                },
+            ],
+        ]);
+
+        $date = Carbon::parse($request->get('date'))->format('Y-m-d');
+        $dataSource = DataSource::where('short_name', 'manual')->first();
+
+        foreach ($request->get('points') as $modality => $distance) {
+            $eventService->createOrUpdate($user, [
+                'date' => $date,
+                'distance' => $distance,
+                'modality' => $modality,
+                'eventId' => $request->eventId,
+                'dataSourceId' => $dataSource->id,
+            ]);
+        }
+        $eventService->createOrUpdateUserPoint($user, $request->eventId, $date);
+
+        return response()->json(['message' => 'Points have been added']);
+
     }
 }
