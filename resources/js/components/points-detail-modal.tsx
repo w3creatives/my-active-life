@@ -78,7 +78,7 @@ export function PointsDetailModal({ isOpen, onClose, date, eventId, activeModali
       }
 
       setProcessing(true);
-      axios.post(route('user.add.manual.points'), {points:pointFormData, date:format(date, 'yyyy-mm-dd'), eventId})
+      axios.post(route('user.add.manual.points'), {points:pointFormData, date:format(date, 'yyyy-MM-dd'), eventId})
           .then((response) => {
               toast.success(response.data.message);
               setPointFormData({});
