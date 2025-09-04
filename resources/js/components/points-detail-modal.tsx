@@ -39,6 +39,7 @@ export function PointsDetailModal({ isOpen, onClose, date, eventId, activeModali
     if (!isOpen || !date || !eventId) return;
 
     setLoading(true);
+      setProcessing(false);
     const formattedDate = format(date, 'yyyy-MM-dd');
 
     axios
@@ -82,13 +83,13 @@ export function PointsDetailModal({ isOpen, onClose, date, eventId, activeModali
           .then((response) => {
               toast.success(response.data.message);
               setPointFormData({});
-              setProcessing(true);
+              setProcessing(false);
               refreshCalendar();
               onClose();
           })
           .catch((error) => {
               toast.error(error.response.data.message);
-              setProcessing(true);
+              setProcessing(false);
           });
   };
   return (
