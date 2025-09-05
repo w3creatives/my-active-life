@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('customer_id')->nullable();
             $table->decimal('total_price', 10)->nullable();
             $table->string('product_id')->nullable();
+            $table->string('line_item_id')->nullable();
             $table->string('product_name')->nullable();
             $table->string('product_type')->nullable();
             $table->string('product_tags')->nullable();

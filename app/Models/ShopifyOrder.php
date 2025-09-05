@@ -20,6 +20,7 @@ final class ShopifyOrder extends Model
         'customer_id',
         'total_price',
         'product_id',
+        'line_item_id',
         'product_name',
         'product_type',
         'product_tags',

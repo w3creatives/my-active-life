@@ -12,8 +12,11 @@ final class SopifyRepository
 {
     public function createOrder($order, $lineItem)
     {
-
-        $hasOrder = ShopifyOrder::where('order_number', $order['order_number'])->where('product_id', $lineItem['product_id'])->count();
+        // Check if this specific line item already exists using line_item_id
+        $hasOrder = ShopifyOrder::where('order_number', $order['order_number'])
+            ->where('product_id', $lineItem['product_id'])
+            ->where('line_item_id', $lineItem['id'])
+            ->count();
 
         if ($hasOrder) {
             return false;
@@ -28,6 +31,7 @@ final class SopifyRepository
             'customer_id' => $order['customer']['id'] ?? null,
             'total_price' => $order['total_price'],
             'product_id' => $lineItem['product_id'],
+            'line_item_id'  => $lineItem['id'],
             'product_name' => $lineItem['name'],
             'quantity' => $lineItem['quantity'],
             'product_sku' => $lineItem['sku'] ?? null,
