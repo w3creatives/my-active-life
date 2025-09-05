@@ -32,7 +32,6 @@ final class UserPointsController extends BaseController
 {
     public function listView(Request $request): JsonResponse
     {
-
         $isCalendarMode = $request->mode === 'calendar';
 
         $request->validate([
@@ -97,7 +96,9 @@ final class UserPointsController extends BaseController
                 ->where('date', '>=', $event->start_date)
                 ->where('date', '<=', $item->date)->sum('amount');
             // $item->note = $participation->note;
-            $item->milestone = $event->milestones()->where('distance', '<=', $item->cumulative_mile)->orderBy('distance', 'DESC')->first();
+
+            // Remove premature milestone assignment - will be handled in the next through function
+            // $item->milestone = $event->milestones()->where('distance', '<=', $item->cumulative_mile)->orderBy('distance', 'DESC')->first();
 
             return $item;
         });
@@ -149,20 +150,38 @@ final class UserPointsController extends BaseController
             }
 
             $prevItem = $points->get($key - 1);
+            $milestone = null;
 
-            $milestone = $event->milestones()->selectRaw('name,description,distance,data,logo, team_logo, calendar_logo, calendar_team_logo');
+            // Calculate previous cumulative miles to determine if a milestone was crossed
+            $prevCumulativeMile = 0;
+
+            // $milestone = $event->milestones()->selectRaw('name,description,distance,data,logo, team_logo, calendar_logo, calendar_team_logo');
 
             if ($prevItem) {
-                $milestone = $milestone->where('distance', '<=', $item->cumulative_mile)->where('distance', '>', $prevItem->cumulative_mile);
+                $prevCumulativeMile = $prevItem->cumulative_mile;
+                // $milestone = $milestone->where('distance', '<=', $item->cumulative_mile)->where('distance', '>', $prevItem->cumulative_mile);
             } else {
-                $milestone = $milestone->where('distance', '<=', $item->cumulative_mile);
+                // $milestone = $milestone->where('distance', '<=', $item->cumulative_mile);
+                // For the first item, get cumulative miles from the day before
+                $prevCumulativeMile = $user->points()->where('event_id', $event->id)
+                    ->where('date', '>=', $event->start_date)
+                    ->where('date', '<', $item->date)->sum('amount');
             }
 
-            $milestone = $milestone->orderBy('distance', 'DESC')->first();
+            // $milestone = $milestone->orderBy('distance', 'DESC')->first();
 
             // if(is_null($milestone)) {
             // $milestone = $event->milestones()->selectRaw('name,description,distance,data')->where('distance','<=', $item->total_mile)->orderBy('distance','DESC')->first();
             // }
+
+            // Only assign milestone if we crossed a milestone threshold on this specific date
+            if ($item->cumulative_mile > $prevCumulativeMile) {
+                $milestone = $event->milestones()->selectRaw('name,description,distance,data')
+                    ->where('distance', '<=', $item->cumulative_mile)
+                    ->where('distance', '>', $prevCumulativeMile)
+                    ->orderBy('distance', 'DESC')
+                    ->first();
+            }
 
             if ($milestone) {
                 if ($event->bibs_name) {
