@@ -102,6 +102,13 @@ final class StreaksController extends Controller
             $data['calendar_logo'] = $teamLogoFileName;
         }
 
+        if ($request->hasFile('bib_image')) {
+            $teamLogoFile = $request->file('bib_image');
+            $teamLogoFileName = 'individual-bib-'.$event->id.'_'.time().'_'.uniqid().$request->min_distance.'.'.$teamLogoFile->getClientOriginalExtension();
+            $teamLogoFile->storeAs('uploads/streaks/bibs', $teamLogoFileName, 'public');
+            $data['bib_image'] = $teamLogoFileName;
+        }
+
         if ($streak) {
             $streak->fill($data)->save();
 

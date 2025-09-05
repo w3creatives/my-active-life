@@ -32,7 +32,7 @@
                                 <label for="video_url" class="form-label">Video URL</label>
                                 <input type="text" name="video_url" id="video_url"
                                        class="form-control @error('video_url') parsley-error @enderror"
-                                       value="{{ $eventMilestone->video_url ?? '' }}" required
+                                       value="{{ $eventMilestone->video_url ?? '' }}"
                                        data-parsley-trigger="change">
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
@@ -105,7 +105,22 @@
                                     </div>
                                 </div>
                             @endif
-
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="bib-image" class="form-label">Bibs Image</label>
+                                <input type="file" id="bib-image" data-preview=".bib-image-preview"
+                                       name="bib_image" class="form-control choose-file">
+                                <div class="bib-image-preview {{ isset($eventMilestone->bib_image) && $eventMilestone->bib_image?'':'d-none' }} mt-3">
+                                    <img src="{{ $eventMilestone->bib_image??'' }}" class="img-fluid img" style="height: 100px;" />
+                                </div>
+                            </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="team-bib-image" class="form-label">Team Bibs Image</label>
+                                <input type="file" id="team-bib-image" data-preview=".team-bib-image-preview"
+                                       name="team_bib_image" class="form-control choose-file">
+                                <div class="team-bib-image-preview {{ isset($eventMilestone->team_bib_image) && $eventMilestone->team_bib_image?'':'d-none' }} mt-3">
+                                    <img src="{{ $eventMilestone->team_bib_image??'' }}" class="img-fluid img" style="height: 100px;" />
+                                </div>
+                            </div>
                         </div>
                         <div class="d-flex justify-content-between mt-3">
 

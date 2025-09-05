@@ -15,6 +15,7 @@ final class FitLifeActivityMilestone extends Model
     protected $guarded = [];
 
     private string $uploadPath = 'uploads/milestones/';
+    private string $bibUploadPath = 'uploads/milestones/bibs/';
 
     public function getVideoUrlAttribute()
     {
@@ -61,6 +62,26 @@ final class FitLifeActivityMilestone extends Model
         }
 
         return asset(Storage::url($this->uploadPath.trim($this->attributes['calendar_logo'])));
+    }
+
+    public function getBibImageAttribute(): ?string
+    {
+
+        if (! $this->attributes['bib_image']) {
+            return null;
+        }
+
+        return asset(Storage::url($this->bibUploadPath.trim($this->attributes['bib_image'])));
+    }
+
+    public function getTeamBibImageAttribute(): ?string
+    {
+
+        if (! $this->attributes['team_bib_image']) {
+            return null;
+        }
+
+        return asset(Storage::url($this->bibUploadPath.trim($this->attributes['team_bib_image'])));
     }
 
     public function images($isCompleted): array

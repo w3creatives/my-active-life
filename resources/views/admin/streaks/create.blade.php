@@ -63,6 +63,14 @@
                                     <img src="{{ $eventStreak->calendar_logo??'' }}" class="img-fluid img" style="height: 100px;" />
                                 </div>
                             </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="bib-image" class="form-label">Bibs Image</label>
+                                <input type="file" id="bib-image" data-preview=".bib-image-preview"
+                                       name="bib_image" class="form-control choose-file">
+                                <div class="bib-image-preview {{ isset($eventStreak->bib_image) && $eventStreak->bib_image?'':'d-none' }} mt-3">
+                                    <img src="{{ $eventStreak->bib_image??'' }}" class="img-fluid img" style="height: 100px;" />
+                                </div>
+                            </div>
                         </div>
 
                         <div class="d-flex justify-content-between mt-3">

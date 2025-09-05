@@ -165,6 +165,19 @@ final class MilestonesController extends Controller
             $data['calendar_team_logo'] = $teamLogoFileName;
         }
 
+        if ($request->hasFile('bib_image')) {
+            $teamLogoFile = $request->file('bib_image');
+            $teamLogoFileName = 'individual-bib-'.$event->id.'_'.time().'_'.uniqid().$data['distance'].'.'.$teamLogoFile->getClientOriginalExtension();
+            $teamLogoFile->storeAs('uploads/milestones/bibs', $teamLogoFileName, 'public');
+            $data['bib_image'] = $teamLogoFileName;
+        }
+
+        if ($request->hasFile('team_bib_image')) {
+            $teamLogoFile = $request->file('team_bib_image');
+            $teamLogoFileName = 'team-bib-'.$event->id.'_'.time().'_'.uniqid().$data['distance'].'.'.$teamLogoFile->getClientOriginalExtension();
+            $teamLogoFile->storeAs('uploads/milestones/bibs', $teamLogoFileName, 'public');
+            $data['team_bib_image'] = $teamLogoFileName;
+        }
         if (in_array($event->event_type, ['regular', 'month'])) {
 
             $eventMilestone = $event->milestones()->find($milestoneId);
@@ -193,9 +206,9 @@ final class MilestonesController extends Controller
             if ($eventMilestone) {
                 $eventMilestone->fill($data)->save();
                 $flashMessage = 'Milestone updated successfully.';
+            } else {
+                $activity->milestones()->create($data);
             }
-
-            $activity->milestones()->create($data);
 
             return redirect()
                 ->route('admin.events.activity.milestones', [$event->id, $activityId])

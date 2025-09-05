@@ -12,9 +12,11 @@ final class EventMilestone extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'distance', 'data', 'description', 'logo', 'team_logo', 'calendar_logo', 'calendar_team_logo', 'email_template_id'];
+    protected $fillable = ['name', 'distance', 'data', 'description', 'logo', 'team_logo', 'calendar_logo', 'calendar_team_logo', 'email_template_id', 'bib_image', 'team_bib_image'];
 
     private string $uploadPath = 'uploads/milestones/';
+
+    private string $bibUploadPath = 'uploads/milestones/bibs/';
 
     public function getLogoAttribute(): ?string
     {
@@ -53,6 +55,26 @@ final class EventMilestone extends Model
         }
 
         return asset(Storage::url($this->uploadPath.trim($this->attributes['calendar_team_logo'])));
+    }
+
+    public function getBibImageAttribute(): ?string
+    {
+
+        if (! $this->attributes['bib_image']) {
+            return null;
+        }
+
+        return asset(Storage::url($this->bibUploadPath.trim($this->attributes['bib_image'])));
+    }
+
+    public function getTeamBibImageAttribute(): ?string
+    {
+
+        if (! $this->attributes['team_bib_image']) {
+            return null;
+        }
+
+        return asset(Storage::url($this->bibUploadPath.trim($this->attributes['team_bib_image'])));
     }
 
     public function getVideoUrlAttribute()

@@ -14,6 +14,8 @@ final class EventStreak extends Model
 
     private string $uploadPath = 'uploads/streaks/';
 
+    private string $bibUploadPath = 'uploads/streaks/bibs/';
+
     public function getMinDistanceAttribute()
     {
         $data = $this->data ? json_decode($this->data, true) : null;
@@ -39,6 +41,16 @@ final class EventStreak extends Model
         }
 
         return asset(Storage::url($this->uploadPath.trim($this->attributes['calendar_logo'])));
+    }
+
+    public function getBibImageAttribute(): ?string
+    {
+
+        if (! $this->attributes['bib_image']) {
+            return null;
+        }
+
+        return asset(Storage::url($this->bibUploadPath.trim($this->attributes['bib_image'])));
     }
 
     public function emailTemplate(): BelongsTo
