@@ -176,7 +176,7 @@ export default function AdminControls() {
               <div className="space-y-4">
                 {/* Search Input */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
                   <Input
                     type="search"
                     placeholder="Search team members..."
@@ -219,10 +219,7 @@ export default function AdminControls() {
                 ) : (
                   <div className="py-4 text-center">
                     <p className="text-sm text-gray-600">
-                      {teamMembers && teamMembers.data.length > 0 
-                        ? 'No other team members found to transfer admin role to' 
-                        : 'No team members found'
-                      }
+                      {teamMembers && teamMembers.data.length > 0 ? 'No other team members found to transfer admin role to' : 'No team members found'}
                     </p>
                   </div>
                 )}

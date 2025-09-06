@@ -215,14 +215,24 @@ final class UserRepository
         $eventStartDate = Carbon::parse($event->start_date);
         $eventEndDate = Carbon::parse($event->end_date);
 
+        // Filter for current year only
+        $currentYear = Carbon::now()->year;
+        $currentYearStart = Carbon::create($currentYear, 1, 1)->startOfDay();
+        $currentYearEnd = Carbon::create($currentYear, 12, 31)->endOfDay();
+        
+        // Use the intersection of event dates and current year
+        $startDate = $eventStartDate->max($currentYearStart);
+        $endDate = $eventEndDate->min($currentYearEnd);
+
         return PointMonthly::select('amount', 'date')
             ->where('event_id', $eventId)
             ->where('user_id', $user->id)
-            ->whereDate('date', '>=', $eventStartDate)
-            ->whereDate('date', '<=', $eventEndDate)
+            ->whereDate('date', '>=', $startDate)
+            ->whereDate('date', '<=', $endDate)
+            ->whereYear('date', $currentYear) // Additional filter for current year
             ->get()
             ->map(function ($item) {
-                $item->label = Carbon::parse($item->date)->format('M y'); // e.g., Dec 25
+                $item->label = Carbon::parse($item->date)->format('M'); // Show only month name (e.g., Dec)
 
                 return $item;
             });

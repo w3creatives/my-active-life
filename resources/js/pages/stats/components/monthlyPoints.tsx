@@ -1,13 +1,12 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/chart';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 import type { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { useEffect, useState, useMemo } from 'react';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { Calendar } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 type MonthlyPointsData = {
   label: string;
@@ -23,15 +22,21 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function MonthlyPoints() {
+interface MonthlyPointsProps {
+  dataFor: string;
+}
+
+export default function MonthlyPoints({ dataFor }: MonthlyPointsProps) {
   const { auth } = usePage<SharedData>().props;
   const [loading, setLoading] = useState(true);
   const [monthlies, setMonthlies] = useState<MonthlyPointsData[]>([]);
 
   useEffect(() => {
     const fetchMonthlies = async () => {
+      setLoading(true); // Set loading to true when dataFor changes
       try {
-        const response = await axios.get(route('userstats', ['monthlies']), {
+        const routeName = dataFor === 'team' ? 'teamstats' : 'userstats';
+        const response = await axios.get(route(routeName, ['monthlies']), {
           params: {
             event_id: auth.preferred_event.id,
             user_id: auth.user.id,
@@ -46,7 +51,7 @@ export default function MonthlyPoints() {
     };
 
     fetchMonthlies();
-  }, []);
+  }, [dataFor]);
 
   const statsData = useMemo(() => {
     if (monthlies.length === 0) {
@@ -54,20 +59,29 @@ export default function MonthlyPoints() {
         totalMiles: 0,
         averageMiles: 0,
         bestMonth: null,
-        monthlyData: []
+        monthlyData: [],
       };
     }
 
-    const monthlyData = monthlies.map((item: MonthlyPointsData) => ({
-      ...item,
-      amount: parseFloat(item.amount.toString()),
-    }));
+    // Sort data by month to ensure proper order (Jan, Feb, Mar, etc.)
+    const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const monthlyData = monthlies
+      .map((item: MonthlyPointsData) => ({
+        ...item,
+        amount: parseFloat(item.amount.toString()),
+      }))
+      .sort((a, b) => {
+        const aIndex = monthOrder.indexOf(a.label);
+        const bIndex = monthOrder.indexOf(b.label);
+        return aIndex - bIndex;
+      });
 
     const totalMiles = monthlyData.reduce((sum, item) => sum + item.amount, 0);
-    const averageMiles = totalMiles / monthlyData.length;
-    const bestMonth = monthlyData.reduce((best, current) =>
-      current.amount > (best?.amount || 0) ? current : best
-    );
+    const averageMiles = monthlyData.length > 0 ? totalMiles / monthlyData.length : 0;
+    const bestMonth = monthlyData.length > 0
+      ? monthlyData.reduce((best, current) => (current.amount > (best?.amount || 0) ? current : best))
+      : null;
 
     return { totalMiles, averageMiles, bestMonth, monthlyData };
   }, [monthlies]);
@@ -103,73 +117,70 @@ export default function MonthlyPoints() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
+              <Calendar className="text-primary h-5 w-5" />
               <CardTitle className="text-lg">Monthly Mileage</CardTitle>
             </div>
-            <CardDescription className="text-sm">
-              Your month-over-month progress throughout the event
-            </CardDescription>
+            <CardDescription className="text-sm">{dataFor === 'team' ? 'Team' : 'Your'} month-over-month progress for {new Date().getFullYear()}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Stats Summary */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="text-center p-3 rounded-lg bg-primary/5 border">
-                <div className="text-xl font-bold text-primary">
-                  {formatDistance(statsData.totalMiles)}
-                </div>
-                <div className="text-xs text-muted-foreground">Total Miles</div>
+              <div className="bg-primary/5 rounded-lg border p-3 text-center">
+                <div className="text-primary text-xl font-bold">{formatDistance(statsData.totalMiles)}</div>
+                <div className="text-muted-foreground text-xs">Total Miles</div>
               </div>
-              <div className="text-center p-3 rounded-lg bg-muted/30 border">
-                <div className="text-xl font-bold">
-                  {formatDistance(statsData.averageMiles)}
-                </div>
-                <div className="text-xs text-muted-foreground">Avg per Month</div>
+              <div className="bg-muted/30 rounded-lg border p-3 text-center">
+                <div className="text-xl font-bold">{formatDistance(statsData.averageMiles)}</div>
+                <div className="text-muted-foreground text-xs">Avg per Month</div>
               </div>
-              <div className="text-center p-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
+              <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center dark:border-green-800 dark:bg-green-950/20">
                 <div className="text-xl font-bold text-green-600 dark:text-green-400">
                   {statsData.bestMonth ? formatDistance(statsData.bestMonth.amount) : '0'}
                 </div>
-                <div className="flex text-xs text-muted-foreground items-center justify-center gap-1">
+                <div className="text-muted-foreground flex items-center justify-center gap-1 text-xs">
                   <span>Best Month</span>
                   {statsData.bestMonth && (
-                      <>
-                        - <span className='font-bold'>{statsData.bestMonth.label}</span>
-                      </>
+                    <>
+                      - <span className="font-bold">{statsData.bestMonth.label}</span>
+                    </>
                   )}
                 </div>
               </div>
             </div>
 
             {/* Chart */}
-            <div className="h-64">
-              <ChartContainer config={chartConfig}>
+            <div className="h-64 w-full overflow-hidden">
+              <ChartContainer config={chartConfig} className="h-full w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={statsData.monthlyData} margin={{ top: 20, right: 20, left: 10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                  <BarChart
+                    data={statsData.monthlyData}
+                    margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" strokeOpacity={0.3} />
                     <XAxis
                       dataKey="label"
                       tickLine={false}
                       axisLine={false}
-                      tickMargin={10}
-                      tickFormatter={(value) => {
-                        // Show first 3 letters of month
-                        return value.slice(0, 3);
-                      }}
+                      tickMargin={8}
+                      fontSize={12}
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
                     />
                     <YAxis
                       tickLine={false}
                       axisLine={false}
-                      tickMargin={10}
-                      label={{ value: 'Miles', angle: -90, position: 'insideLeft' }}
-                      domain={[0, 'auto']}
+                      tickMargin={8}
+                      fontSize={11}
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                      domain={[0, 'dataMax']}
+                      allowDecimals={false}
                     />
                     <ChartTooltip
                       content={({ active, payload, label }) => {
                         if (active && payload && payload.length) {
                           const data = payload[0];
                           return (
-                            <div className="rounded-lg border bg-background p-3 shadow-lg">
-                              <div className="font-medium mb-2">{label}</div>
+                            <div className="bg-background rounded-lg border p-3 shadow-lg">
+                              <div className="mb-2 font-medium">{label} {new Date().getFullYear()}</div>
                               <div className="text-sm">
                                 <span className="text-muted-foreground">Miles: </span>
                                 <span className="font-medium">{formatDistance(data.value as number)}</span>
@@ -183,7 +194,8 @@ export default function MonthlyPoints() {
                     <Bar
                       dataKey="amount"
                       fill="var(--color-primary)"
-                      radius={[4, 4, 0, 0]}
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={50}
                     />
                   </BarChart>
                 </ResponsiveContainer>

@@ -3,13 +3,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { type SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 
-export default function ProgressCard() {
+interface ProgressCardProps {
+  dataFor?: string;
+}
+
+export default function ProgressCard({ dataFor = 'you' }: ProgressCardProps) {
   const { auth } = usePage<SharedData>().props;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl">Your Progress So Far</CardTitle>
+        <CardTitle className="text-2xl">{dataFor === 'team' ? 'Team Progress So Far' : 'Your Progress So Far'}</CardTitle>
         <CardDescription></CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">

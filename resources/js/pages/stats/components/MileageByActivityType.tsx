@@ -1,7 +1,7 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Bike, Clock, MapPin, Footprints } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartConfig, ChartContainer, ChartTooltip } from '@/components/ui/chart';
+import { Activity, Bike, Clock, Footprints, MapPin } from 'lucide-react';
 import { useMemo } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 
@@ -16,14 +16,15 @@ interface MileageByActivityTypeProps {
   data?: ActivityTypeData[];
   totalMiles?: number;
   className?: string;
+  dataFor?: string;
 }
 
 const activityIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  'Running': Footprints,
-  'Walking': MapPin,
-  'Cycling': Bike,
-  'Swimming': Activity,
-  'Other': Clock,
+  Running: Footprints,
+  Walking: MapPin,
+  Cycling: Bike,
+  Swimming: Activity,
+  Other: Clock,
 };
 
 const defaultColors = [
@@ -43,11 +44,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function MileageByActivityType({
-  data = [],
-  totalMiles = 0,
-  className = '',
-}: MileageByActivityTypeProps) {
+export default function MileageByActivityType({ data = [], totalMiles = 0, className = '', dataFor = 'you' }: MileageByActivityTypeProps) {
   const formatDistance = (distance: number) => {
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
@@ -69,22 +66,18 @@ export default function MileageByActivityType({
     <Card className={`${className}`}>
       <CardHeader className="pb-4">
         <div className="flex items-center gap-2">
-          <Activity className="h-6 w-6 text-primary" />
+          <Activity className="text-primary h-6 w-6" />
           <CardTitle className="text-xl">Mileage by Activity Type</CardTitle>
         </div>
-        <CardDescription>
-          Breakdown of your miles by different activity types
-        </CardDescription>
+        <CardDescription>Breakdown of your miles by different activity types</CardDescription>
       </CardHeader>
       <CardContent>
         {!hasData ? (
           <div className="flex h-64 items-center justify-center text-center">
             <div>
-              <Activity className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+              <Activity className="text-muted-foreground/50 mx-auto mb-4 h-12 w-12" />
               <p className="text-muted-foreground mb-2">No activity data available</p>
-              <p className="text-sm text-muted-foreground/70">
-                Start logging activities to see your breakdown
-              </p>
+              <p className="text-muted-foreground/70 text-sm">Start logging activities to see your breakdown</p>
             </div>
           </div>
         ) : (
@@ -113,12 +106,9 @@ export default function MileageByActivityType({
                         if (active && payload && payload.length > 0) {
                           const data = payload[0].payload;
                           return (
-                            <div className="rounded-lg border bg-background p-3 shadow-lg">
-                              <div className="flex items-center gap-2 mb-2">
-                                <div 
-                                  className="h-3 w-3 rounded-full" 
-                                  style={{ backgroundColor: data.color }}
-                                />
+                            <div className="bg-background rounded-lg border p-3 shadow-lg">
+                              <div className="mb-2 flex items-center gap-2">
+                                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: data.color }} />
                                 <span className="font-medium">{data.name}</span>
                               </div>
                               <div className="space-y-1 text-sm">
@@ -144,31 +134,22 @@ export default function MileageByActivityType({
 
             {/* Activity List */}
             <div className="space-y-3">
-              <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-                Activity Breakdown
-              </h4>
+              <h4 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">Activity Breakdown</h4>
               {chartData.map((item, index) => {
                 const Icon = activityIcons[item.name] || Activity;
                 return (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                  <div key={index} className="bg-muted/30 flex items-center justify-between rounded-lg border p-3">
                     <div className="flex items-center gap-3">
-                      <div 
-                        className="rounded-full p-2 text-white shadow-sm"
-                        style={{ backgroundColor: item.color }}
-                      >
+                      <div className="rounded-full p-2 text-white shadow-sm" style={{ backgroundColor: item.color }}>
                         <Icon className="h-4 w-4" />
                       </div>
                       <div>
                         <div className="font-medium">{item.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {item.percentage.toFixed(1)}% of total
-                        </div>
+                        <div className="text-muted-foreground text-sm">{item.percentage.toFixed(1)}% of total</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-bold text-foreground">
-                        {formatDistance(item.miles)}
-                      </div>
+                      <div className="text-foreground text-lg font-bold">{formatDistance(item.miles)}</div>
                       <Badge variant="outline" className="text-xs">
                         miles
                       </Badge>
@@ -179,19 +160,15 @@ export default function MileageByActivityType({
             </div>
 
             {/* Summary */}
-            <div className="rounded-lg border bg-primary/5 p-4">
+            <div className="bg-primary/5 rounded-lg border p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-medium text-muted-foreground">Total Distance</div>
-                  <div className="text-2xl font-bold text-primary">
-                    {formatDistance(totalMiles)}
-                  </div>
+                  <div className="text-muted-foreground text-sm font-medium">Total Distance</div>
+                  <div className="text-primary text-2xl font-bold">{formatDistance(totalMiles)}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-medium text-muted-foreground">Activity Types</div>
-                  <div className="text-2xl font-bold text-primary">
-                    {chartData.length}
-                  </div>
+                  <div className="text-muted-foreground text-sm font-medium">Activity Types</div>
+                  <div className="text-primary text-2xl font-bold">{chartData.length}</div>
                 </div>
               </div>
             </div>

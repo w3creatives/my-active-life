@@ -4,7 +4,6 @@ import { usePage } from '@inertiajs/react';
 export default function EventBannerImage() {
   const { auth } = usePage<SharedData>().props;
 
-  
   return (
     <>
       {auth.preferred_event && (

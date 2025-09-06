@@ -6,7 +6,11 @@ namespace App\Services;
 
 use App\Models\Team;
 use App\Models\User;
+use App\Models\TeamPointMonthly;
+use App\Models\TeamPoint;
 use App\Repositories\TeamRepository;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 
 final class TeamService
 {
@@ -193,5 +197,54 @@ final class TeamService
     public function leaveTeam($team, $user)
     {
         return $this->teamRepository->leaveTeam($team, $user);
+    }
+
+    public function monthlies(int $eventId, Team $team): Collection
+    {
+        // Get team's monthly points for current year only (similar to UserRepository logic)
+        $currentYear = Carbon::now()->year;
+        
+        return TeamPointMonthly::where('team_id', $team->id)
+            ->where('event_id', $eventId)
+            ->whereYear('date', $currentYear)
+            ->select('amount', 'date')
+            ->get()
+            ->map(function ($item) {
+                $item->label = Carbon::parse($item->date)->format('M'); // Show only month name
+                return $item;
+            });
+    }
+
+    public function total(int $eventId, Team $team): int
+    {
+        return (int) $team->totalPoints()->where('event_id', $eventId)->sum('amount');
+    }
+
+    public function last30DaysStats(Team $team, int $eventId): array
+    {
+        $endDate = Carbon::now();
+        $startDate = $endDate->copy()->subDays(29); // 30 days total including today
+        
+        $stats = collect();
+        
+        for ($date = $startDate; $date <= $endDate; $date->addDay()) {
+            $dayPoints = TeamPoint::where('team_id', $team->id)
+                ->where('event_id', $eventId)
+                ->where('date', $date->format('Y-m-d'))
+                ->sum('amount');
+                
+            $stats->push([
+                'date' => $date->format('Y-m-d'),
+                'amount' => (float) $dayPoints
+            ]);
+        }
+        
+        return ['stats' => $stats];
+    }
+
+    public function getUserTeam(User $user, int $eventId): ?Team
+    {
+        $membership = $user->memberships()->where('event_id', $eventId)->first();
+        return $membership ? $membership->team : null;
     }
 }

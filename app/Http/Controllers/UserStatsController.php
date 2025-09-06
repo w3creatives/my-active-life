@@ -8,6 +8,7 @@ use App\Models\AmerithonPathDistance;
 use App\Models\Event;
 use App\Services\UserPointService;
 use App\Services\UserService;
+use App\Services\TeamService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
@@ -18,7 +19,8 @@ final readonly class UserStatsController
 {
     public function __construct(
         private UserService $userService,
-        private UserPointService $userPointService
+        private UserPointService $userPointService,
+        private TeamService $teamService
     ) {}
 
     public function getUserStats(Request $request, string $type)
@@ -37,6 +39,10 @@ final readonly class UserStatsController
 
         if ($type === 'amerithon-map') {
             return $this->userAmerithonMapData($request);
+        }
+
+        if ($type === 'target') {
+            return $this->userTargetData($request);
         }
 
         return false;
@@ -96,10 +102,14 @@ final readonly class UserStatsController
         $maxDistance = AmerithonPathDistance::max('distance') ?: 3000; // Default to ~3000 miles for cross-country
         $completionPercentage = $maxDistance > 0 ? ($totalDistance / $maxDistance) * 100 : 0;
 
-        // Get route line data (sample of path points for the complete route)
+        // Get route line data - sample evenly across the entire route for better visualization
+        $totalCount = AmerithonPathDistance::count();
+        $sampleSize = 2000; // Increased sample size for smoother route line
+        $step = max(1, intval($totalCount / $sampleSize));
+        
         $routeLineData = AmerithonPathDistance::select('distance', 'coordinates')
+            ->whereRaw('MOD(id, ?) = 0', [$step]) // Sample every Nth record
             ->orderBy('distance')
-            ->take(200) // Limit to 200 points for performance
             ->get()
             ->map(function ($point) {
                 $coordinates = is_string($point->coordinates)
@@ -190,5 +200,382 @@ final readonly class UserStatsController
         Cache::put($cacheName, $data, now()->addHours(2));
 
         return response()->json(['data' => $data]);
+    }
+
+    public function getTeamStats(Request $request, string $type)
+    {
+        if ($type === 'last30days') {
+            return $this->teamLast30DaysStats($request);
+        }
+
+        if ($type === 'monthlies') {
+            return $this->teamMonthlyPoints($request);
+        }
+
+        if ($type === 'yearly') {
+            return $this->teamYearlyPoints($request);
+        }
+
+        if ($type === 'amerithon-map') {
+            return $this->teamAmerithonMapData($request);
+        }
+
+        if ($type === 'target') {
+            return $this->teamTargetData($request);
+        }
+
+        return false;
+    }
+
+    public function teamLast30DaysStats(Request $request)
+    {
+        $user = $request->user();
+        $eventId = (int) $request->query('event_id');
+
+        $team = $this->teamService->getUserTeam($user, $eventId);
+        if (!$team) {
+            return response()->json(['error' => 'User is not part of any team'], 404);
+        }
+
+        $points = $this->teamService->last30DaysStats($team, $eventId);
+
+        return $points['stats']->map(function ($item) {
+            $item['label'] = Carbon::parse($item['date'])->format('d M y'); // e.g., 18 Dec 25
+            // Ensure compatibility with frontend - rename amount to daily_total
+            $item['daily_total'] = $item['amount'];
+            unset($item['amount']);
+            return $item;
+        });
+    }
+
+    public function teamMonthlyPoints(Request $request): Collection|JsonResponse
+    {
+        $eventId = (int) $request->query('event_id');
+        $user = $request->user();
+
+        $team = $this->teamService->getUserTeam($user, $eventId);
+        if (!$team) {
+            return response()->json(['error' => 'User is not part of any team'], 404);
+        }
+
+        return $this->teamService->monthlies($eventId, $team);
+    }
+
+    public function teamYearlyPoints(Request $request): Collection|JsonResponse
+    {
+        $eventId = (int) $request->query('event_id');
+        $user = $request->user();
+
+        $team = $this->teamService->getUserTeam($user, $eventId);
+        if (!$team) {
+            return response()->json(['error' => 'User is not part of any team'], 404);
+        }
+
+        // For now, return team yearly points (this could be enhanced later if needed)
+        return collect([]);
+    }
+
+    public function teamTotalPoints(Request $request): int|JsonResponse
+    {
+        $eventId = (int) $request->query('event_id');
+        $user = $request->user();
+
+        $team = $this->teamService->getUserTeam($user, $eventId);
+        if (!$team) {
+            return response()->json(['error' => 'User is not part of any team'], 404);
+        }
+
+        return $this->teamService->total($eventId, $team);
+    }
+
+    public function teamAmerithonMapData(Request $request): JsonResponse
+    {
+        $eventId = (int) $request->query('event_id');
+        $user = $request->user();
+
+        $team = $this->teamService->getUserTeam($user, $eventId);
+        if (!$team) {
+            return response()->json(['error' => 'User is not part of any team'], 404);
+        }
+
+        // Get team's total distance for the event
+        $totalDistance = $this->teamService->total($eventId, $team);
+
+        // Get the maximum distance for completion percentage
+        $maxDistance = AmerithonPathDistance::max('distance') ?: 3000; // Default to ~3000 miles for cross-country
+        $completionPercentage = $maxDistance > 0 ? ($totalDistance / $maxDistance) * 100 : 0;
+
+        // Get route line data - sample evenly across the entire route for better visualization
+        $totalCount = AmerithonPathDistance::count();
+        $sampleSize = 2000; // Increased sample size for smoother route line
+        $step = max(1, intval($totalCount / $sampleSize));
+        
+        $routeLineData = AmerithonPathDistance::select('distance', 'coordinates')
+            ->whereRaw('MOD(id, ?) = 0', [$step]) // Sample every Nth record
+            ->orderBy('distance')
+            ->get()
+            ->map(function ($point) {
+                $coordinates = is_string($point->coordinates)
+                    ? json_decode($point->coordinates, true)
+                    : $point->coordinates;
+
+                return [
+                    'lat' => $coordinates['lat'] ?? $coordinates['latitude'] ?? 0,
+                    'lng' => $coordinates['lng'] ?? $coordinates['longitude'] ?? 0,
+                    'distance' => $point->distance,
+                ];
+            })
+            ->filter(function ($point) {
+                return $point['lat'] !== 0 && $point['lng'] !== 0;
+            })
+            ->values()
+            ->toArray();
+
+        // Find the nearest position on the Amerithon path for team's current location
+        $teamPosition = null;
+        if ($totalDistance > 0) {
+            $pathData = AmerithonPathDistance::select('id', 'distance', 'coordinates')
+                ->orderByRaw('ABS(distance - ?)', [$totalDistance])
+                ->first();
+
+            if ($pathData) {
+                $coordinates = is_string($pathData->coordinates)
+                    ? json_decode($pathData->coordinates, true)
+                    : $pathData->coordinates;
+
+                $teamPosition = [
+                    'latitude' => $coordinates['lat'] ?? $coordinates['latitude'] ?? 0,
+                    'longitude' => $coordinates['lng'] ?? $coordinates['longitude'] ?? 0,
+                    'distance_covered' => $totalDistance,
+                    'team_id' => $team->id,
+                    'team_name' => $team->name,
+                ];
+            }
+        }
+
+        return response()->json([
+            'team_position' => $teamPosition,
+            'total_distance' => $maxDistance,
+            'completion_percentage' => round($completionPercentage, 2),
+            'route_line' => $routeLineData,
+            'message' => $totalDistance <= 0 ? 'No distance recorded yet for team' : null,
+        ]);
+    }
+
+    public function getTeamAchievements(Request $request): JsonResponse
+    {
+        $eventId = (int) $request->query('event_id');
+        $user = $request->user();
+
+        $team = $this->teamService->getUserTeam($user, $eventId);
+        if (!$team) {
+            return response()->json(['error' => 'User is not part of any team'], 404);
+        }
+
+        $startOfMonth = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->startOfMonth()->format('Y-m-d');
+        $endOfMonth = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->endOfMonth()->format('Y-m-d');
+
+        $startOfWeek = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->startOfWeek()->format('Y-m-d');
+        $endOfWeek = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->endOfWeek()->format('Y-m-d');
+
+        $today = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->format('Y-m-d');
+
+        $cacheName = "team_achievement_{$team->id}_event_{$eventId}_{$startOfMonth}_{$endOfMonth}_{$startOfWeek}_{$endOfWeek}";
+
+        if (Cache::has($cacheName)) {
+            $item = Cache::get($cacheName);
+            return response()->json(['data' => $item]);
+        }
+
+        $event = Event::find($eventId);
+        if (! $event) {
+            return response()->json(['error' => 'Event not found'], 404);
+        }
+
+        [$achievementData, $totalPoints, $yearwisePoints] = $this->teamService->achievements($event, [$today, $startOfMonth, $endOfMonth, $startOfWeek, $endOfWeek], $team);
+
+        $data = [
+            'achievement' => $achievementData,
+            'miles' => [
+                'total' => $totalPoints,
+                'chart' => $yearwisePoints,
+            ],
+            'event' => $event,
+        ];
+
+        Cache::put($cacheName, $data, now()->addHours(2));
+
+        return response()->json(['data' => $data]);
+    }
+
+    public function userTargetData(Request $request): JsonResponse
+    {
+        $eventId = (int) $request->query('event_id');
+        $user = $request->user();
+
+        $event = Event::find($eventId);
+        if (!$event) {
+            return response()->json(['error' => 'Event not found'], 404);
+        }
+
+        // Get user's current distance
+        $currentDistance = $this->userService->total($eventId, $user);
+        
+        // Parse event goals - use user's personal goal if set, otherwise use event goals
+        $userSettings = $user->settings ?? [];
+        $rtyGoals = $userSettings['rty_goals'] ?? [];
+        $personalGoal = null;
+        
+        // Find user's personal goal for this event
+        foreach ($rtyGoals as $goalSet) {
+            if (isset($goalSet[$event->name]) || isset($goalSet[strtolower(str_replace(' ', '_', $event->name))])) {
+                $personalGoal = $goalSet[$event->name] ?? $goalSet[strtolower(str_replace(' ', '_', $event->name))];
+                break;
+            }
+        }
+        
+        // Use personal goal or fallback to event goals
+        if ($personalGoal) {
+            $targetGoal = (float) $personalGoal;
+        } else {
+            $goals = $event->goals ? json_decode($event->goals, true) : [];
+            $goals = is_array($goals) ? array_map('floatval', $goals) : [];
+            sort($goals);
+            $targetGoal = !empty($goals) ? end($goals) : 1000; // Default 1000 miles
+        }
+
+        // Calculate timing based on mobile API logic
+        $eventStartDate = Carbon::parse($event->start_date);
+        $eventEndDate = Carbon::parse($event->end_date);
+        $now = Carbon::now();
+        
+        $totalDays = $eventStartDate->diffInDays($eventEndDate);
+        $daysSinceStart = max(1, $eventStartDate->diffInDays($now));
+        $daysRemaining = max(1, $now->diffInDays($eventEndDate));
+        
+        // Calculate required daily average for the entire event
+        $dailyTargetMileage = $targetGoal / $totalDays;
+        
+        // Calculate what they should have by now (on-target mileage)
+        $onTargetMileage = $daysSinceStart * $dailyTargetMileage;
+        
+        // Calculate percentage (how they're doing vs where they should be)
+        $onTargetPercentage = $onTargetMileage > 0 ? ($currentDistance / $onTargetMileage) * 100 : 0;
+        
+        // Calculate current daily average and needed daily average
+        $currentDailyAverage = $daysSinceStart > 0 ? $currentDistance / $daysSinceStart : 0;
+        $neededDailyAverage = $daysRemaining > 0 ? ($targetGoal - $currentDistance) / $daysRemaining : 0;
+        
+        // Get goal message and indicator using mobile API logic
+        $goalMessage = $this->getGoalMessage('default', $onTargetPercentage, $eventEndDate->format('M j, Y'));
+        
+        // Calculate estimated completion date
+        $estimatedDaysToComplete = $currentDailyAverage > 0 ? ($targetGoal - $currentDistance) / $currentDailyAverage : 999;
+        $estimatedCompletionDate = $now->copy()->addDays($estimatedDaysToComplete);
+
+        return response()->json([
+            'current_distance' => $currentDistance,
+            'target_goal' => $targetGoal,
+            'on_target_mileage' => round($onTargetMileage, 2),
+            'on_target_percentage' => round($onTargetPercentage, 2),
+            'days_remaining' => $daysRemaining,
+            'daily_average_needed' => round($neededDailyAverage, 2),
+            'current_daily_average' => round($currentDailyAverage, 2),
+            'is_on_track' => $onTargetPercentage >= 100,
+            'goal_indicator' => $goalMessage['indicator'] ?? '',
+            'goal_message' => $goalMessage['message'] ?? '',
+            'event_end_date' => $event->end_date,
+            'estimated_completion_date' => $estimatedCompletionDate->format('Y-m-d'),
+        ]);
+    }
+
+    private function getGoalMessage($attitude, $onTargetPercentage, $expectedFinishDate): array
+    {
+        $goalMessage = [];
+
+        if ($onTargetPercentage < 80) {
+            $goalMessage['indicator'] = 'behind';
+            $goalMessage['message'] = 'You can do this! To meet your current goal you just need to get rolling! Of course, you can also change your goal in Account Settings.';
+        } elseif ($onTargetPercentage >= 80 && $onTargetPercentage < 100) {
+            $goalMessage['indicator'] = 'nearly there';
+            $goalMessage['message'] = "We believe in you! Every day is a new day. Start fresh and set your sights high to get back on track! You're so close!";
+        } elseif ($onTargetPercentage >= 100 && $onTargetPercentage < 120) {
+            $goalMessage['indicator'] = 'on target';
+            $goalMessage['message'] = "WHOA! You're crushing this challenge! Keep it up, you're on pace to finish on {$expectedFinishDate} and not a day later!";
+        } else { // >= 120
+            $goalMessage['indicator'] = 'ahead';
+            $goalMessage['message'] = "Wow! You are amazing and well ahead of your goal! You are on target to finish approximately on {$expectedFinishDate}.";
+        }
+
+        return $goalMessage;
+    }
+
+    public function teamTargetData(Request $request): JsonResponse
+    {
+        $eventId = (int) $request->query('event_id');
+        $user = $request->user();
+
+        $team = $this->teamService->getUserTeam($user, $eventId);
+        if (!$team) {
+            return response()->json(['error' => 'User is not part of any team'], 404);
+        }
+
+        $event = Event::find($eventId);
+        if (!$event) {
+            return response()->json(['error' => 'Event not found'], 404);
+        }
+
+        // Get team's current distance
+        $currentDistance = $this->teamService->total($eventId, $team);
+        
+        // For teams, use event goals (highest goal as target)
+        $goals = $event->goals ? json_decode($event->goals, true) : [];
+        $goals = is_array($goals) ? array_map('floatval', $goals) : [];
+        sort($goals);
+        $targetGoal = !empty($goals) ? end($goals) : 1000; // Default 1000 miles
+
+        // Calculate timing based on mobile API logic
+        $eventStartDate = Carbon::parse($event->start_date);
+        $eventEndDate = Carbon::parse($event->end_date);
+        $now = Carbon::now();
+        
+        $totalDays = $eventStartDate->diffInDays($eventEndDate);
+        $daysSinceStart = max(1, $eventStartDate->diffInDays($now));
+        $daysRemaining = max(1, $now->diffInDays($eventEndDate));
+        
+        // Calculate required daily average for the entire event
+        $dailyTargetMileage = $targetGoal / $totalDays;
+        
+        // Calculate what they should have by now (on-target mileage)
+        $onTargetMileage = $daysSinceStart * $dailyTargetMileage;
+        
+        // Calculate percentage (how they're doing vs where they should be)
+        $onTargetPercentage = $onTargetMileage > 0 ? ($currentDistance / $onTargetMileage) * 100 : 0;
+        
+        // Calculate current daily average and needed daily average
+        $currentDailyAverage = $daysSinceStart > 0 ? $currentDistance / $daysSinceStart : 0;
+        $neededDailyAverage = $daysRemaining > 0 ? ($targetGoal - $currentDistance) / $daysRemaining : 0;
+        
+        // Get goal message and indicator using mobile API logic
+        $goalMessage = $this->getGoalMessage('default', $onTargetPercentage, $eventEndDate->format('M j, Y'));
+        
+        // Calculate estimated completion date
+        $estimatedDaysToComplete = $currentDailyAverage > 0 ? ($targetGoal - $currentDistance) / $currentDailyAverage : 999;
+        $estimatedCompletionDate = $now->copy()->addDays($estimatedDaysToComplete);
+
+        return response()->json([
+            'current_distance' => $currentDistance,
+            'target_goal' => $targetGoal,
+            'on_target_mileage' => round($onTargetMileage, 2),
+            'on_target_percentage' => round($onTargetPercentage, 2),
+            'days_remaining' => $daysRemaining,
+            'daily_average_needed' => round($neededDailyAverage, 2),
+            'current_daily_average' => round($currentDailyAverage, 2),
+            'is_on_track' => $onTargetPercentage >= 100,
+            'goal_indicator' => $goalMessage['indicator'] ?? '',
+            'goal_message' => $goalMessage['message'] ?? '',
+            'event_end_date' => $event->end_date,
+            'estimated_completion_date' => $estimatedCompletionDate->format('Y-m-d'),
+        ]);
     }
 }

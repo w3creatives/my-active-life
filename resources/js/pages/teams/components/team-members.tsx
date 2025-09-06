@@ -112,28 +112,30 @@ export default function TeamMembers() {
 
     setRemovingMember(member.id);
 
-    router.post(
-      route('teams.remove-member'),
-      {
-        team_id: teamData?.id,
-        member_id: member.id,
-        event_id: teamData?.event_id,
-      },
-      {
-        preserveScroll: true,
-        onSuccess: () => {
-          toast.success(`${member.name} has been removed from the team.`);
-          // Refresh the team members list
-          fetchUsers(currentPage);
+    router
+      .post(
+        route('teams.remove-member'),
+        {
+          team_id: teamData?.id,
+          member_id: member.id,
+          event_id: teamData?.event_id,
         },
-        onError: (errors) => {
-          const errorMessage = errors.error || 'Failed to remove team member. Please try again.';
-          toast.error(errorMessage);
+        {
+          preserveScroll: true,
+          onSuccess: () => {
+            toast.success(`${member.name} has been removed from the team.`);
+            // Refresh the team members list
+            fetchUsers(currentPage);
+          },
+          onError: (errors) => {
+            const errorMessage = errors.error || 'Failed to remove team member. Please try again.';
+            toast.error(errorMessage);
+          },
         },
-      },
-    ).finally(() => {
-      setRemovingMember(null);
-    });
+      )
+      .finally(() => {
+        setRemovingMember(null);
+      });
   }
 
   useEffect(() => {
@@ -236,27 +238,25 @@ export default function TeamMembers() {
                     {member.name.charAt(0)}
                   </div>
                   <div>
-                    <div className="font-medium flex items-center gap-2">
+                    <div className="flex items-center gap-2 font-medium">
                       {member.name}
-                      {member.id === teamData?.owner_id && (
-                        <Crown className="h-4 w-4 text-yellow-600" title="Team Admin" />
-                      )}
+                      {member.id === teamData?.owner_id && <Crown className="h-4 w-4 text-yellow-600" title="Team Admin" />}
                     </div>
                   </div>
                 </div>
 
                 <div className="w-1/4 lg:w-1/3">{member.miles}</div>
                 <div className="mt-2 w-full lg:mt-0 lg:w-1/3 lg:text-right">
-                  <div className="flex gap-2 justify-end">
+                  <div className="flex justify-end gap-2">
                     {member.id === auth.user.id ? (
                       <Button variant="destructive" size="sm" onClick={() => handleLeaveTeam(member)} disabled={leavingTeam}>
                         {leavingTeam ? 'Leaving...' : 'Leave Team'}
                       </Button>
                     ) : teamData?.owner_id === auth.user.id ? (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleRemoveMember(member)} 
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRemoveMember(member)}
                         disabled={removingMember === member.id}
                         className="border-red-300 text-red-700 hover:bg-red-50"
                       >

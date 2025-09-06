@@ -30,7 +30,7 @@ export default function PreferredEvent({ events }: { events: any[] }) {
     if (!isChecked || updatingEventId) return;
 
     setUpdatingEventId(eventId);
-    
+
     router.post(
       route('user.set-preferred-event'),
       { event_id: eventId },
@@ -39,11 +39,11 @@ export default function PreferredEvent({ events }: { events: any[] }) {
         onSuccess: () => {
           toast.success('Preferred event updated successfully');
           // Update local state to reflect the change
-          setLocalEvents(prevEvents => 
-            prevEvents.map(event => ({
+          setLocalEvents((prevEvents) =>
+            prevEvents.map((event) => ({
               ...event,
-              is_preferred: event.id === eventId
-            }))
+              is_preferred: event.id === eventId,
+            })),
           );
         },
         onError: (errors) => {
@@ -58,9 +58,9 @@ export default function PreferredEvent({ events }: { events: any[] }) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Your Current Challenges" />
       <PageContent>
-        <Heading title="Your Current Challenges" description='Below are the challenges you are registered for with Run The Edge.' />
+        <Heading title="Your Current Challenges" description="Below are the challenges you are registered for with Run The Edge." />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {localEvents.map((event) => (
             <Card key={event.id}>
               <CardHeader>
@@ -76,16 +76,14 @@ export default function PreferredEvent({ events }: { events: any[] }) {
                 </div>
               </CardContent>
               <CardFooter>
-                <div className="flex items-center gap-2 mt-4">
-                  <Checkbox 
-                    id={`preferred-${event.id}`} 
-                    checked={event.is_preferred} 
+                <div className="mt-4 flex items-center gap-2">
+                  <Checkbox
+                    id={`preferred-${event.id}`}
+                    checked={event.is_preferred}
                     onCheckedChange={(checked) => handlePreferredEventChange(event.id, checked as boolean)}
                     disabled={updatingEventId === event.id}
                   />
-                  <Label htmlFor={`preferred-${event.id}`}>
-                    {updatingEventId === event.id ? 'Updating...' : 'Make this my default'}
-                  </Label>
+                  <Label htmlFor={`preferred-${event.id}`}>{updatingEventId === event.id ? 'Updating...' : 'Make this my default'}</Label>
                 </div>
               </CardFooter>
             </Card>

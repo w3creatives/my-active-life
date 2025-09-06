@@ -180,6 +180,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/user/set-preferred-event', [DashboardController::class, 'setPreferredEvent'])->name('user.set-preferred-event');
     Route::get('/user/stats/{type}', [UserStatsController::class, 'getUserStats'])->name('userstats');
     Route::get('/user/achievements', [UserStatsController::class, 'getUserAchievements'])->name('web.user.achievements');
+    Route::get('/team/stats/{type}', [UserStatsController::class, 'getTeamStats'])->name('teamstats');
+    Route::get('/team/achievements', [UserStatsController::class, 'getTeamAchievements'])->name('web.team.achievements');
     Route::get('/user/event/{type}', [DashboardController::class, 'getUserEventDetails'])->name('user.event.details');
 
     // Teams route

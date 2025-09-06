@@ -4,8 +4,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { useEffect, useState, useMemo } from 'react';
-import { Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { useEffect, useMemo, useState } from 'react';
+import { Bar, CartesianGrid, ComposedChart, Legend, Line, XAxis, YAxis } from 'recharts';
 
 export const description = 'A bar chart';
 
@@ -26,15 +26,21 @@ type Last30DaysData = {
   seven_day_avg?: number;
 };
 
-export default function Last30days() {
+interface Last30daysProps {
+  dataFor: string;
+}
+
+export default function Last30days({ dataFor }: Last30daysProps) {
   const { auth } = usePage<SharedData>().props;
   const [loading, setLoading] = useState(true);
   const [last30days, setLast30days] = useState<Last30DaysData[]>([]);
 
   useEffect(() => {
     const fetchMonthlies = async () => {
+      setLoading(true); // Set loading to true when dataFor changes
       try {
-        const response = await axios.get(route('userstats', ['last30days']), {
+        const routeName = dataFor === 'team' ? 'teamstats' : 'userstats';
+        const response = await axios.get(route(routeName, ['last30days']), {
           params: {
             event_id: auth.preferred_event.id,
             user_id: auth.user.id,
@@ -49,23 +55,23 @@ export default function Last30days() {
     };
 
     fetchMonthlies();
-  }, []);
+  }, [dataFor]);
 
   // Process data to calculate proper 7-day average starting from day 7
   const chartData = useMemo(() => {
     return last30days.map((item: Last30DaysData, index: number) => {
       let sevenDayAvg = null;
-      
+
       // Only calculate 7-day average starting from day 7 (index 6)
       if (index >= 6) {
         const last7Days = last30days.slice(index - 6, index + 1);
-        const sum = last7Days.reduce((total, day) => total + parseFloat(day.daily_total.toString()), 0);
+        const sum = last7Days.reduce((total, day) => total + parseFloat((day.daily_total || 0).toString()), 0);
         sevenDayAvg = sum / 7;
       }
 
       return {
         ...item,
-        daily_total: parseFloat(item.daily_total.toString()),
+        daily_total: parseFloat((item.daily_total || 0).toString()),
         seven_day_avg: sevenDayAvg,
       };
     });
@@ -95,16 +101,11 @@ export default function Last30days() {
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Last 30 Days</CardTitle>
-            <CardDescription>Your daily points for the last 30 days</CardDescription>
+            <CardDescription>{dataFor === 'team' ? 'Team' : 'Your'} daily points for the last 30 days</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig}>
-              <ComposedChart
-                width={800}
-                height={320}
-                data={chartData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-              >
+              <ComposedChart width={800} height={320} data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="label"
@@ -125,28 +126,20 @@ export default function Last30days() {
                   label={{ value: 'Miles', angle: -90, position: 'insideLeft' }}
                   domain={[0, 'auto']}
                 />
-                <ChartTooltip 
+                <ChartTooltip
                   content={<ChartTooltipContent />}
-                  formatter={(value, name) => [
-                    typeof value === 'number' ? value.toFixed(2) : value,
-                    name
-                  ]}
+                  formatter={(value, name) => [typeof value === 'number' ? value.toFixed(2) : value, name]}
                   labelFormatter={(label) => {
                     const date = new Date(label);
-                    return date.toLocaleDateString('en-US', { 
-                      weekday: 'short', 
-                      month: 'short', 
-                      day: 'numeric' 
+                    return date.toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
                     });
                   }}
                 />
                 <Legend />
-                <Bar 
-                  dataKey="daily_total" 
-                  fill="var(--color-primary)" 
-                  name="Daily Miles"
-                  radius={[2, 2, 0, 0]}
-                />
+                <Bar dataKey="daily_total" fill="var(--color-primary)" name="Daily Miles" radius={[2, 2, 0, 0]} />
                 <Line
                   type="monotone"
                   dataKey="seven_day_avg"

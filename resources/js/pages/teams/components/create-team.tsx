@@ -11,7 +11,6 @@ import { FormEventHandler } from 'react';
 import { toast } from 'sonner';
 import AdminControls from './admin-controls';
 import TeamInvitations from './team-invitations';
-import React from 'react';
 
 type CreateTeamForm = {
   name: string;
@@ -66,7 +65,7 @@ export default function CreateTeam({ status }: { status?: string }) {
     <>
       {/* Team Invitations Section - Show above create team if user has invitations */}
       <TeamInvitations />
-      
+
       <Card>
         <CardHeader>
           {!teamData ? <CardTitle>Create Your Team</CardTitle> : <CardTitle>Rename Your Team</CardTitle>}
@@ -133,7 +132,7 @@ export default function CreateTeam({ status }: { status?: string }) {
           </form>
         </CardContent>
       </Card>
-      
+
       {/* Admin Controls - Show only if user is team owner */}
       {teamData && <AdminControls />}
     </>
