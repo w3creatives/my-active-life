@@ -5,12 +5,25 @@ import { cn } from '@/lib/utils';
 import axios from 'axios';
 import { PointsDetailModal } from '@/components/points-detail-modal';
 import { Skeleton } from '@/components/ui/skeleton';
+import BibModal from '@/components/ui/bib-modal';
+
+export interface Milestone {
+  id: number;
+  name: string;
+  distance: number;
+  description: string;
+  calendar_logo_url?: string;
+  calendar_team_logo_url?: string;
+  bib_image_url?: string;
+  team_bib_image_url?: string;
+}
 
 export interface UserPoint {
   id: string;
   date: string;
   amount: number;
   cumulative_miles: number;
+  milestone?: Milestone;
   note?: string;
   modality?: string;
 }
@@ -19,15 +32,18 @@ interface CalendarProps {
   date: Date;
   setDate: (date: Date) => void;
   disableFuture?: boolean;
+  showTeamView?: boolean;
 }
 
-export function Calendar({ date, setDate, disableFuture = true }: CalendarProps) {
+export function Calendar({ date, setDate, disableFuture = true, showTeamView = false }: CalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [userPoints, setUserPoints] = useState<UserPoint[]>([]);
   const [eventInfo, setEventInfo] = useState<{ id: number; name: string } | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [activeModality, setActiveModality] = useState<string>("all");
+  const [selectedMilestone, setSelectedMilestone] = useState<Milestone | null>(null);
+  const [isBibModalOpen, setIsBibModalOpen] = useState<boolean>(false);
 
   // Get days in month
   const getDaysInMonth = (year: number, month: number) => {
@@ -152,7 +168,7 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
     setActiveModality(modality);
   };
 
-    const fetchUserPoints = async () => {
+    const fetchUserPoints = React.useCallback(async () => {
         setLoading(true);
         try {
             const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
@@ -164,7 +180,7 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentYear, currentMonth]);
 
     const refreshCalendar = () => {
         fetchUserPoints();
@@ -172,9 +188,8 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
 
   // Fetch user points data
   useEffect(() => {
-
     fetchUserPoints();
-  }, [currentYear, currentMonth]);
+  }, [fetchUserPoints]);
 
   const modalities = ["all", "run", "walk", "other"];
 
@@ -258,18 +273,11 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
                     key={`day-${weekIndex}-${dayIndex}`}
                     className={cn(
                       "aspect-square p-1 transition-colors border-r border-b border-border",
-                      day ? "cursor-pointer hover:bg-accent" : "",
                       day && isToday(day) ? "bg-accent/50" : "",
                       day && selectedDate && day.getDate() === selectedDate.getDate() &&
                       day.getMonth() === selectedDate.getMonth() ? "bg-accent" : "",
-                      disableFuture && day && isFutureDate(day) ? "opacity-50 cursor-not-allowed hover:bg-transparent" : ""
+                      disableFuture && day && isFutureDate(day) ? "opacity-50" : ""
                     )}
-                    onClick={() => {
-                      if (day && !(disableFuture && isFutureDate(day))) {
-                        setSelectedDate(day);
-                        setIsModalOpen(true);
-                      }
-                    }}
                   >
                     {day && (
                       <div className="h-full w-full">
@@ -277,15 +285,57 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
                           {day.getDate()}
                         </div>
                         <div className="space-y-1 p-1">
-                          {getPointsForDay(day).map((point) => (
-                            <div
-                              key={point.id}
-                              className="truncate text-center text-sm md:text-xl"
-                              title={point.note || `${point.amount} miles (Total: ${point.cumulative_miles})`}
-                            >
-                              {Number(point.amount).toFixed(2)}±
-                            </div>
-                          ))}
+                          {getPointsForDay(day).length > 0 ? (
+                            getPointsForDay(day).map((point) => (
+                              <div key={point.id} className="space-y-1">
+                                    <div
+                                      className="truncate text-center text-sm md:text-xl cursor-pointer hover:bg-accent/20 rounded px-1"
+                                      title={point.note || `${point.amount} miles (Total: ${point.cumulative_miles})`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedDate(day);
+                                        setIsModalOpen(true);
+                                      }}
+                                    >
+                                      {Number(point.amount).toFixed(2)}±
+                                    </div>
+                                    {point.milestone && (
+                                      <div className="flex justify-center">
+                                        <img
+                                          src={showTeamView ?
+                                            point.milestone.calendar_team_logo_url || point.milestone.calendar_logo_url || point.milestone.team_bib_image_url || point.milestone.bib_image_url :
+                                            point.milestone.calendar_logo_url || point.milestone.bib_image_url
+                                          }
+                                          alt={point.milestone.name}
+                                          className="size-14 object-contain cursor-pointer hover:scale-110 transition-transform"
+                                          title={`${point.milestone.name} - ${point.milestone.distance} miles`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedMilestone(point.milestone);
+                                            setIsBibModalOpen(true);
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                              ))
+                            ) : (
+                              !isFutureDate(day) && (
+                                <div className="flex items-center justify-center h-full">
+                                  <div
+                                    className="w-8 h-8 flex items-center justify-center text-2xl cursor-pointer hover:bg-accent/20 rounded-full transition-colors text-muted-foreground hover:text-foreground"
+                                    title="Click to add miles for this day"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedDate(day);
+                                      setIsModalOpen(true);
+                                    }}
+                                  >
+                                    ±
+                                  </div>
+                                </div>
+                              )
+                            )}
                         </div>
                       </div>
                     )}
@@ -314,6 +364,14 @@ export function Calendar({ date, setDate, disableFuture = true }: CalendarProps)
         eventId={eventInfo?.id || null}
         activeModality={activeModality}
         refreshCalendar={refreshCalendar}
+      />
+
+      {/* Bib Modal */}
+      <BibModal
+        milestone={selectedMilestone}
+        isOpen={isBibModalOpen}
+        onOpenChange={setIsBibModalOpen}
+        showTeamView={showTeamView}
       />
     </div>
   );

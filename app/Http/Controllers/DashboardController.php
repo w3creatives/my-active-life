@@ -389,17 +389,88 @@ final class DashboardController extends Controller
         $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
         $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
 
-        $event = Event::get()->where('id', 60)->first();
-        $eventId = $event->id;
+        // Get user's preferred event or first participating event
+        $eventId = $user->preferred_event_id ?? $user->participations()->first()?->event_id;
+        if (! $eventId) {
+            return response()->json([
+                'points' => [],
+                'total' => 0,
+                'event' => null,
+            ]);
+        }
+
+        $event = Event::find($eventId);
+        if (! $event) {
+            return response()->json([
+                'points' => [],
+                'total' => 0,
+                'event' => null,
+            ]);
+        }
+
         $eventName = $event->name;
 
         $pointsCacheKey = "user_dashboard_points_{$user->id}_{$startDate}_to_{$endDate}_for_{$eventId}";
         Cache::forget($pointsCacheKey);
 
-        $points = Cache::remember($pointsCacheKey, now()->addMinutes(15), function () use ($user, $startDate, $endDate, $eventId) {
+        $pointsWithMilestones = Cache::remember($pointsCacheKey, now()->addMinutes(15), function () use ($user, $startDate, $endDate, $eventId, $event) {
             $data = $this->fetchUserPointsInDateRange($user, $startDate, $endDate, $eventId);
+            $points = $data['points'];
 
-            return $data['points']->toArray();
+            // Calculate cumulative miles and check for milestones
+            $pointsArray = [];
+            $cumulativeMiles = 0;
+
+            // Get all milestones for this event
+            $milestones = $event->milestones()->orderBy('distance')->get();
+
+            foreach ($points as $point) {
+                $pointDate = $point->date;
+                $dailyMiles = $point->amount;
+
+                // Get cumulative miles up to this date
+                $cumulativeMiles = $user->points()
+                    ->where('event_id', $eventId)
+                    ->where('date', '>=', $event->start_date)
+                    ->where('date', '<=', $pointDate)
+                    ->sum('amount');
+
+                // Get previous day's cumulative miles to check if milestone was crossed on this date
+                $previousDate = Carbon::parse($pointDate)->subDay()->format('Y-m-d');
+                $previousCumulativeMiles = $user->points()
+                    ->where('event_id', $eventId)
+                    ->where('date', '>=', $event->start_date)
+                    ->where('date', '<', $pointDate)
+                    ->sum('amount');
+
+                // Find milestone earned on this specific date
+                $milestoneEarned = null;
+                foreach ($milestones as $milestone) {
+                    if ($cumulativeMiles >= $milestone->distance && $previousCumulativeMiles < $milestone->distance) {
+                        $milestoneEarned = [
+                            'id' => $milestone->id,
+                            'name' => $milestone->name,
+                            'distance' => $milestone->distance,
+                            'description' => $milestone->description,
+                            'calendar_logo_url' => $milestone->calendar_logo,
+                            'calendar_team_logo_url' => $milestone->calendar_team_logo,
+                            'bib_image_url' => $milestone->bib_image,
+                            'team_bib_image_url' => $milestone->team_bib_image,
+                        ];
+                        break; // Only show the first milestone earned on this date
+                    }
+                }
+
+                $pointsArray[] = [
+                    'id' => $point->id,
+                    'date' => $point->date,
+                    'amount' => $point->amount,
+                    'cumulative_miles' => $cumulativeMiles,
+                    'milestone' => $milestoneEarned,
+                ];
+            }
+
+            return $pointsArray;
         });
 
         $totalPointsCacheKey = "user_event_total_points_{$user->id}_{$startDate}_to_{$endDate}_for_{$eventId}";
@@ -411,7 +482,7 @@ final class DashboardController extends Controller
         });
 
         return response()->json([
-            'points' => $points,
+            'points' => $pointsWithMilestones,
             'total' => $totalPoints,
             'event' => [
                 'id' => $eventId,
@@ -435,6 +506,83 @@ final class DashboardController extends Controller
         });
 
         return response()->json($dailyPoints);
+    }
+
+    /**
+     * Get next milestone data for the homepage widget.
+     */
+    public function getNextMilestone(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Get user's preferred event or first participating event
+        $eventId = $user->preferred_event_id ?? $user->participations()->first()?->event_id;
+        if (! $eventId) {
+            return response()->json([
+                'next_milestone' => null,
+                'previous_milestone' => null,
+                'current_distance' => 0,
+                'event_name' => null,
+            ]);
+        }
+
+        $event = Event::find($eventId);
+        if (! $event) {
+            return response()->json([
+                'next_milestone' => null,
+                'previous_milestone' => null,
+                'current_distance' => 0,
+                'event_name' => null,
+            ]);
+        }
+
+        // Get user's total distance for this event
+        $currentDistance = $user->points()
+            ->where('event_id', $eventId)
+            ->sum('amount');
+
+        // Get next milestone
+        $nextMilestone = EventMilestone::where('event_id', $eventId)
+            ->where('distance', '>', $currentDistance)
+            ->orderBy('distance')
+            ->first();
+
+        // Get previous milestone
+        $previousMilestone = EventMilestone::where('event_id', $eventId)
+            ->where('distance', '<=', $currentDistance)
+            ->orderBy('distance', 'desc')
+            ->first();
+
+        $nextMilestoneData = null;
+        if ($nextMilestone) {
+            $nextMilestoneData = [
+                'id' => $nextMilestone->id,
+                'name' => $nextMilestone->name,
+                'distance' => (float) $nextMilestone->distance,
+                'description' => $nextMilestone->description,
+                'logo_image_url' => $nextMilestone->logo,
+                'team_logo_image_url' => $nextMilestone->team_logo,
+            ];
+        }
+
+        $previousMilestoneData = null;
+        if ($previousMilestone) {
+            $previousMilestoneData = [
+                'id' => $previousMilestone->id,
+                'name' => $previousMilestone->name,
+                'distance' => (float) $previousMilestone->distance,
+                'description' => $previousMilestone->description,
+                'logo_image_url' => $previousMilestone->logo,
+                'team_logo_image_url' => $previousMilestone->team_logo,
+            ];
+        }
+
+        return response()->json([
+            'next_milestone' => $nextMilestoneData,
+            'previous_milestone' => $previousMilestoneData,
+            'current_distance' => (float) $currentDistance,
+            'event_name' => $event->name,
+        ]);
     }
 
     /**

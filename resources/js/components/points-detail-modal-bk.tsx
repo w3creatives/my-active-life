@@ -55,7 +55,7 @@ export function PointsDetailModalBk({ isOpen, onClose, date, eventId, activeModa
     setLoading(true);
     const formattedDate = format(date, 'yyyy-MM-dd');
 
-    let data = JSON.stringify({
+    const data = JSON.stringify({
       dataSources: [
         {
           id: 5,

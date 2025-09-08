@@ -150,6 +150,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/user-points', [DashboardController::class, 'getUserPoints'])->name('user.points');
     Route::get('/user-daily-points', [DashboardController::class, 'getUserDailyPoints'])->name('user.daily.points');
     Route::get('/user-stats', [DashboardController::class, 'getUserStats'])->name('user.stats');
+    Route::get('/next-milestone', [DashboardController::class, 'getNextMilestone'])->name('next.milestone');
     Route::post('/add-points', [DashboardController::class, 'addPoints'])->name('user.add-points');
 
     Route::post('/add-manual-points', [DashboardController::class, 'addManualPoints'])->name('user.add.manual.points');

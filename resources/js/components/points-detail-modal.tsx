@@ -64,7 +64,7 @@ export function PointsDetailModal({ isOpen, onClose, date, eventId, activeModali
 
   const handlePointChange = (value, item) => {
 
-      let data = pointFormData;
+      const data = pointFormData;
       data[item.modality] = value > 0?value : item.points;
      setPointFormData(data);
     }
