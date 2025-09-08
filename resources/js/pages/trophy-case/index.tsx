@@ -407,9 +407,9 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                                                     <div className="relative">
                                                         <div
                                                             className="aspect-square w-32 rounded-lg overflow-hidden bg-muted/10 border">
-                                                            {milestone.logo_image_url ? (
+                                                            {(!showTeamView && milestone.logo_image_url) || (showTeamView && milestone.team_logo_image_url)? (
                                                                 <img
-                                                                    src={showTeamView ? (milestone.team_logo_image_url || milestone.logo_image_url) : milestone.logo_image_url}
+                                                                    src={showTeamView ? (milestone.team_logo_image_url) : milestone.logo_image_url}
                                                                     alt={milestone.name}
                                                                     className="w-full h-full object-cover"
                                                                 />
