@@ -123,7 +123,7 @@ final class EventMilestones
 
             $teamPoints = 0;
 
-            if($team) {
+            if ($team) {
                 $teamPoints = $team->points()->where('event_id', $event->id)
                     ->where('date', $registration->date)
                     ->sum('amount');
@@ -136,7 +136,7 @@ final class EventMilestones
                 $isCompleted = $userPoints >= $milestone->total_points;
                 $isTeamCompleted = $teamPoints >= $milestone->total_points;
                 // Get milestone images
-                //$images = $this->getMilestoneImage($event->id, $milestone->total_points, $activity->id);
+                // $images = $this->getMilestoneImage($event->id, $milestone->total_points, $activity->id);
 
                 $milestoneData = [
                     'id' => $milestone->id,
@@ -150,8 +150,8 @@ final class EventMilestones
                     'logo_image_url' => $milestone->logo,
                     'team_logo_image_url' => $milestone->team_logo,
                     'video_url' => $milestone->video_url,
-                    //'bib_image' => $this->getBibImage($event->id, $activity->id, $isCompleted),
-                    //'images' => $images,
+                    // 'bib_image' => $this->getBibImage($event->id, $activity->id, $isCompleted),
+                    // 'images' => $images,
                 ];
 
                 $result[] = $milestoneData;
