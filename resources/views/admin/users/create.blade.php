@@ -6,7 +6,9 @@
                 <h5 class="card-header">{{ $user?'Update':'Add'}} User Details</h5>
                 <div class="card-body">
                     <x-alert.validation :errors=$errors></x-alert.validation>
-                    <form action="" class="needs-validation" method="POST" id="event-form" novalidate>
+                    <form action="" class="needs-validation" method="POST" id="event-form" autocomplete="nope" novalidate>
+                        <input type="email" style="display:none">
+                        <input type="password" style="display:none">
                         @csrf
                         <div class="row">
                             <div class="mb-4 col-xl-6 col-sm-12">
@@ -33,7 +35,7 @@
                             <div class="mb-4 col-xl-6 col-sm-12">
                                 <label for="email" class="form-label">Email Address</label>
                                 <input type="email" name="email" id="email"
-                                       value="{{ $user->email??old('email') }}" class="form-control">
+                                       value="{{ $user->email??old('email') }}" class="form-control" autocomplete="nope">
                             </div>
                         </div>
                         <div class="mb-4">
@@ -48,12 +50,12 @@
                         <div class="mb-4 password-group col-xl-6 col-sm-12">
                             <label for="password" class="form-label">Password</label>
                             <input type="password" name="password" id="password"
-                                   value="{{ $user->password??old('password') }}" class="form-control">
+                                   value="{{ old('password') }}" class="form-control" autocomplete="nope">
                         </div>
                         <div class="mb-4 password-group col-xl-6 col-sm-12">
                             <label for="confirm_password" class="form-label">Confirm Password</label>
                             <input type="password" name="confirm_password" id="confirm_password"
-                                   value="{{ $user->confirm_password??old('confirm_password') }}" class="form-control">
+                                   value="{{ old('confirm_password') }}" class="form-control"  autocomplete="nope">
                         </div>
                         </div>
                         <div class="mb-4">

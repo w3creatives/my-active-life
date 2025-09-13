@@ -41,7 +41,7 @@
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="social_hashtags" class="form-label">Social Hashtags</label>
                                 <input type="text" name="social_hashtags" id="social_hashtags"
-                                       value="{{ $event->social_hashtags??'' }}" class="form-control">
+                                       value="{{ $event->social_hashtags??'' }}" class="form-control" required>
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="start_date" class="form-label">Start Date</label>

@@ -30,7 +30,7 @@ final class EventsController extends Controller
             $events = $events->map(function ($event) use ($eventService) {
                 // $event->name = view('admin.events.actions.title', compact('event'))->render();
                 $event->event_type_text = $eventService->findEventType($event->event_type);
-                $event->status = $event->open ? 'Open' : 'Closed';
+                $event->open = $event->open ? 'Open' : 'Closed';
                 $event->bibs_name = $event->bibs_name ?? '--';
                 $event->event_group = $event->event_group ?? '--';
                 $event->email_template_name = $event->emailTemplate->name ?? '--';
@@ -76,6 +76,7 @@ final class EventsController extends Controller
             'end_date' => 'required|date|after:start_date',
             'event_type' => 'required',
             'goals' => 'required',
+            'social_hashtags' => 'required',
         ]);
 
         $data = $request->only('name', 'start_date', 'end_date', 'event_type', 'goals', 'social_hashtags', 'description', 'total_points', 'registration_url', 'bibs_name', 'event_group', 'future_start_message');

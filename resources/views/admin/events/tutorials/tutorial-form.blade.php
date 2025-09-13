@@ -14,7 +14,7 @@
                 <label class="form-label">Type</label>
                 <select class="form-select input-group-selection" name="type[]"
                         aria-label="Default select example" data-parsley-trigger="change"
-                        aria-label="Default select example">
+                        aria-label="Default select example" required>
                     @foreach($tutorialTypes as $tutorialType)
                         <option
                             value="{{ $tutorialType }}" {{ $type == $tutorialType?'selected':'' }}>{{ ucfirst($tutorialType) }}</option>
@@ -27,17 +27,26 @@
                        class="form-control"
                        data-parsley-trigger="change">
             </div>
-            <div class="mb-4 col-auto input-group-item input-group-item-heading">
+            <div class="mb-4 col-2 input-group-item input-group-item-heading">
                 <label class="form-label">Level</label>
-                <input type="text" name="level[]" value="{{ $level }}"
-                       class="form-control"
+                <select name="level[]"
+                       class="form-select"
                        data-parsley-trigger="change">
+                    @foreach(range(1, 6) as $_level)
+                        <option value="{{ $_level }}" {{ $level == $_level?'selected':'' }}>Level {{ $_level }}</option>
+                    @endforeach
+                </select>
             </div>
             <div class="mb-4 col-xl-2 col-sm-12 col-md-2 d-none input-group-item input-group-item-video">
                 <label class="form-label">Source</label>
-                <input type="text" name="source[]" value="{{ $source }}"
-                       class="form-control"
-                       data-parsley-trigger="change">
+
+                <select name="source[]"
+                        class="form-select"
+                        data-parsley-trigger="change">
+                    @foreach(['YouTube','Vimeo'] as $_source)
+                        <option value="{{ $_source }}" {{ $source == $_source?'selected':'' }}>{{ $_source }}</option>
+                    @endforeach
+                </select>
             </div>
             <div class="mb-4 col-xl-8 col-sm-12 col-md-8 d-none col-md-6 input-group-item input-group-item-video">
                 <label class="form-label">Thumb</label>
@@ -53,7 +62,7 @@
             </div>
             <div class="mb-4 col-xl-6 col-sm-12 col-md-6 d-none input-group-item input-group-item-video">
                 <label class="form-label">URL</label>
-                <input type="text" name="url[]" value="{{ $url }}"
+                <input type="url" name="url[]" value="{{ $url }}"
                        class="form-control"
                        data-parsley-trigger="change">
             </div>

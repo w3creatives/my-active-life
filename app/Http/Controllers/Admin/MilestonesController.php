@@ -121,9 +121,9 @@ final class MilestonesController extends Controller
 
         $data = $request->only(['name', 'distance', 'description']);
 
-        $videoData = $request->video_url ? ['flyover_url' => $request->video_url] : [];
+        $videoData = $request->video_url ? json_encode(['flyover_url' => $request->video_url]) :'{}';
 
-        $data['data'] = json_encode($videoData);
+        $data['data'] = $videoData;
 
         $data['email_template_id'] = $request->get('email_template_id', null);
 

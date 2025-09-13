@@ -52,7 +52,7 @@
         <script
             src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
         <script
-            src="{{ asset('js/common/custom.datatable.js') }}"></script>
+            src="{{ asset('js/common/custom.datatable.js?v=1.0') }}"></script>
         <script type="text/javascript">
             $(function() {
                 customDatatable.initDatatable('#eventlist-table', [
@@ -61,10 +61,10 @@
                     { data: 'event_type_text', name: 'event_type_text' },
                     { data: 'start_date', name: 'start_date' },
                     { data: 'end_date', name: 'end_date' },
-                    {data:'status', name: 'status'},
+                    {data:'open', name: 'open'},
                     {data:'email_template_name', name: 'email_template_name', sortable: false},
                     { data: 'action', name: 'action', sortable: false }
-                ]);
+                ],{order: [[0, 'desc']]});
             });
         </script>
     @endpush

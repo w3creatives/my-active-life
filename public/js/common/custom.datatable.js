@@ -1,12 +1,12 @@
 class CustomDataTable {
     customTable = null;
 
-    initDatatable(elementId, columns) {
+    initDatatable(elementId, columns, options) {
 
         $.fn.dataTable.ext.errMode = 'none';
         let elementTable = $(elementId);
 
-        this.customTable = new DataTable(elementId, {
+        let config = {
             searchable: true,
             fixedHeight: true,
             ajax: elementTable.attr('data-ajax-url'),
@@ -45,16 +45,25 @@ class CustomDataTable {
                 }
             },
             createdRow: function (row, data, dataIndex) {
-               $(document).find('[data-bs-toggle="tooltip"]').tooltip();
+                $(document).find('[data-bs-toggle="tooltip"]').tooltip();
             }
-        });
+        };
+
+        options = options || {};
+
+        if(options.order)
+        {
+            config.order =  options.order;
+        }
+
+        this.customTable = new DataTable(elementId, config);
 
         this.initDatatableStyle();
     }
 
     initDatatableStyle() {
         setTimeout(() => {
-            
+
             const elementsToModify = [
                 { selector: '.dt-buttons .btn', classToRemove: 'btn-secondary' },
                 { selector: '.dt-search .form-control', classToRemove: 'form-control-sm', classToAdd: 'ms-4' },

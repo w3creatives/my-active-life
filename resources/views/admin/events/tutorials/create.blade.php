@@ -13,6 +13,9 @@
                                 <a href="{{ route('admin.events.edit', $event->id) }}" class="btn btn-label-primary">Edit
                                     Event</a>
                             </li>
+                            <li class="list-inline-item">
+                                <a href="{{ route('admin.events') }}" class="btn btn-label-primary">Back to Events</a>
+                            </li>
                             @if($eventTutorial)
                                 <li class="list-inline-item">
                                     <form method="POST" id="delete-tutorial-form" action="{{ route('admin.events.tutorials.delete',[$event->id, $eventTutorial->id]) }}">
@@ -34,11 +37,11 @@
                 @csrf
                 <div class="tutorial-list">
                     @if($tutorials->count())
-                        @foreach($tutorials as $tutorial)
-                            @include('admin.events.tutorials.tutorial-form', ['tutorial' => $tutorial])
+                        @foreach($tutorials as $inputIndex => $tutorial)
+                            @include('admin.events.tutorials.tutorial-form', ['tutorial' => $tutorial, 'errors' => $errors, 'inputIndex' => $inputIndex])
                         @endforeach
                     @else
-                        @include('admin.events.tutorials.tutorial-form', ['tutorial' => null])
+                        @include('admin.events.tutorials.tutorial-form', ['tutorial' => null, 'errors' => $errors])
                     @endif
                 </div>
                 <div class="d-flex justify-content-between mt-3">
@@ -68,7 +71,7 @@
         <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
         <script src="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.js') }}"></script>
         <script type="text/template" id="tutorial-form-item">
-        @include('admin.events.tutorials.tutorial-form',  ['tutorial' => null])
+        @include('admin.events.tutorials.tutorial-form',  ['tutorial' => null, 'errors' => $errors])
         </script>
         <script type="text/javascript">
             (function() {
@@ -136,6 +139,7 @@
                 $('.add-new-tutorial').click(function(e) {
                     e.preventDefault();
                     $('.tutorial-list').append($('#tutorial-form-item').html());
+
                 });
 
                 // Fetch all the forms we want to apply custom Bootstrap validation styles to

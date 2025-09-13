@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Utilities\DataTable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 final class EventTutorialsController extends Controller
 {
@@ -59,6 +60,27 @@ final class EventTutorialsController extends Controller
     public function store(Request $request)
     {
 
+        $request->validate([
+            'type.*' => 'required|in:heading,text,video',
+            'content.*' => 'required_if:type.*,heading,required_if:type.*,text',
+            'level.*' => 'required_if:type.*,heading',
+            'source.*' => 'required_if:type.*,video',
+            'thumb.*' => 'required_if:type.*,video',
+            'title.*' => 'required_if:type.*,video',
+            'url.*' => 'required_if:type.*,video',
+        ], [
+            'type.*.required' => 'The type field is required.',
+            'type.*.in' => 'The type must be one of heading, text, or video.',
+
+            'content.*.required' => 'Content is required when type is heading or text.',
+            'level.*.required' => 'Level is required when type is heading.',
+
+            'source.*.required' => 'Source is required when type is video.',
+            'thumb.*.required' => 'Thumbnail is required when type is video.',
+            'title.*.required' => 'Title is required when type is video.',
+            'url.*.required' => 'URL is required when type is video.',
+        ]);
+
         $event = Event::findOrFail($request->route()->parameter('eventId'));
 
         $eventTutorial = $event->tutorials()->first();
@@ -68,7 +90,8 @@ final class EventTutorialsController extends Controller
         $tutorials = $request->except('_token');
 
         if (! $tutorials) {
-            return redirect()->route('admin.events.tutorials', $event->id)->with('alert', ['type' => 'danger', 'message' => 'Tutorial cannot be added.']);
+            $event->tutorials()->delete();
+            return redirect()->route('admin.events.tutorials', $event->id)->with('alert', ['type' => 'success', 'message' => 'Event Tutorial updated successfully']);
         }
 
         foreach ($request->get('type') as $key => $type) {
