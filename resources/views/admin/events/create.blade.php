@@ -28,26 +28,26 @@
                                     <option selected="" value="">Select Event Type</option>
                                     @foreach($eventTypes as $eventTypeKey => $eventType)
                                         <option
-                                            value="{{ $eventTypeKey }}" {{ ($event && $event->event_type == $eventTypeKey)?'selected':''}}>{{ $eventType }}</option>
+                                            value="{{ $eventTypeKey }}" {{ (($event && $event->event_type == $eventTypeKey) || old('event_type') == $eventTypeKey)?'selected':''}}>{{ $eventType }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="name" class="form-label">Name</label>
-                                <input type="text" id="name" name="name" value="{{ $event->name??'' }}"
+                                <input type="text" id="name" name="name" value="{{ $event->name??old('name') }}"
                                        class="form-control @error('name') parsley-error @enderror"
                                        data-parsley-trigger="change" required>
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="social_hashtags" class="form-label">Social Hashtags</label>
                                 <input type="text" name="social_hashtags" id="social_hashtags"
-                                       value="{{ $event->social_hashtags??'' }}" class="form-control" required>
+                                       value="{{ $event->social_hashtags??old('social_hashtags') }}" class="form-control" required>
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="start_date" class="form-label">Start Date</label>
                                 <input type="date" name="start_date" id="start_date"
                                        class="form-control @error('start_date') parsley-error @enderror"
-                                       value="{{ $event->start_date??'' }}" required
+                                       value="{{ $event->start_date??old('start_date') }}" required
                                        data-parsley-trigger="change" placeholder="YYYY-MM-DD">
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
@@ -55,12 +55,12 @@
                                 <input type="date" name="end_date" id="end_date"
                                        class="form-control @error('end_date') parsley-error @enderror" required
                                        data-parsley-trigger="change" placeholder="YYYY-MM-DD"
-                                       value="{{ $event->end_date??'' }}">
+                                       value="{{ $event->end_date??old('end_date') }}">
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="total_points" class="form-label">Total Points</label>
                                 <input type="text" id="total_points" name="total_points" class="form-control"
-                                       value="{{ $event->total_points??'' }}">
+                                       value="{{ $event->total_points??old('total_points') }}">
                             </div>
 
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
@@ -70,7 +70,7 @@
                                         required>
                                     @foreach($modalities as $modality)
                                         <option
-                                            value="{{ $modality->name }}" {{ in_array($modality->name,$selectedModalities)?'selected':''}}>{{ $modality->name }}</option>
+                                            value="{{ $modality->name }}" {{ in_array($modality->name,old('modalities',$selectedModalities))?'selected':''}}>{{ $modality->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -78,20 +78,20 @@
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="registration_url" class="form-label">Registration URL</label>
                                 <input type="text" id="registration_url" name="registration_url" class="form-control"
-                                       value="{{ isset($event->registration_url)?$event->registration_url == '#'?'':$event->registration_url:'' }}">
+                                       value="{{ isset($event->registration_url)?$event->registration_url == '#'?'':$event->registration_url:old('registration_url') }}">
                             </div>
 
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="goals" class="form-label">Goals</label>
                                 <input type="text" id="goals" name="goals" class="form-control"
-                                       value="{{ $event && $event->goals?implode(',',json_decode($event->goals)):'' }}"
+                                       value="{{ $event && $event->goals?implode(',',json_decode($event->goals)):'' }}" required
                                        placeholder="500,1000,1500,2000">
                             </div>
 
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="bibs_name" class="form-label">Bibs Name</label>
                                 <input type="text" id="bibs_name" name="bibs_name" class="form-control"
-                                       value="{{ $event->bibs_name??'' }}" placeholder="">
+                                       value="{{ $event->bibs_name??old('bibs_name') }}" placeholder="">
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="open_status" class="form-label">Event Status</label>
@@ -106,7 +106,7 @@
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="event_group" class="form-label">Group</label>
                                 <input type="text" id="event_group" name="event_group" class="form-control"
-                                       value="{{ $event->event_group??'' }}" placeholder="">
+                                       value="{{ $event->event_group??old('event_group') }}" placeholder="">
                             </div>
 
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
@@ -131,7 +131,7 @@
                                     <option selected="" value="">Select Email Template</option>
                                     @foreach($emailTemplates as $emailTemplate)
                                         <option
-                                            value="{{ $emailTemplate->id }}" {{ ($event && $event->email_template_id == $emailTemplate->id)?'selected':''}}>{{ $emailTemplate->name }}</option>
+                                            value="{{ $emailTemplate->id }}" {{ ($event && $event->email_template_id == $emailTemplate->id) || old('email_template_id') == $emailTemplate->id?'selected':''}}>{{ $emailTemplate->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -139,7 +139,7 @@
                                 <label for="description" class="form-label">Description</label>
                                 <textarea class="form-control @error('description') parsley-error @enderror"
                                           name="description" id="description" data-parsley-trigger="change" rows="3"
-                                          required>{{ $event->description??'' }}</textarea>
+                                          required>{{ $event->description??old('description') }}</textarea>
                             </div>
                             <div class="mb-4 col-xl-8 col-sm-12 col-md-6">
                                 <label for="future_start_message" class="form-label">Future Start Message</label>
