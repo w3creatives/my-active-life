@@ -52,7 +52,7 @@
         <script
             src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
         <script
-            src="{{ asset('js/common/custom.datatable.js?v=1.0') }}"></script>
+            src="{{ asset('js/common/custom.datatable.js?v=1.0.0') }}"></script>
         <script type="text/javascript">
             $(function() {
                 customDatatable.initDatatable('#eventlist-table', [

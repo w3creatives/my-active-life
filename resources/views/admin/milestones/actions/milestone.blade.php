@@ -1,12 +1,10 @@
-<div class="d-inline-block">
-    <div class="d-inline-block">
-        <a href="javascript:;" class="btn btn-icon dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="icon-base ti tabler-dots-vertical"></i></a>
-        <div class="dropdown-menu dropdown-menu-end m-0">
-             <a href="{{ $event->event_type == 'fit_life'?route('admin.events.activity.milestones.edit',[$event->id,$item->activity_id,$item->id]):route('admin.events.milestones.edit', [$event->id,$item->id]) }}" class="dropdown-item waves-effect"><i
-                    class="icon-base ti tabler-pencil mb-2"></i> Edit Milestone</a>
-            @if(in_array($event->event_type,['regular','month']))
-            <a href="{{ route('admin.events.milestones.view', [$event->id,$item->id]) }}" class="dropdown-item waves-effect" data-bs-toggle="modal" data-bs-target="#view-milestone-modal"><i class="icon-base ti tabler-target mb-2"></i> View Details</a>
-            @endif
-        </div>
-    </div>
+<div class="d-flex justify-between">
+    <a href="{{ $event->event_type == 'fit_life'?route('admin.events.activity.milestones.edit',[$event->id,$item->activity_id,$item->id]):route('admin.events.milestones.edit', [$event->id,$item->id]) }}"
+       class="btn btn-icon btn-text-secondary waves-effect" data-bs-toggle="tooltip" title="Edit Milestone"><i
+            class="icon-base ti tabler-pencil mb-2"></i></a>
+    @if(in_array($event->event_type,['regular','month']))
+        <a href="{{ route('admin.events.milestones.view', [$event->id,$item->id]) }}"
+           class="btn btn-icon btn-text-secondary waves-effect" data-bs-toggle="modal"
+           data-bs-target="#view-milestone-modal" ><i data-bs-toggle="tooltip" title="View Details" class="icon-base ti tabler-target mb-2"></i></a>
+    @endif
 </div>

@@ -1,20 +1,15 @@
-<div class="d-inline-block">
-    <div class="d-inline-block">
-        <a href="javascript:;" class="btn btn-icon dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="icon-base ti tabler-dots-vertical"></i></a>
-        <div class="dropdown-menu dropdown-menu-end m-0">
-            <a href="{{ route('admin.email.builders.edit',$item->id) }}" class="dropdown-item waves-effect"><i
-                    class="icon-base ti tabler-pencil mb-2"></i> Edit Template</a>
-            <a href="" class="d-none dropdown-item waves-effect" data-bs-toggle="modal" data-bs-target="#view-email-template-modal">
-                <i class="icon-base ti tabler-target mb-2"></i> View Details
-            </a>
+<div class="flex justify-content-between">
+    <a href="{{ route('admin.email.builders.edit',$item->id) }}" class="btn btn-icon btn-text-secondary waves-effect" data-bs-toggle="tooltip" title="Edit Template"><i
+            class="icon-base ti tabler-pencil"></i></a>
+    <a href="" class="d-none btn btn-icon btn-text-secondary waves-effect" data-bs-toggle="modal" data-bs-target="#view-email-template-modal">
+        <i class="icon-base ti tabler-target" data-bs-toggle="tooltip" title="View Details"></i>
+    </a>
 
-            <button class="dropdown-item waves-effect text-danger action-delete" data-confirm-form="#activity-action-delete-form-{{ $item->id }}">
-                <i class="icon-base ti tabler-trash me-1"></i> Delete Activity
-            </button>
-            <form method="POST" id="activity-action-delete-form-{{ $item->id }}" action="{{ route('admin.email.builders.destroy', $item->id) }}">
-                @method('DELETE')
-                @csrf
-            </form>
-        </div>
-    </div>
+    <a class="btn btn-icon btn-text-danger waves-effect text-danger action-delete" data-confirm-form="#activity-action-delete-form-{{ $item->id }}" data-bs-toggle="tooltip" title="Delete Activity">
+        <i class="icon-base ti tabler-trash"></i>
+    </a>
+    <form method="POST" id="activity-action-delete-form-{{ $item->id }}" action="{{ route('admin.email.builders.destroy', $item->id) }}">
+        @method('DELETE')
+        @csrf
+    </form>
 </div>

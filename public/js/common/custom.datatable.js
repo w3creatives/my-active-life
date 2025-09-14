@@ -45,7 +45,7 @@ class CustomDataTable {
                 }
             },
             createdRow: function (row, data, dataIndex) {
-                $(document).find('[data-bs-toggle="tooltip"]').tooltip();
+                $(row).find('[data-bs-toggle="tooltip"]').tooltip();
             }
         };
 
