@@ -46,14 +46,14 @@
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="start_date" class="form-label">Start Date</label>
                                 <input type="date" name="start_date" id="start_date"
-                                       class="form-control @error('start_date') parsley-error @enderror"
+                                       class="form-control date-field @error('start_date') parsley-error @enderror"
                                        value="{{ $event->start_date??old('start_date') }}" required
                                        data-parsley-trigger="change" placeholder="YYYY-MM-DD">
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="end_date" class="form-label">End Date</label>
                                 <input type="date" name="end_date" id="end_date"
-                                       class="form-control @error('end_date') parsley-error @enderror" required
+                                       class="form-control date-field @error('end_date') parsley-error @enderror" required
                                        data-parsley-trigger="change" placeholder="YYYY-MM-DD"
                                        value="{{ $event->end_date??old('end_date') }}">
                             </div>
@@ -84,7 +84,7 @@
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="goals" class="form-label">Goals</label>
                                 <input type="text" id="goals" name="goals" class="form-control"
-                                       value="{{ $event && $event->goals?implode(',',json_decode($event->goals)):'' }}" required
+                                       value="{{ $event && $event->goals?implode(',',json_decode($event->goals)):old('goals') }}" required
                                        placeholder="500,1000,1500,2000">
                             </div>
 
@@ -99,7 +99,7 @@
                                         aria-label="Default select example" data-parsley-trigger="change">
                                     @foreach([null => 'Default',1 => 'Open',0 =>'Closed'] as $openStatusKey => $openStatus)
                                         <option
-                                            value="{{ $openStatusKey }}" {{ $event && $openStatusKey == $event->open?'selected':''}}>{{ $openStatus }}</option>
+                                            value="{{ $openStatusKey }}" {{ (($event && $openStatusKey == $event->open) || old('open_status') == $openStatusKey)?'selected':''}}>{{ $openStatus }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -199,7 +199,6 @@
                 'use strict';
 
                 function readURL(input) {
-                    console.log(input.files, input.files[0]);
                     if (input.files && input.files[0]) {
                         console.log(input);
                         var reader = new FileReader();
@@ -216,6 +215,14 @@
                 $('.choose-file').change(function(e) {
 
                     readURL(this);
+                });
+
+                $('.date-field').change(function(){
+                   if($(this).val()) {
+                       $(this).removeClass('is-invalid');
+                   } else {
+                       $(this).addClass('is-invalid');
+                   }
                 });
 
                 $('.select2').select2();
@@ -306,9 +313,24 @@
                 Array.prototype.slice.call(forms)
                     .forEach(function(form) {
                         form.addEventListener('submit', function(event) {
-                            if (!form.checkValidity()) {
+
+                            let startDateField = $(form).find('#start_date');
+                            let endDateField = $(form).find('#end_date');
+
+                            let startDateFieldVal = startDateField.val().trim();
+                            let endDateFieldVal = endDateField.val().trim();
+
+                            if (!form.checkValidity() || !startDateFieldVal || !endDateFieldVal) {
                                 event.preventDefault();
                                 event.stopPropagation();
+                            }
+
+                            if(!startDateFieldVal) {
+                                startDateField.addClass('is-invalid');
+                            }
+
+                            if(!endDateFieldVal) {
+                                endDateField.addClass('is-invalid');
                             }
 
                             form.classList.add('was-validated');
