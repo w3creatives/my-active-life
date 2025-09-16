@@ -335,10 +335,14 @@
 
                             if(!startDateFieldVal) {
                                 startDateField.addClass('is-invalid');
+                            } else {
+                                startDateField.addClass('is-valid');
                             }
 
                             if(!endDateFieldVal) {
                                 endDateField.addClass('is-invalid');
+                            } else {
+                                endDateField.addClass('is-valid');
                             }
 
                             form.classList.add('was-validated');
