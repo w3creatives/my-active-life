@@ -25,13 +25,13 @@
                 <label class="form-label">Content</label>
                 <input type="text" name="content[]" value="{{ $content }}"
                        class="form-control"
-                       data-parsley-trigger="change">
+                       data-parsley-trigger="change" data-validate="true">
             </div>
             <div class="mb-4 col-2 input-group-item input-group-item-heading">
                 <label class="form-label">Level</label>
                 <select name="level[]"
                        class="form-select"
-                       data-parsley-trigger="change">
+                       data-parsley-trigger="change" data-validate="true">
                     @foreach(range(1, 6) as $_level)
                         <option value="{{ $_level }}" {{ $level == $_level?'selected':'' }}>Level {{ $_level }}</option>
                     @endforeach
@@ -42,7 +42,7 @@
 
                 <select name="source[]"
                         class="form-select"
-                        data-parsley-trigger="change">
+                        data-parsley-trigger="change" data-validate="true">
                     @foreach(['YouTube','Vimeo'] as $_source)
                         <option value="{{ $_source }}" {{ $source == $_source?'selected':'' }}>{{ $_source }}</option>
                     @endforeach
@@ -52,19 +52,19 @@
                 <label class="form-label">Thumb</label>
                 <input type="text" name="thumb[]" value="{{ $thumb }}"
                        class="form-control"
-                       data-parsley-trigger="change">
+                       data-parsley-trigger="change" data-validate="true">
             </div>
             <div class="mb-4 col-xl-6 col-sm-12 col-md-6 d-none input-group-item input-group-item-video">
                 <label class="form-label">Title</label>
                 <input type="text" name="title[]" value="{{ $title }}"
                        class="form-control"
-                       data-parsley-trigger="change">
+                       data-parsley-trigger="change" data-validate="true">
             </div>
             <div class="mb-4 col-xl-6 col-sm-12 col-md-6 d-none input-group-item input-group-item-video">
                 <label class="form-label">URL</label>
                 <input type="url" name="url[]" value="{{ $url }}"
                        class="form-control"
-                       data-parsley-trigger="change">
+                       data-parsley-trigger="change" data-validate="true">
             </div>
         </div>
         <div class="divider text-end m-0">

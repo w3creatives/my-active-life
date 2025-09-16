@@ -77,6 +77,7 @@ final class EventsController extends Controller
             'event_type' => 'required',
             'goals' => 'required',
             'social_hashtags' => 'required',
+            'total_points' => 'required',
         ]);
 
         $data = $request->only('name', 'start_date', 'end_date', 'event_type', 'goals', 'social_hashtags', 'description', 'total_points', 'registration_url', 'bibs_name', 'event_group', 'future_start_message');

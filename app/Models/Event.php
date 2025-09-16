@@ -25,7 +25,7 @@ final class Event extends Model
 
     public function getLogoUrlAttribute(): string|UrlGenerator|null
     {
-        if (! isset($this->attributes['logo'])) {
+        if (! isset($this->attributes['logo']) || !$this->attributes['logo']) {
             return null;
         }
         if (file_exists(public_path('static/'.$this->attributes['logo']))) {

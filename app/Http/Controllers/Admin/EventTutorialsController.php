@@ -72,13 +72,13 @@ final class EventTutorialsController extends Controller
             'type.*.required' => 'The type field is required.',
             'type.*.in' => 'The type must be one of heading, text, or video.',
 
-            'content.*.required' => 'Content is required when type is heading or text.',
-            'level.*.required' => 'Level is required when type is heading.',
+            'content.*.required_if' => 'Content is required when type is heading or text.',
+            'level.*.required_if' => 'Level is required when type is heading.',
 
-            'source.*.required' => 'Source is required when type is video.',
-            'thumb.*.required' => 'Thumbnail is required when type is video.',
-            'title.*.required' => 'Title is required when type is video.',
-            'url.*.required' => 'URL is required when type is video.',
+            'source.*.required_if' => 'Source is required when type is video.',
+            'thumb.*.required_if' => 'Thumbnail is required when type is video.',
+            'title.*.required_if' => 'Title is required when type is video.',
+            'url.*.required_if' => 'URL is required when type is video.',
         ]);
 
         $event = Event::findOrFail($request->route()->parameter('eventId'));

@@ -59,7 +59,7 @@
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="total_points" class="form-label">Total Points</label>
-                                <input type="text" id="total_points" name="total_points" class="form-control"
+                                <input type="text" id="total_points" name="total_points" class="form-control" required
                                        value="{{ $event->total_points??old('total_points') }}">
                             </div>
 
@@ -99,7 +99,7 @@
                                         aria-label="Default select example" data-parsley-trigger="change">
                                     @foreach([null => 'Default',1 => 'Open',0 =>'Closed'] as $openStatusKey => $openStatus)
                                         <option
-                                            value="{{ $openStatusKey }}" {{ (($event && $openStatusKey == $event->open) || old('open_status') == $openStatusKey)?'selected':''}}>{{ $openStatus }}</option>
+                                            value="{{ $openStatusKey }}" {{ (($event && $openStatusKey == $event->open) || old('open_status', 1) == $openStatusKey)?'selected':''}}>{{ $openStatus }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -218,7 +218,15 @@
                 });
 
                 $('.date-field').change(function(){
+
+                    let hasInvalidClassName = $(this).hasClass('is-invalid');
+
+                    $(this).removeClass('is-invalid is-valid');
+
                    if($(this).val()) {
+                       if(hasInvalidClassName) {
+                           $(this).addClass('is-valid');
+                       }
                        $(this).removeClass('is-invalid');
                    } else {
                        $(this).addClass('is-invalid');

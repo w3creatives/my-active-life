@@ -38,10 +38,24 @@
                 <div class="tutorial-list">
                     @if($tutorials->count())
                         @foreach($tutorials as $inputIndex => $tutorial)
-                            @include('admin.events.tutorials.tutorial-form', ['tutorial' => $tutorial, 'errors' => $errors, 'inputIndex' => $inputIndex])
+                            @include('admin.events.tutorials.tutorial-form', ['tutorial' => $tutorial, 'inputIndex' => $inputIndex])
                         @endforeach
                     @else
-                        @include('admin.events.tutorials.tutorial-form', ['tutorial' => null, 'errors' => $errors])
+                        @if(old('type'))
+                            @foreach(old('type') as $oldKey => $oldType)
+                                @include('admin.events.tutorials.tutorial-form', ['tutorial' => (object)[
+                                     'type' => $oldType,
+                                    'content' => old('content.'.$oldKey),
+                                    'level' => old('level.'.$oldKey),
+                                    'source' => old('source.'.$oldKey),
+                                    'thumb' => old('thumb.'.$oldKey),
+                                    'title' => old('title.'.$oldKey),
+                                    'url' => old('url.'.$oldKey),
+                            ]])
+                            @endforeach
+                            @else
+                                @include('admin.events.tutorials.tutorial-form', ['tutorial' => null])
+                            @endif
                     @endif
                 </div>
                 <div class="d-flex justify-content-between mt-3">
@@ -71,7 +85,7 @@
         <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
         <script src="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.js') }}"></script>
         <script type="text/template" id="tutorial-form-item">
-        @include('admin.events.tutorials.tutorial-form',  ['tutorial' => null, 'errors' => $errors])
+        @include('admin.events.tutorials.tutorial-form',  ['tutorial' => null])
         </script>
         <script type="text/javascript">
             (function() {
@@ -127,9 +141,21 @@
 
                     let tutorialElement = $(this).parents('.tutorial-input-group');
 
-                    tutorialElement.find('.input-group-item').addClass('d-none');
+                    let inputGroupItem = tutorialElement.find('.input-group-item');
 
-                    tutorialElement.find(`.input-group-item-${val}`).removeClass('d-none');
+                    let selectedInputGroupItem = tutorialElement.find(`.input-group-item-${val}`);
+
+                    inputGroupItem.addClass('d-none');
+
+                    inputGroupItem.each(function(){
+                        $(this).find('input,select').attr('data-validate',false);
+                    });
+
+                    selectedInputGroupItem.each(function(){
+                        $(this).find('input,select').attr('data-validate',true);
+                    });
+
+                    selectedInputGroupItem.removeClass('d-none');
                 });
 
                 $(document).find('.input-group-selection').each(function() {
@@ -149,6 +175,7 @@
                 Array.prototype.slice.call(forms)
                     .forEach(function(form) {
                         form.addEventListener('submit', function(event) {
+
                             if (!form.checkValidity()) {
                                 event.preventDefault();
                                 event.stopPropagation();
