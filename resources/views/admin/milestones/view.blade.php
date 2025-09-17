@@ -6,12 +6,12 @@
             </div>
             <div class="col-auto">
                 <a title="Edit Milestone" href="{{ route('admin.events.milestones.edit', [$eventMilestone->event_id,$eventMilestone->id]) }}"><i class="icon-base ti tabler-pencil icon-22px text-body-dark"></i></a>
-    
+
             </div>
             <div class="col-12  mt-3">
                      <h5 class="card-title">Distance</h5>
                 <p class="card-text">{{ $eventMilestone->distance }}</p>
-               
+
             </div>
             <div class="col-12 mt-3">
                 <h5 class="card-title">Description</h5>
@@ -22,6 +22,7 @@
                 <h5 class="card-title">Data</h5>
                 <p class="card-text">{{ $eventMilestone->video_url }}</p>
             </div>
+            @if($eventMilestone->logo)
             <div class="col-6 mt-3">
                 <h5>Logo</h5>
                 <p class="card-text">
@@ -30,6 +31,8 @@
                 </div>
                 </p>
             </div>
+            @endif
+            @if($eventMilestone->team_logo)
             <div class="col-6 mt-3">
                 <h5>Team Logo</h5>
                 <p class="card-text">
@@ -39,5 +42,6 @@
                 </div>
                 </p>
             </div>
+            @endif
         </div>
     </div>
