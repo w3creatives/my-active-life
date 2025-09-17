@@ -60,7 +60,7 @@
                 </div>
                 <div class="d-flex justify-content-between mt-3">
                     <button type="submit" class="btn btn-primary">Save Tutorial</button>
-                    <a class="btn btn-link add-new-tutorial">
+                    <a class="btn btn-outline-secondary  add-new-tutorial">
                         <i class="icon-base ti tabler-plus"></i>
                         <span class="align-middle">Add new</span>
                     </a>

@@ -50,7 +50,7 @@
             </div>
             <div class="mb-4 col-xl-8 col-sm-12 col-md-8 d-none col-md-6 input-group-item input-group-item-video">
                 <label class="form-label">Thumb</label>
-                <input type="text" name="thumb[]" value="{{ $thumb }}"
+                <input type="url" name="thumb[]" value="{{ $thumb }}"
                        class="form-control"
                        data-parsley-trigger="change" data-validate="true">
             </div>
