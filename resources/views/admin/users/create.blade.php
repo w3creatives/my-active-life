@@ -30,7 +30,7 @@
                             <div class="mb-4 col-xl-6 col-sm-12">
                                 <label for="display_name" class="form-label">Display Name</label>
                                 <input type="text" name="display_name" id="display_name"
-                                       value="{{ $user->display_name??old('display_name') }}" class="form-control">
+                                       value="{{ $user->display_name??old('display_name') }}" class="form-control" required>
                             </div>
                             <div class="mb-4 col-xl-6 col-sm-12">
                                 <label for="email" class="form-label">Email Address</label>
