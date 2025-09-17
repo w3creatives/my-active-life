@@ -35,7 +35,7 @@
                             <div class="mb-4 col-xl-6 col-sm-12">
                                 <label for="email" class="form-label">Email Address</label>
                                 <input type="email" name="email" id="email"
-                                       value="{{ $user->email??old('email') }}" class="form-control" autocomplete="nope">
+                                       value="{{ $user->email??old('email') }}" class="form-control" autocomplete="nope" required>
                             </div>
                         </div>
                         <div class="mb-4">
