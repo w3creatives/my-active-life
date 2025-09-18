@@ -6,6 +6,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
 
 final class FitLifeActivityMilestone extends Model
@@ -16,6 +18,11 @@ final class FitLifeActivityMilestone extends Model
 
     private string $uploadPath = 'uploads/milestones/';
     private string $bibUploadPath = 'uploads/milestones/bibs/';
+
+    public function activity(): BelongsTo
+    {
+        return $this->belongsTo(FitLifeActivity::class,'activity_id','id');
+    }
 
     public function getVideoUrlAttribute()
     {
@@ -47,21 +54,21 @@ final class FitLifeActivityMilestone extends Model
     public function getBwLogoAttribute(): ?string
     {
 
-        if (! $this->attributes['logo']) {
+        if (! $this->attributes['bw_logo']) {
             return null;
         }
 
-        return asset(Storage::url($this->uploadPath.trim($this->attributes['logo'])));
+        return asset(Storage::url($this->uploadPath.trim($this->attributes['bw_logo'])));
     }
 
     public function getBwCalendarLogoAttribute(): ?string
     {
 
-        if (! $this->attributes['calendar_logo']) {
+        if (! $this->attributes['bw_calendar_logo']) {
             return null;
         }
 
-        return asset(Storage::url($this->uploadPath.trim($this->attributes['calendar_logo'])));
+        return asset(Storage::url($this->uploadPath.trim($this->attributes['bw_calendar_logo'])));
     }
 
     public function getBibImageAttribute(): ?string

@@ -157,4 +157,9 @@ final class Event extends Model
 
         return $participation->$field;
     }
+
+    public function getIsFitLifeEventAttribute(): bool
+    {
+        return $this->attributes['event_type'] === 'fit_life';
+    }
 }

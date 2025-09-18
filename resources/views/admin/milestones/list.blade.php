@@ -11,7 +11,7 @@
         </div>
         <div class="card-datatable text-nowrap">
             <table class="datatables-ajax table table-bordered" id="milestonelist-table"
-                data-ajax-url="">
+                data-ajax-url="" data-event-type="{{ $event->event_type }}">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -53,6 +53,10 @@
         src="{{ asset('js/common/custom.datatable.js?v=1.0.0') }}"></script>
     <script type="text/javascript">
         $(function() {
+
+            let isFitlife = $('#milestonelist-table').data('event-type') == 'fit_life';
+
+
             customDatatable.initDatatable('#milestonelist-table', [{
                     data: 'id',
                     name: 'id'
@@ -62,8 +66,8 @@
                     name: 'name'
                 },
                 {
-                    data: 'distance',
-                    name: 'distance'
+                    data: isFitlife?'total_points':'distance',
+                    name: isFitlife?'total_points':'distance'
                 },
                 {
                     data: 'logo',

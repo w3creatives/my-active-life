@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\EmailTemplate;
 use App\Models\Event;
+use App\Models\FitLifeActivityMilestone;
 use App\Utilities\DataTable;
 use Illuminate\Http\Request;
 
@@ -24,29 +25,30 @@ final class MilestonesController extends Controller
         if ($request->ajax()) {
 
             if (in_array($event->event_type, ['regular', 'month'])) {
-                $query = $event->milestones()->select(['id', 'name', 'distance', 'data', 'event_id', 'logo', 'team_logo']);
+                $query = $event->milestones(); // ->select(['id', 'name', 'distance', 'data', 'event_id', 'logo', 'team_logo']);
                 $searchableColumns = ['name', 'distance'];
             } else {
-                $query = $activity->milestones()->select(['id', 'name', 'total_points', 'data', 'activity_id']);
+                $query = $activity->milestones(); // ->select(['id', 'name', 'total_points', 'data', 'activity_id']);
                 $searchableColumns = ['name', 'total_points'];
             }
 
             [$itemCount, $items] = $dataTable->setSearchableColumns($searchableColumns)->query($request, $query)->response();
 
             $items = $items->map(function ($item) use ($event) {
-
+                $item->event_id = ! isset($item->event_id) ? $event->id : $item->event_id;
                 $data = [
                     'id' => $item->id,
                     'name' => $item->name,
-                    'distance' => isset($item->distance) ? $item->distance : $item->total_points,
+                    'distance' => $item->distance ?? $item->total_points,
+                    'total_points' => $item->distance ?? $item->total_points,
                     'data' => $item->video_url ?? '',
                     'action' => [
                         view('admin.milestones.actions.milestone', compact('item', 'event'))->render(),
                     ],
                 ];
 
-                if ($event->event_type === 'regular') {
-                    $data['logo'] = view('admin.milestones.logo', compact('item'))->render();
+                if (in_array($event->event_type, ['regular', 'month', 'fit_life'])) {
+                    $data['logo'] = view('admin.milestones.logo', compact('item', 'event'))->render();
                 } else {
                     $data['logo'] = 'N/A';
                 }
@@ -112,16 +114,35 @@ final class MilestonesController extends Controller
 
         $event = Event::findOrFail($eventId);
 
+        $isRegularEvent = true;
+
+        if (in_array($event->event_type, ['regular', 'month'])) {
+            $eventMilestone = $event->milestones()->find($milestoneId);
+        } elseif ($event->event_type === 'fit_life') {
+            $activityId = $request->route()->parameter('activityId');
+            $activity = $event->fitActivities()->find($activityId);
+            $eventMilestone = $activity->milestones()->find($milestoneId);
+            $isRegularEvent = false;
+        }
+
         $request->validate([
             'name' => 'required',
             'distance' => 'required|numeric',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'team_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'logo' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', is_null($eventMilestone) || ! $eventMilestone->logo ? 'required' : 'nullable'),
+            'calendar_logo' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', is_null($eventMilestone) || ! $eventMilestone->calendar_logo ? 'required' : 'nullable'),
+            'team_logo' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', ($isRegularEvent && (is_null($eventMilestone) || ! $eventMilestone->team_logo)) ? 'required' : 'nullable'),
+            'calendar_team_logo' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', ($isRegularEvent && (is_null($eventMilestone) || ! $eventMilestone->calendar_team_logo)) ? 'required' : 'nullable'),
+
+            'bw_logo' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', (! $isRegularEvent && (is_null($eventMilestone) || ! $eventMilestone->bw_logo)) ? 'required' : 'nullable'),
+            'bw_calendar_logo' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', (! $isRegularEvent && (is_null($eventMilestone) || ! $eventMilestone->bw_calendar_logo)) ? 'required' : 'nullable'),
+
+            'bib_image' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', is_null($eventMilestone) || ! $eventMilestone->bib_image ? 'required' : 'nullable'),
+            'team_bib_image' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', ($isRegularEvent && (is_null($eventMilestone) || ! $eventMilestone->team_bib_image)) ? 'required' : 'nullable'),
         ]);
 
         $data = $request->only(['name', 'distance', 'description']);
 
-        $videoData = $request->video_url ? json_encode(['flyover_url' => $request->video_url]) :'{}';
+        $videoData = $request->video_url ? json_encode(['flyover_url' => $request->video_url]) : '{}';
 
         $data['data'] = $videoData;
 
@@ -220,9 +241,13 @@ final class MilestonesController extends Controller
     {
         $event = Event::findOrFail($eventId);
 
-        $eventMilestone = $event->milestones()->find($milestoneId);
+        if ($event->event_type === 'fit_life') {
+            $eventMilestone = FitLifeActivityMilestone::find($milestoneId);
+        } else {
+            $eventMilestone = $event->milestones()->find($milestoneId);
+        }
 
-        return ['html' => view('admin.milestones.view', compact('eventMilestone'))->render()];
+        return ['html' => view('admin.milestones.view', compact('eventMilestone', 'event'))->render()];
     }
 
     /**

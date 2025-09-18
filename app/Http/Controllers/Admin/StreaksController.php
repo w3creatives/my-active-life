@@ -70,18 +70,21 @@ final class StreaksController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'days_count' => 'required|numeric',
-            'min_distance' => 'required:digits',
-        ]);
-
         $eventId = $request->route()->parameter('id');
         $streakId = $request->route()->parameter('streakId');
 
         $event = Event::promotional()->findOrFail($eventId);
 
         $streak = $event->streaks()->find($streakId);
+
+        $request->validate([
+            'name' => 'required',
+            'days_count' => 'required|numeric:strict',
+            'min_distance' => 'required|numeric:strict',
+            'logo' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', is_null($streak) || ! $streak->logo ? 'required' : 'nullable'),
+            'calendar_logo' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', is_null($streak) || ! $streak->calendar_logo ? 'required' : 'nullable'),
+            'bib_image' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', is_null($streak) || ! $streak->bib_image ? 'required' : 'nullable'),
+        ]);
 
         $data = $request->only(['name', 'days_count']);
 

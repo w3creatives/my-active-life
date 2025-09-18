@@ -21,10 +21,10 @@
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="days_count" class="form-label">Days Count</label>
-                                <input type="text" name="days_count" id="days_count"
+                                <input type="number" name="days_count" id="days_count"
                                        class="form-control @error('days_count') parsley-error @enderror"
-                                       value="{{ $eventStreak->days_count ?? old('days_count') }}" required
-                                       data-parsley-trigger="change">
+                                       value="{{ $eventStreak->days_count ?? old('days_count') }}" min="1" required
+                                       data-parsley-trigger="change" >
                             </div>
 
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
@@ -32,7 +32,7 @@
                                 <input type="number" name="min_distance" id="min_distance"
                                        class="form-control @error('min_distance') parsley-error @enderror"
                                        value="{{ $eventStreak->min_distance ?? old('min_distance') }}" required
-                                       data-parsley-trigger="change">
+                                       data-parsley-trigger="change" min="1">
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="email_template_id" class="form-label">Email Template</label>
@@ -49,7 +49,7 @@
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="logo" class="form-label">Logo</label>
                                 <input type="file" id="logo" name="logo" data-preview=".logo-preview"
-                                       class="form-control choose-file">
+                                       class="form-control choose-file" {{ isset($eventStreak->logo) && $eventStreak->logo?'':'required' }}>
                                 <div class="logo-preview {{ isset($eventStreak->logo) && $eventStreak->logo?'':'d-none' }} mt-3">
                                     <img src="{{ $eventStreak->logo??'' }}" alt="" class="img-fluid img" style="height: 100px;" />
                                 </div>
@@ -58,7 +58,7 @@
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="calendar_logo" class="form-label">Calendar Logo</label>
                                 <input type="file" id="calendar_logo" data-preview=".calendar-logo-preview"
-                                       name="calendar_logo" class="form-control choose-file">
+                                       name="calendar_logo" class="form-control choose-file" {{ isset($eventStreak->calendar_logo) && $eventStreak->calendar_logo?'':'required' }}>
                                 <div class="calendar-logo-preview {{ isset($eventStreak->calendar_logo) && $eventStreak->calendar_logo?'':'d-none' }} mt-3">
                                     <img src="{{ $eventStreak->calendar_logo??'' }}" class="img-fluid img" style="height: 100px;" />
                                 </div>
@@ -66,7 +66,7 @@
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="bib-image" class="form-label">Bibs Image</label>
                                 <input type="file" id="bib-image" data-preview=".bib-image-preview"
-                                       name="bib_image" class="form-control choose-file">
+                                       name="bib_image" class="form-control choose-file" {{ isset($eventStreak->bib_image) && $eventStreak->bib_image?'':'required' }}>
                                 <div class="bib-image-preview {{ isset($eventStreak->bib_image) && $eventStreak->bib_image?'':'d-none' }} mt-3">
                                     <img src="{{ $eventStreak->bib_image??'' }}" class="img-fluid img" style="height: 100px;" />
                                 </div>
