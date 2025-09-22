@@ -36,10 +36,33 @@
                   novalidate>
                 @csrf
                 <div class="tutorial-list">
+                    @php
+                        $currentTutorialIndex = 0;
+                    @endphp
                     @if($tutorials->count())
                         @foreach($tutorials as $inputIndex => $tutorial)
                             @include('admin.events.tutorials.tutorial-form', ['tutorial' => $tutorial, 'inputIndex' => $inputIndex])
+                            @php
+                                $currentTutorialIndex++;
+                            @endphp
                         @endforeach
+
+                        @if(old('type'))
+
+                            @foreach(old('type') as $oldKey => $oldType)
+                                @if($currentTutorialIndex <= $oldKey)
+                                @include('admin.events.tutorials.tutorial-form', ['tutorial' => (object)[
+                                     'type' => $oldType,
+                                    'content' => old('content.'.$oldKey),
+                                    'level' => old('level.'.$oldKey),
+                                    'source' => old('source.'.$oldKey),
+                                    'thumb' => old('thumb.'.$oldKey),
+                                    'title' => old('title.'.$oldKey),
+                                    'url' => old('url.'.$oldKey),
+                            ]])
+                            @endif
+                            @endforeach
+                        @endif
                     @else
                         @if(old('type'))
                             @foreach(old('type') as $oldKey => $oldType)
