@@ -136,8 +136,8 @@ final class MilestonesController extends Controller
             'bw_logo' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', (! $isRegularEvent && (is_null($eventMilestone) || ! $eventMilestone->bw_logo)) ? 'required' : 'nullable'),
             'bw_calendar_logo' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', (! $isRegularEvent && (is_null($eventMilestone) || ! $eventMilestone->bw_calendar_logo)) ? 'required' : 'nullable'),
 
-            'bib_image' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', is_null($eventMilestone) || ! $eventMilestone->bib_image ? 'required' : 'nullable'),
-            'team_bib_image' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', ($isRegularEvent && (is_null($eventMilestone) || ! $eventMilestone->team_bib_image)) ? 'required' : 'nullable'),
+            //'bib_image' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', is_null($eventMilestone) || ! $eventMilestone->bib_image ? 'required' : 'nullable'),
+            //'team_bib_image' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', ($isRegularEvent && (is_null($eventMilestone) || ! $eventMilestone->team_bib_image)) ? 'required' : 'nullable'),
         ]);
 
         $data = $request->only(['name', 'distance', 'description']);

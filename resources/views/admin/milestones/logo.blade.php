@@ -14,8 +14,9 @@
                     @include('admin.milestones.logo-item',['title' => 'BW Logo', 'item' => $item, 'image_url' => $item->bw_logo])
                     @include('admin.milestones.logo-item',['title' => 'BW Calendar Logo', 'item' => $item, 'image_url' => $item->bw_calendar_logo])
                 @endif
+                @if(in_array($event->event_type, ['regular1', 'month1']))
                 @include('admin.milestones.logo-item',['title' => 'Bibs Image', 'item' => $item, 'image_url' => $item->bib_image])
-                @if(in_array($event->event_type, ['regular', 'month']))
+
                 @include('admin.milestones.logo-item',['title' => 'Team Bibs Image', 'item' => $item, 'image_url' => $item->team_bib_image])
                     @endif
 

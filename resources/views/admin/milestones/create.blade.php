@@ -105,7 +105,9 @@
                                     </div>
                                 </div>
                             @endif
-                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                              @php
+                            /*
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6 d-none">
                                 <label for="bib-image" class="form-label">Bibs Image</label>
                                 <input type="file" id="bib-image" data-preview=".bib-image-preview"
                                        name="bib_image" class="form-control choose-file" {{ isset($eventMilestone->bib_image) && $eventMilestone->bib_image?'':'required' }}>
@@ -114,7 +116,7 @@
                                 </div>
                             </div>
                             @if($isRegularEvent)
-                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6 d-none">
                                 <label for="team-bib-image" class="form-label">Team Bibs Image</label>
                                 <input type="file" id="team-bib-image" data-preview=".team-bib-image-preview"
                                        name="team_bib_image" class="form-control choose-file" {{ isset($eventMilestone->team_bib_image) && $eventMilestone->team_bib_image?'':'required' }}>
@@ -123,6 +125,8 @@
                                 </div>
                             </div>
                                 @endif
+                                  */
+                              @endphp
                         </div>
                         <div class="d-flex justify-content-between mt-3">
 

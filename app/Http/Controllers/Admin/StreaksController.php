@@ -83,7 +83,7 @@ final class StreaksController extends Controller
             'min_distance' => 'required|numeric:strict',
             'logo' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', is_null($streak) || ! $streak->logo ? 'required' : 'nullable'),
             'calendar_logo' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', is_null($streak) || ! $streak->calendar_logo ? 'required' : 'nullable'),
-            'bib_image' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', is_null($streak) || ! $streak->bib_image ? 'required' : 'nullable'),
+            //'bib_image' => sprintf('%s|image|mimes:jpeg,png,jpg,gif|max:2048', is_null($streak) || ! $streak->bib_image ? 'required' : 'nullable'),
         ]);
 
         $data = $request->only(['name', 'days_count']);

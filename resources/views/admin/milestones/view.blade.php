@@ -34,11 +34,15 @@
             @include('admin.milestones.logo-item',['title' => 'Team Logo', 'item' => $eventMilestone, 'image_url' => $eventMilestone->team_logo, 'type' => 'view'])
 
             @include('admin.milestones.logo-item',['title' => 'Calendar Team Logo', 'item' => $eventMilestone, 'image_url' => $eventMilestone->calendar_team_logo, 'type' => 'view'])
+            @if(in_array($event->event_type, ['regular2']))
             @include('admin.milestones.logo-item',['title' => 'Team Bibs Image', 'item' => $eventMilestone, 'image_url' => $eventMilestone->team_bib_image, 'type' => 'view'])
+                @endif
         @else
             @include('admin.milestones.logo-item',['title' => 'BW Logo', 'item' => $eventMilestone, 'image_url' => $eventMilestone->bw_logo, 'type' => 'view'])
             @include('admin.milestones.logo-item',['title' => 'BW Calendar Logo', 'item' => $eventMilestone, 'image_url' => $eventMilestone->bw_calendar_logo, 'type' => 'view'])
+            @if(in_array($event->event_type, ['regular2']))
             @include('admin.milestones.logo-item',['title' => 'Bibs Image', 'item' => $eventMilestone, 'image_url' => $eventMilestone->bib_image, 'type' => 'view'])
-        @endif
+            @endif
+            @endif
     </div>
 </div>
