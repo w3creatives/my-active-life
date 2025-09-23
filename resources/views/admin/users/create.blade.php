@@ -6,7 +6,8 @@
                 <h5 class="card-header">{{ $user?'Update':'Add'}} User Details</h5>
                 <div class="card-body">
                     <x-alert.validation :errors=$errors></x-alert.validation>
-                    <form action="" class="needs-validation" method="POST" id="event-form" autocomplete="nope" novalidate>
+                    <form action="" class="needs-validation" method="POST" id="event-form" autocomplete="nope"
+                          novalidate>
                         <input type="email" style="display:none">
                         <input type="password" style="display:none">
                         @csrf
@@ -30,12 +31,14 @@
                             <div class="mb-4 col-xl-6 col-sm-12">
                                 <label for="display_name" class="form-label">Display Name</label>
                                 <input type="text" name="display_name" id="display_name"
-                                       value="{{ $user->display_name??old('display_name') }}" class="form-control" required>
+                                       value="{{ $user->display_name??old('display_name') }}" class="form-control"
+                                       required>
                             </div>
                             <div class="mb-4 col-xl-6 col-sm-12">
                                 <label for="email" class="form-label">Email Address</label>
                                 <input type="email" name="email" id="email"
-                                       value="{{ $user->email??old('email') }}" class="form-control" autocomplete="nope" required>
+                                       value="{{ $user->email??old('email') }}" class="form-control" autocomplete="nope"
+                                       required>
                             </div>
                         </div>
                         <div class="mb-4">
@@ -47,25 +50,29 @@
                             </div>
                         </div>
                         <div class="row">
-                        <div class="mb-4 password-group col-xl-6 col-sm-12">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" name="password" id="password"
-                                   value="{{ old('password') }}" class="form-control" autocomplete="nope">
-                        </div>
-                        <div class="mb-4 password-group col-xl-6 col-sm-12">
-                            <label for="confirm_password" class="form-label">Confirm Password</label>
-                            <input type="password" name="confirm_password" id="confirm_password"
-                                   value="{{ old('confirm_password') }}" class="form-control"  autocomplete="nope">
-                        </div>
+                            <div class="mb-4 password-group col-xl-6 col-sm-12">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" name="password" id="password"
+                                       value="{{ old('password') }}" class="form-control" autocomplete="nope">
+                            </div>
+                            <div class="mb-4 password-group col-xl-6 col-sm-12">
+                                <label for="confirm_password" class="form-label">Confirm Password</label>
+                                <input type="password" name="confirm_password" id="confirm_password"
+                                       value="{{ old('confirm_password') }}" class="form-control" autocomplete="nope">
+                            </div>
                         </div>
                         <div class="mb-4">
                             <h5 class="m-0 me-2">Assign Events</h5>
                             @if($user)
-                            <div class="form-check mt-4">
-                                <input class="form-check-input show-assigned" type="checkbox" value="1" id="show-assigned" checked>
-                                <label class="form-check-label" for="show-assigned"> Show Assigned Only </label>
-                            </div>
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input show-assigned" type="checkbox" value="1"
+                                           id="show-assigned" checked>
+                                    <label class="form-check-label" for="show-assigned"> Show Assigned Only </label>
+                                </div>
                             @endif
+                            <div class="invalid-feedback w-100" id="checkbox-feedback">
+                                Please select at least one option.
+                            </div>
                             <div class="table-responsive overflow-hidden" style="height: 300px" id="table-scrollable">
                                 <table class="table card-table">
                                     <thead>
@@ -88,7 +95,7 @@
                                                     <div class="form-check mt-4">
                                                         <input class="form-check-input" type="checkbox" name="event[]"
                                                                value="{{ $event->id }}" id="event-item-{{ $event->id }}"
-                                                               {{ $event->hasUserParticipation($user)?'checked':'' }} data-end-item="subscription-item-{{$event->id}}" {{ $event->isPastEvent()?'disabled':'' }}>
+                                                               {{ $event->hasUserParticipation($user) || in_array($event->id, old('event',[]))?'checked':'' }} data-end-item="subscription-item-{{$event->id}}" {{ $event->isPastEvent()?'disabled':'' }}>
                                                         <label class="form-check-label"
                                                                for="event-item-{{ $event->id }}"> {{ $event->name }}</label>
                                                     </div>
@@ -96,13 +103,19 @@
                                             </td>
                                             <td class="text-end pe-0 text-nowrap">
                                                 <input type="date" name="start_date[{{$event->id}}]"
-                                                       class="form-control start-date @error('start_date') parsley-error @enderror" data-item="subscription-item-{{$event->id}}" value="{{ $subscriptionStartDate?$subscriptionStartDate:$event->start_date }}" {{ $event->isPastEvent()?'disabled':'' }} required
+                                                       class="form-control start-date @error('start_date') parsley-error @enderror"
+                                                       data-item="subscription-item-{{$event->id}}"
+                                                       value="{{ old('start_date.'.$event->id,$subscriptionStartDate?$subscriptionStartDate:$event->start_date) }}"
+                                                       {{ $event->isPastEvent()?'disabled':'' }} required
                                                        data-parsley-trigger="change" placeholder="YYYY-MM-DD">
                                             </td>
                                             <td class="text-end pe-0 text-nowrap">
-                                                <input type="date" name="end_date[{{$event->id}}]" data-item="subscription-{{$event->id}}"
-                                                       class="form-control end-date @error('end_date') parsley-error @enderror" {{ $event->isPastEvent()?'disabled':'' }} required
-                                                       data-parsley-trigger="change" placeholder="YYYY-MM-DD" value="{{ $subscriptionEndDate?$subscriptionEndDate:$event->end_date }}">
+                                                <input type="date" name="end_date[{{$event->id}}]"
+                                                       data-item="subscription-{{$event->id}}"
+                                                       class="form-control end-date @error('end_date') parsley-error @enderror"
+                                                       {{ $event->isPastEvent()?'disabled':'' }} required
+                                                       data-parsley-trigger="change" placeholder="YYYY-MM-DD"
+                                                       value="{{ old('end_date.'.$event->id,$subscriptionEndDate?$subscriptionEndDate:$event->end_date) }}">
 
                                             </td>
 
@@ -156,13 +169,13 @@
                     static: true,
                     onChange: function(sel_date, date_str, e) {
                         let dataItem = e.element.data('end-item');
-                        console.log(dataItem, $(e.element))
-                        flatpickrEndDate[dataItem].set("minDate", date_str);
+                        console.log(dataItem, $(e.element));
+                        flatpickrEndDate[dataItem].set('minDate', date_str);
                     }
                 });
-                $('.end-date').each(function(){
+                $('.end-date').each(function() {
                     let dataItem = $(this).attr('data-item');
-                    flatpickrEndDate[dataItem] =  $(this).flatpickr({
+                    flatpickrEndDate[dataItem] = $(this).flatpickr({
                         monthSelectorType: 'static',
                         static: true
                     });
@@ -178,10 +191,10 @@
                     }
                 }).trigger('change');
 
-                if($('.show-assigned').length) {
-                    $('.show-assigned').change(function(){
+                if ($('.show-assigned').length) {
+                    $('.show-assigned').change(function() {
                         let userUnassignedItems = $('.user-unassigned');
-                        if($(this).is(':checked')) {
+                        if ($(this).is(':checked')) {
                             userUnassignedItems.addClass('d-none');
                         } else {
                             userUnassignedItems.removeClass('d-none');
@@ -189,14 +202,42 @@
                     }).trigger('change');
                 }
 
+                let validateEventSelection = function() {
+                    const checkboxes = $('input[name="event[]"]');
+                    const checkboxFeedback = $('#checkbox-feedback');
+                    const checkedItem = $('input[name="event[]"]:checked');
+
+                    checkboxes.each(function() {
+                        if (checkedItem.length === 0) {
+                            $(this).removeClass('is-valid');
+                            $(this).addClass('is-invalid');
+                            $(this)[0].setCustomValidity('Invalid');
+                        } else {
+                            $(this).removeClass('is-invalid');
+                            $(this).addClass('is-valid');
+                            $(this)[0].setCustomValidity('');
+                        }
+                    });
+                };
+
+                $('input[name="event[]"]').change(function(){
+                    if($('#event-form').hasClass('was-validated')){
+                        validateEventSelection();
+                    }
+                })
+
                 // Fetch all the forms we want to apply custom Bootstrap validation styles to
                 var forms = document.querySelectorAll('.needs-validation');
 
                 // Loop over them and prevent submission
                 Array.prototype.slice.call(forms)
                     .forEach(function(form) {
+
                         form.addEventListener('submit', function(event) {
-                            if (!form.checkValidity()) {
+
+                            const checkedItem = $('input[name="event[]"]:checked');
+                            validateEventSelection();
+                            if (!form.checkValidity() || checkedItem.length === 0) {
                                 event.preventDefault();
                                 event.stopPropagation();
                             }

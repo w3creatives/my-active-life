@@ -86,7 +86,12 @@ final class UsersController extends Controller
                 'required_if_accepted:enabled_password',
                 'same:password',
             ],
-            'event' => 'required|array|min:1',
+            'event' => [
+                'required',
+                'array',
+                'min:1',
+                Rule::excludeIf($user && $user->participations()->count() > 0),
+            ],
         ]);
 
         $data = $request->only(['first_name', 'last_name', 'email', 'display_name']);
@@ -103,7 +108,7 @@ final class UsersController extends Controller
             $flashMessage = 'User details created successfully.!';
         }
 
-        $events = Event::whereIn('id', $request->get('event'))->get();
+        $events = Event::whereIn('id', $request->get('event', []))->get();
 
         foreach ($events as $event) {
             $user->participations()
@@ -118,7 +123,7 @@ final class UsersController extends Controller
                 );
         }
 
-        $userParticipations = $user->participations()->whereNotIn('event_id', $request->get('event'))->with('event')->get();
+        $userParticipations = $user->participations()->whereNotIn('event_id', $request->get('event', []))->with('event')->get();
 
         if ($userParticipations->count()) {
             foreach ($userParticipations as $userParticipation) {
