@@ -81,7 +81,7 @@ final class DeviceSyncController extends Controller
 
         $user = $request->user();
 
-        Log::info('DeviceSyncController:trackerCallback: Response: '.json_encode($response));
+        //Log::info('DeviceSyncController:trackerCallback: Response: '.json_encode($response));
 
         // For Strava, we need to store the user_id as access_token_secret for webhook identification
         if (in_array($sourceSlug, ['strava', 'fitbit']) && isset($response['user_id'])) {
