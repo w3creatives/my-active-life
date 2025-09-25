@@ -11,6 +11,7 @@ use App\Services\EventService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use function Pest\Laravel\json;
 
 final class TrackerWebhooksController extends Controller
 {
@@ -162,7 +163,7 @@ final class TrackerWebhooksController extends Controller
                 $activities = $tracker->setSecrets($notification->sourceToken)
                     ->processWebhook($notification->webhookUrl)
                     ->setDate($notification->date)->activities();
-
+                Log::debug("Webhook {$sourceSlug} Activities: ", ['activities' => $activities]);
                 if ($activities->count()) {
                     foreach ($activities as $activity) {
                         $activity['dataSourceId'] = $notification->dataSourceId;
