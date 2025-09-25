@@ -82,7 +82,7 @@ final class DeviceSyncController extends Controller
         $user = $request->user();
 
         // For Strava, we need to store the user_id as access_token_secret for webhook identification
-        if ($sourceSlug === 'strava' && isset($response['user_id'])) {
+        if (in_array($sourceSlug, ['strava', 'fitbit']) && isset($response['user_id'])) {
             $this->tracker->get($sourceSlug)
                 ->setAccessToken($response['access_token'])
                 ->setAccessTokenSecret($response['user_id'])
@@ -105,22 +105,28 @@ final class DeviceSyncController extends Controller
             $userSourceProfile->fill($response)->save();
 
             // For Strava, create webhook subscription if needed
+            /*
+             * Duplicate - Refer to line no 89
             if ($sourceSlug === 'strava') {
-                try {
-                    $this->tracker->get($sourceSlug)->createSubscription();
-                } catch (Exception $e) {
-                    Log::error('Failed to create Strava subscription', [
-                        'error' => $e->getMessage(),
-                        'user_id' => $user->id,
-                    ]);
-                }
-            }
+                 try {
+                     $this->tracker->get($sourceSlug)->createSubscription();
+                 } catch (Exception $e) {
+                     Log::error('Failed to create Strava subscription', [
+                         'error' => $e->getMessage(),
+                         'user_id' => $user->id,
+                     ]);
+                 }
+             }
 
-            return redirect()->route('profile.device-sync.edit');
+             return redirect()->route('profile.device-sync.edit');
+            */
+        } else {
+            $userSourceProfile = $user->profiles()->create($response);
         }
 
         // For Strava, create a webhook subscription if needed
-        if ($sourceSlug === 'strava') {
+        // Duplicate - Refer to line no 89
+        /*if ($sourceSlug === 'strava') {
             try {
                 $this->tracker->get($sourceSlug)->createSubscription();
             } catch (Exception $e) {
@@ -129,10 +135,10 @@ final class DeviceSyncController extends Controller
                     'user_id' => $user->id,
                 ]);
             }
-        }
+        }*/
 
         if ($syncStartDate) {
-            $userSourceProfile = $user->profiles()->create($response);
+
             $activities = $this->tracker->get($sourceSlug)
                 ->setSecrets([$userSourceProfile->access_token, $userSourceProfile->access_token_secret])
                 ->setDate($syncStartDate, Carbon::now()->format('Y-m-d'))
