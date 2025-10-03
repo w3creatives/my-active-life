@@ -436,8 +436,9 @@ final class GarminService implements DataSourceInterface
             $date = Carbon::createFromTimestamp($activity['startTimeInSeconds'])->format('Y-m-d');
             $distance = round(($activity['distanceInMeters'] / 1609.344), 3);
             $modality = $this->modality($activity['activityType']);
+            $raw_distance = round($activity['distanceInMeters'], 3);
 
-            return compact('date', 'distance', 'modality');
+            return compact('date', 'distance', 'modality', 'raw_distance');
         });
 
         $items = $activities->reduce(function ($data, $item) {
