@@ -339,8 +339,9 @@ final class GarminService implements DataSourceInterface
                 $distance = round(($activity['distanceInMeters'] / 1609.344), 3);
                 $modality = $this->modality($activity['activityType']);
                 $time = $activity['startTimeInSeconds'];
+                $raw_distance = round($activity['distanceInMeters'], 3);
 
-                return compact('date', 'distance', 'modality');
+                return compact('date', 'distance', 'modality', 'raw_distance');
             }
         })->toArray();
 
