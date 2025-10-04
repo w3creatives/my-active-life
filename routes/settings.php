@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\DeviceSyncController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\RtyGoalsController;
 use App\Http\Controllers\Webhook\TrackerWebhooksController;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
@@ -35,8 +36,39 @@ Route::middleware('auth')->group(function () {
     })->name('profile.import-previous-years');
 
     Route::get('settings/rty-goals', function () {
-        return Inertia::render('settings/rty-goals');
+        $user = auth()->user();
+
+        // Get the user's preferred event or the first active event
+        $preferredEvent = null;
+        if ($user->preferred_event_id) {
+            $preferredEvent = App\Models\Event::find($user->preferred_event_id);
+        }
+
+        // If no preferred event, get the first active event the user is participating in
+        if (! $preferredEvent) {
+            $participation = $user->participations()
+                ->whereHas('event', function ($query) {
+                    $query->where('end_date', '>=', now());
+                })
+                ->with('event')
+                ->first();
+
+            if ($participation) {
+                $preferredEvent = $participation->event;
+            }
+        }
+
+        return Inertia::render('settings/rty-goals', [
+            'preferredEvent' => $preferredEvent,
+            'eventId' => $preferredEvent?->id,
+        ]);
     })->name('profile.rty-goals');
+
+    // RTY Goals API routes
+    Route::get('settings/rty-goals/goal', [RtyGoalsController::class, 'getGoal'])->name('profile.rty-goals.get-goal');
+    Route::get('settings/rty-goals/modalities', [RtyGoalsController::class, 'getModalities'])->name('profile.rty-goals.get-modalities');
+    Route::post('settings/rty-goals/goal', [RtyGoalsController::class, 'updateGoal'])->name('profile.rty-goals.update-goal');
+    Route::post('settings/rty-goals/modality', [RtyGoalsController::class, 'updateModality'])->name('profile.rty-goals.update-modality');
 
     Route::get('settings/tracker-attitude', function () {
         return Inertia::render('settings/tracker-attitude');
