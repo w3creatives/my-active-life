@@ -12,7 +12,7 @@ export default function DatasourcePoint({ items, title, type, handlePointChange 
       <div className="space-y-4">
         <h2 className="text-xl">{title}</h2>
         <hr />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-1 md:grid-cols-2">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-1 md:grid-cols-5">
           {items.map((item) => (
             <div key={`${type}-${item.modality}`} className="space-y-1">
               <div className="flex items-center justify-between">

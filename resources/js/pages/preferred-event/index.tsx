@@ -22,7 +22,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function PreferredEvent({ events }: { events: any[] }) {
-  console.log(events);
   const [updatingEventId, setUpdatingEventId] = useState<number | null>(null);
   const [localEvents, setLocalEvents] = useState(events);
 
