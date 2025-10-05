@@ -55,7 +55,13 @@ final class HandleInertiaRequests extends Middleware
                         return 0;
                     }
 
-                    $totalPoints = (float) $request->user()->totalPoints()->where('event_id', $request->user()->preferred_event_id)->first()->amount ?? 0.0;
+                    $totalPointsData = $request->user()->totalPoints()->where('event_id', $request->user()->preferred_event_id)->first();
+
+                    if (! $totalPointsData) {
+                        return 0.0;
+                    }
+
+                    $totalPoints = (float) $totalPointsData->amount ?? 0.0;
 
                     return round($totalPoints, 2);
                 },

@@ -85,7 +85,6 @@ export default function NextMilestone({ milestone, userDistance, previousMilesto
       <CardContent className="space-y-6">
         {/* Milestone Info */}
         <div className="flex gap-4">
-          <script>console.log('mile', milestone)</script>
           {milestone.logo && (
             <div className="flex-shrink-0">
               <img src={milestone.logo} alt={milestone.name} className="bg-muted h-16 w-16 rounded-lg object-contain p-2" />

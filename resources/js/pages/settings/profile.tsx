@@ -1,7 +1,7 @@
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import { FormEventHandler, useEffect, useState } from 'react';
 
 import DeleteUser from '@/components/delete-user';
 import HeadingSmall from '@/components/heading-small';
@@ -42,6 +42,7 @@ type ProfileForm = {
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
   const { auth } = usePage<SharedData>().props;
+  const [timezones, setTimezones] = useState<Record<string, string>>({});
 
   const { data, setData, patch, errors, processing, recentlySuccessful } = useForm<ProfileForm>({
     email: auth.user.email,
@@ -53,6 +54,13 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
     gender: auth.user.gender || '',
     birthday: auth.user.birthday || '',
   });
+
+  useEffect(() => {
+    fetch(route('profile.timezones'))
+      .then((response) => response.json())
+      .then((data) => setTimezones(data.timezones))
+      .catch((error) => console.error('Error fetching timezones:', error));
+  }, []);
 
   const submit: FormEventHandler = (e) => {
     e.preventDefault();
@@ -145,18 +153,17 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                   <SelectValue placeholder="Select timezone" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="UTC">UTC</SelectItem>
-                  <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
-                  <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
-                  <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
-                  <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
-                  {/* Add more timezones as needed */}
+                  {Object.entries(timezones).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>
+                      {label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <InputError className="mt-2" message={errors.time_zone} />
             </div>
 
-            <HeadingSmall title="Personal information" description="Additional details about you" />
+            <HeadingSmall title="Personal information" description="The following will never be shared publicly. You are the only one that can see this. We use it to hopefully delight you." />
 
             <div className="grid gap-2">
               <Label htmlFor="gender">Gender</Label>
@@ -168,7 +175,8 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                   <SelectItem value="male">Male</SelectItem>
                   <SelectItem value="female">Female</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
-                  <SelectItem value="none_of_your_beeswax">Prefer not to say</SelectItem>
+                  <SelectItem value="none_of_your_beeswax">None Of Your Beeswax</SelectItem>
+                  <SelectItem value="unknown">Unknown</SelectItem>
                 </SelectContent>
               </Select>
               <InputError className="mt-2" message={errors.gender} />
@@ -221,7 +229,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
             )}
 
             <div className="flex items-center gap-4">
-              <Button disabled={processing}>Save</Button>
+              <Button disabled={processing}>Update Profile</Button>
 
               <Transition
                 show={recentlySuccessful}
@@ -234,9 +242,10 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
               </Transition>
             </div>
           </form>
+          <HeadingSmall title="" description="* We do solemnly swear that we will NEVER sell your information to 3rd parties. We use the above information for registration and to administer the event. Pinky swear! We will never bother you, unless you want to be bothered." />
         </div>
 
-        <DeleteUser />
+        {/* <DeleteUser /> */}
       </SettingsLayout>
     </AppLayout>
   );

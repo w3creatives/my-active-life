@@ -17,6 +17,7 @@ Route::middleware('auth')->group(function () {
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('settings/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('settings/timezones', [ProfileController::class, 'getTimezones'])->name('profile.timezones');
 
     Route::get('settings/device-sync', [DeviceSyncController::class, 'index'])->name('profile.device-sync.edit');
     Route::get('settings/device-sync/{sourceSlug}', [DeviceSyncController::class, 'connect'])->name('profile.device-sync.connect');
