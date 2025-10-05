@@ -55,7 +55,7 @@
                                 </div>
                             @endif
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
-                                <label for="logo" class="form-label">Logo</label>
+                                <label for="logo" class="form-label">Bib</label>
                                 <input type="file" id="logo" name="logo" data-preview=".logo-preview"
                                        class="form-control choose-file" {{ isset($eventMilestone->logo) && $eventMilestone->logo?'':'required' }}>
                                 <div class="logo-preview {{ isset($eventMilestone->logo) && $eventMilestone->logo?'':'d-none' }} mt-3">
@@ -63,7 +63,7 @@
                                 </div>
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
-                                <label for="calendar_logo" class="form-label">Calendar Logo</label>
+                                <label for="calendar_logo" class="form-label">Calendar Bib</label>
                                 <input type="file" id="calendar_logo" data-preview=".calendar-logo-preview"
                                        name="calendar_logo" class="form-control choose-file" {{ isset($eventMilestone->calendar_logo) && $eventMilestone->calendar_logo?'':'required' }}>
                                 <div class="calendar-logo-preview {{ isset($eventMilestone->calendar_logo) && $eventMilestone->calendar_logo?'':'d-none' }} mt-3">
@@ -72,7 +72,7 @@
                             </div>
                             @if($isRegularEvent)
                                 <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
-                                    <label for="team_logo" class="form-label">Team Logo</label>
+                                    <label for="team_logo" class="form-label">Team Bib</label>
                                     <input type="file" id="team_logo" data-preview=".team-logo-preview"
                                            name="team_logo" class="form-control choose-file" {{ isset($eventMilestone->team_logo) && $eventMilestone->team_logo?'':'required' }}>
                                     <div class="team-logo-preview {{ isset($eventMilestone->team_logo) && $eventMilestone->team_logo?'':'d-none' }} mt-3">
@@ -80,7 +80,7 @@
                                     </div>
                                 </div>
                                 <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
-                                    <label for="calendar_team_logo" class="form-label">Calendar Team Logo</label>
+                                    <label for="calendar_team_logo" class="form-label">Calendar Team Bib</label>
                                     <input type="file" id="calendar_team_logo" data-preview=".calendar-team-logo-preview"
                                            name="calendar_team_logo" class="form-control choose-file" {{ isset($eventMilestone->calendar_team_logo) && $eventMilestone->calendar_team_logo?'':'required' }}>
                                     <div class="calendar-team-logo-preview {{ isset($eventMilestone->calendar_team_logo) && $eventMilestone->calendar_team_logo?'':'d-none' }} mt-3">
@@ -89,7 +89,7 @@
                                 </div>
                             @else
                                 <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
-                                    <label for="logo_bw" class="form-label">BW Logo</label>
+                                    <label for="logo_bw" class="form-label">BW Bib</label>
                                     <input type="file" id="logo_bw" name="bw_logo" data-preview=".logo_bw-preview"
                                            class="form-control choose-file" {{ isset($eventMilestone->bw_logo) && $eventMilestone->bw_logo?'':'required' }}>
                                     <div class="logo_bw-preview {{ isset($eventMilestone->bw_logo) && $eventMilestone->bw_logo?'':'d-none' }} mt-3">
@@ -97,7 +97,7 @@
                                     </div>
                                 </div>
                                 <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
-                                    <label for="calendar_bw_logo" class="form-label">BW Calendar Logo</label>
+                                    <label for="calendar_bw_logo" class="form-label">BW Calendar Bib</label>
                                     <input type="file" id="bw_calendar_logo" data-preview=".calendar_bw-logo-preview"
                                            name="bw_calendar_logo" class="form-control choose-file" {{ isset($eventMilestone->bw_calendar_logo) && $eventMilestone->bw_calendar_logo?'':'required' }}>
                                     <div class="calendar_bw-logo-preview {{ isset($eventMilestone->bw_calendar_logo) && $eventMilestone->bw_calendar_logo?'':'d-none' }} mt-3">

@@ -17,7 +17,7 @@
                         <th>ID</th>
                         <th>Name</th>
                         <th> Distance</th>
-                        <th>Logo</th>
+                        <th>Bibs</th>
                         <th>Data</th>
                         <th>Action</th>
                     </tr>

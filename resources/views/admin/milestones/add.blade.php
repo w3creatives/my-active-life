@@ -28,11 +28,11 @@
                    data-parsley-trigger="change">
         </div>
         <div class="mb-4">
-            <label for="logo" class="form-label">Logo</label>
+            <label for="logo" class="form-label">Bib</label>
             <input type="file" id="logo" name="logo" class="form-control">
         </div>
         <div class="mb-4">
-            <label for="team_logo" class="form-label">Team Logo</label>
+            <label for="team_logo" class="form-label">Team Bib</label>
             <input type="file" id="team_logo" name="team_logo" class="form-control">
         </div>
 
