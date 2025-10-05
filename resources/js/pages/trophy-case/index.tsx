@@ -370,7 +370,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                           )}
                         </div>
                         <div className="mt-2 text-center">
-                          <p className="truncate px-1 text-xs font-medium">{milestone.name}  {milestone.is_completed || 'not c'} {milestone.is_team_completed || 'not t c'}</p>
+                          <p className="truncate px-1 text-xs font-medium">{milestone.name}</p>
                           <p className="text-muted-foreground text-xs">{formatDistance(milestone.distance)} mi</p>
                         </div>
                       </div>

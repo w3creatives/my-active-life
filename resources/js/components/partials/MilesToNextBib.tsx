@@ -2,6 +2,7 @@ import { MilestoneRadialChart } from '@/components/partials/charts/MilestoneRadi
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Goal } from 'lucide-react';
 
 interface NextMilestone {
   id: number;
@@ -46,7 +47,7 @@ export default function MilesToNextBib() {
     } else if (eventName?.includes("5K") || eventName?.includes("Challenge")) {
       return "Miles to Next Badge";
     } else {
-      return "Miles to Next Milestone";
+      return "Miles to Next Bib";
     }
   };
 
@@ -69,7 +70,7 @@ export default function MilesToNextBib() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">{getTitle(milestoneData?.event_name || '')}</CardTitle>
+          <CardTitle className="text-xl"><Goal /> {getTitle(milestoneData?.event_name || '')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
@@ -83,12 +84,12 @@ export default function MilesToNextBib() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">{getTitle(milestoneData.event_name)}</CardTitle>
+        <CardTitle className="leading-none font-semibold flex items-center justify-center gap-2"><Goal /> {getTitle(milestoneData.event_name)}</CardTitle>
       </CardHeader>
       <CardContent>
-        <MilestoneRadialChart 
-          current={milestoneData.current_distance} 
-          milestone={milestoneData.next_milestone.distance} 
+        <MilestoneRadialChart
+          current={milestoneData.current_distance}
+          milestone={milestoneData.next_milestone.distance}
         />
       </CardContent>
     </Card>
