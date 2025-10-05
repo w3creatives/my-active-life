@@ -53,12 +53,12 @@
                             <div class="mb-4 password-group col-xl-6 col-sm-12">
                                 <label for="password" class="form-label">Password</label>
                                 <input type="password" name="password" id="password"
-                                       value="{{ old('password') }}" class="form-control" autocomplete="nope">
+                                       value="{{ old('password') }}" class="form-control">
                             </div>
                             <div class="mb-4 password-group col-xl-6 col-sm-12">
                                 <label for="confirm_password" class="form-label">Confirm Password</label>
                                 <input type="password" name="confirm_password" id="confirm_password"
-                                       value="{{ old('confirm_password') }}" class="form-control" autocomplete="nope">
+                                       value="{{ old('confirm_password') }}" class="form-control">
                             </div>
                         </div>
                         <div class="mb-4">

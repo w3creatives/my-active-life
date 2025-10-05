@@ -69,8 +69,8 @@ final class UsersController extends Controller
         $user = User::find($request->route()->parameter('id'));
 
         $request->validate([
-            'first_name' => 'required|alpha|max:255',
-            'last_name' => 'required|alpha|max:255',
+            'first_name' => 'required|max:255',
+            'last_name' => 'required|max:255',
             'display_name' => 'required|max:255',
             'email' => [
                 'required',
