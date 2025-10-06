@@ -53,6 +53,8 @@ export default function PreferredEvent({ events }: { events: any[] }) {
     );
   };
 
+  console.log(localEvents);
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Your Current Challenges" />
@@ -61,15 +63,15 @@ export default function PreferredEvent({ events }: { events: any[] }) {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {localEvents.map((event) => (
-            <Card key={event.id}>
-              <CardHeader>
-                <CardTitle>{event.name}</CardTitle>
-                <CardDescription>{event.description}</CardDescription>
+            <Card key={event.id} className='pt-0'>
+              <CardHeader className='p-0'>
+                <img src={event.logo_url} alt={event.name} className="w-full rounded-t-xl" />
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col items-center justify-center gap-4">
-                  <p className="text-lg font-semibold">You are registered!</p>
-                  <Button variant="default" asChild>
+                  <h2 className='text-2xl font-semibold tracking-tight'>{event.name}</h2>
+                  <p className="text-lg text-muted-foreground">You are registered!</p>
+                  <Button variant="default" asChild className='mt-4'>
                     <Link href={route('preferred.event', event.id)}>Go To Challenge</Link>
                   </Button>
                 </div>
@@ -78,11 +80,12 @@ export default function PreferredEvent({ events }: { events: any[] }) {
                 <div className="mt-4 flex items-center gap-2">
                   <Checkbox
                     id={`preferred-${event.id}`}
+                    className='cursor-pointer'
                     checked={event.is_preferred}
                     onCheckedChange={(checked) => handlePreferredEventChange(event.id, checked as boolean)}
                     disabled={updatingEventId === event.id}
                   />
-                  <Label htmlFor={`preferred-${event.id}`}>{updatingEventId === event.id ? 'Updating...' : 'Make this my default'}</Label>
+                  <Label className='cursor-pointer' htmlFor={`preferred-${event.id}`}>{updatingEventId === event.id ? 'Updating...' : 'Make this my default'}</Label>
                 </div>
               </CardFooter>
             </Card>

@@ -805,7 +805,7 @@ final class DashboardController extends Controller
         $user->preferred_event_id = $validated['event_id'];
         $user->save();
 
-        return back()->with('success', 'Preferred event updated successfully.');
+        return to_route('dashboard')->with('success', 'Preferred event updated successfully.');
     }
 
     public function getUserEventDetails(Request $request, string $type): JsonResponse

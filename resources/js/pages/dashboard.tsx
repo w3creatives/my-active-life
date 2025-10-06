@@ -22,6 +22,7 @@ export default function Dashboard() {
   const { auth } = usePage<SharedData>().props;
   const [date, setDate] = useState<Date>(new Date());
   const [userGoal, setUserGoal] = useState(0);
+  const [totalPoints, setTotalPoints] = useState<number>(auth.total_points ?? 0);
   const [showTeamView, setShowTeamView] = useState(false);
   const [nextMilestoneData, setNextMilestoneData] = useState<any>(null);
   const [loadingMilestone, setLoadingMilestone] = useState(true);
@@ -60,6 +61,30 @@ export default function Dashboard() {
     fetchNextMilestone();
   }, []);
 
+  // Listen for global points updates to refresh milestones
+  useEffect(() => {
+    const handler = async () => {
+      try {
+        // Refresh next milestone card
+        setLoadingMilestone(true);
+        const milestoneResponse = await axios.get(route('next.milestone'));
+        setNextMilestoneData(milestoneResponse.data);
+
+        // Update total points from milestone response if available
+        if (milestoneResponse.data?.current_distance !== undefined) {
+          setTotalPoints(milestoneResponse.data.current_distance);
+        }
+      } catch (error) {
+        console.error('Error refreshing after points update:', error);
+      } finally {
+        setLoadingMilestone(false);
+      }
+    };
+
+    window.addEventListener('points-updated', handler as EventListener);
+    return () => window.removeEventListener('points-updated', handler as EventListener);
+  }, []);
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Home" />
@@ -72,7 +97,7 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <ProgressCard totalPoints={auth.total_points} goal={userGoal} title="Your Progress" />
+          <ProgressCard totalPoints={totalPoints} goal={userGoal} title="Your Progress" />
           {!auth.preferred_event.name.toLowerCase().includes('amerithon') && (
             <>
               {loadingMilestone ? (

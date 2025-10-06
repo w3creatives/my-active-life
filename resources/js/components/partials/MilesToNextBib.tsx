@@ -23,20 +23,26 @@ interface MilestoneData {
 export default function MilesToNextBib() {
   const [milestoneData, setMilestoneData] = useState<MilestoneData | null>(null);
   const [loading, setLoading] = useState(true);
+  const fetchMilestoneData = async () => {
+    try {
+      const response = await axios.get(route('next.milestone'));
+      setMilestoneData(response.data);
+    } catch (error) {
+      console.error('Error fetching milestone data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchMilestoneData = async () => {
-      try {
-        const response = await axios.get(route('next.milestone'));
-        setMilestoneData(response.data);
-      } catch (error) {
-        console.error('Error fetching milestone data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchMilestoneData();
+
+    const handler = () => {
+      setLoading(true);
+      fetchMilestoneData();
+    };
+    window.addEventListener('points-updated', handler as EventListener);
+    return () => window.removeEventListener('points-updated', handler as EventListener);
   }, []);
 
   const getTitle = (eventName: string) => {
@@ -89,7 +95,8 @@ export default function MilesToNextBib() {
       <CardContent>
         <MilestoneRadialChart
           current={milestoneData.current_distance}
-          milestone={milestoneData.next_milestone.distance}
+          nextMilestone={milestoneData.next_milestone.distance}
+          previousMilestone={milestoneData.previous_milestone?.distance || 0}
         />
       </CardContent>
     </Card>

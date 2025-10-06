@@ -42,7 +42,7 @@ const RTYProgressCard = ({ totalPoints, goal, title }: ProgressCardProps) => {
         <div className="flex justify-center">
           <div className="border-primary rounded border px-6 py-2 text-center">
             <h3 className="text-2xl font-semibold">
-              {totalPoints}
+              {totalPoints.toFixed(2)}
               <small className="text-xs font-normal">miles</small>
             </h3>
             <h4 className="text-xs">
@@ -66,7 +66,7 @@ const AmerithonProgressCard = ({ totalPoints, goal, title }: ProgressCardProps) 
         <div className="flex justify-center">
           <div className="border-primary rounded border px-6 py-2 text-center">
             <h3 className="text-2xl font-semibold">
-              {totalPoints}
+              {totalPoints.toFixed(2)}
               <small className="text-xs font-normal">miles</small>
             </h3>
             <h4 className="text-xs">

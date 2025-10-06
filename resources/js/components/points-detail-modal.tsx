@@ -14,6 +14,7 @@ interface PointsDetailModalProps {
   date: Date | null;
   eventId: number | null;
   activeModality?: string;
+  refreshCalendar: () => void;
 }
 
 interface PointItem {
@@ -80,11 +81,26 @@ export function PointsDetailModal({ isOpen, onClose, date, eventId, activeModali
 
       setProcessing(true);
       axios.post(route('user.add.manual.points'), {points:pointFormData, date:format(date, 'yyyy-MM-dd'), eventId})
-          .then((response) => {
+          .then(async (response) => {
               toast.success(response.data.message);
               setPointFormData({});
               setProcessing(false);
-              refreshCalendar();
+
+              // Refresh calendar first
+              await refreshCalendar();
+
+              // Then dispatch event so other widgets can refresh
+              try {
+                window.dispatchEvent(new CustomEvent('points-updated', {
+                  detail: {
+                    date: format(date as Date, 'yyyy-MM-dd'),
+                    eventId,
+                  },
+                }));
+              } catch {
+                // no-op
+              }
+
               onClose();
           })
           .catch((error) => {

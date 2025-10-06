@@ -76,8 +76,8 @@ export default function NextMilestoneCard({
     return (
       <Card className={`${className}`}>
         <CardHeader className="text-center">
-          <CardTitle className="flex items-center justify-center gap-2">
-            <Trophy className="h-5 w-5 text-amber-500" />
+          <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+            <Trophy className="size-5 text-amber-500" />
             {getTitle(eventName)}
           </CardTitle>
         </CardHeader>
@@ -91,27 +91,22 @@ export default function NextMilestoneCard({
     );
   }
 
-  const imageUrl = showTeamView
-    ? nextMilestone.team_logo_image_url || nextMilestone.logo_image_url
-    : nextMilestone.logo_image_url;
+  const imageUrl = nextMilestone.logo_image_url;
 
   return (
     <Card className={`${className}`}>
       <CardHeader className="text-center">
-        <CardTitle className="flex items-center justify-center gap-2">
-          <Trophy className="h-5 w-5 text-amber-500" />
+        <CardTitle className="flex items-center justify-center gap-2 text-xl">
+          <Trophy className="size-5 text-amber-500" />
           {getTitle(eventName)}
         </CardTitle>
-        <CardDescription>
-          {formatDistance(nextMilestone.distance)} mile milestone
-        </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-4">
         {/* Milestone Image */}
         <div className="flex justify-center">
           <div className="relative">
-            <div className="size-48 rounded-lg bg-muted/20 flex items-center justify-center overflow-hidden">
+            <div className="size-60 rounded-lg bg-muted/20 flex items-center justify-center overflow-hidden">
               {imageUrl ? (
                 <img
                   src={imageUrl}
@@ -127,21 +122,12 @@ export default function NextMilestoneCard({
 
         {/* Milestone Name */}
         <div className="text-center">
-          <h3 className="font-semibold text-xl">{nextMilestone.name}</h3>
+          <h2 className="font-semibold text-2xl">{nextMilestone.name}</h2>
           {nextMilestone.description && (
             <p className="text-sm text-muted-foreground mt-1">
               {nextMilestone.description}
             </p>
           )}
-        </div>
-
-
-        {/* Achievement Message */}
-        <div className="text-center bg-muted/30 rounded-lg">
-          <p className="text-sm text-muted-foreground">
-            <strong>{formatDistance(progressData.distanceToNext)}</strong> more miles to earn your{" "}
-            <strong>{nextMilestone.name}</strong> milestone!
-          </p>
         </div>
       </CardContent>
     </Card>

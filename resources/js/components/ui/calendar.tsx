@@ -175,15 +175,17 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
             const response = await axios.get(route('user.points', { date: formattedDate }));
             setUserPoints(response.data.points);
             setEventInfo(response.data.event);
+            return response;
         } catch (error) {
             console.error('Error fetching user points:', error);
+            throw error;
         } finally {
             setLoading(false);
         }
     }, [currentYear, currentMonth]);
 
-    const refreshCalendar = () => {
-        fetchUserPoints();
+    const refreshCalendar = async () => {
+        await fetchUserPoints();
     }
 
   // Fetch user points data

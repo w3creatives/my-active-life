@@ -8,7 +8,8 @@ export const description = 'A radial chart with a custom shape';
 
 type MilestoneRadialChartProps = {
   current: number;
-  milestone: number;
+  nextMilestone: number;
+  previousMilestone: number;
 };
 
 const chartConfig = {
@@ -22,9 +23,16 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function MilestoneRadialChart({ current, milestone }: MilestoneRadialChartProps) {
-  const remaining = Math.max(0, milestone - current);
-  const percentage = Math.min((current / milestone) * 100, 100);
+export function MilestoneRadialChart({ current, nextMilestone, previousMilestone }: MilestoneRadialChartProps) {
+  // Calculate miles remaining to next milestone
+  const remaining = Math.max(0, nextMilestone - current);
+
+  // Calculate progress between previous and next milestone
+  const totalDistanceBetweenMilestones = nextMilestone - previousMilestone;
+  const distanceFromPrevious = current - previousMilestone;
+  const percentage = totalDistanceBetweenMilestones > 0
+    ? Math.min((distanceFromPrevious / totalDistanceBetweenMilestones) * 100, 100)
+    : 0;
 
   const chartData = [
     {

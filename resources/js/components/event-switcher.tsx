@@ -23,9 +23,9 @@ export function EventSwitcher() {
       route('user.set-preferred-event'),
       { event_id: eventId },
       {
-        preserveScroll: true,
         onSuccess: () => {
           toast.success('Preferred event updated successfully');
+          router.visit(route('dashboard'));
         },
         onError: (errors) => {
           toast.error(errors.error || 'Failed to update preferred event');
@@ -34,8 +34,6 @@ export function EventSwitcher() {
       },
     );
   };
-
-  console.log(auth.participations);
 
   return (
     <SidebarMenu>
@@ -46,7 +44,7 @@ export function EventSwitcher() {
               <AppLogo />
               <div className="flex flex-col gap-0.5 leading-none">
                 <span className="text-xs">Run The Edge</span>
-                <span className="font-semibold">{preferredEvent?.name || 'Run The Edge'}</span>
+                <span className="font-semibold truncate">{preferredEvent?.name || 'Run The Edge'}</span>
               </div>
               <ChevronDown className="ml-auto" />
             </SidebarMenuButton>
