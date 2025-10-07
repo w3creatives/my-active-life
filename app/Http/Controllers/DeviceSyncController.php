@@ -10,6 +10,7 @@ use App\Models\DataSourceProfile;
 use App\Services\DataSourceService\FitbitUnsubscriber;
 use App\Services\DataSourceService\GarminUnsubscriber;
 use App\Services\DataSourceService\StravaUnsubscriber;
+use App\Services\DeviceService;
 use App\Services\EventService;
 use Carbon\Carbon;
 use Exception;
@@ -164,7 +165,7 @@ final class DeviceSyncController extends Controller
     /**
      * Disconnect a data source from the user's account
      */
-    public function disconnect(Request $request, string $sourceSlug): RedirectResponse
+    public function disconnect(Request $request, string $sourceSlug, DeviceService $deviceService): RedirectResponse
     {
         $user = $request->user();
         $dataSource = DataSource::where('short_name', $sourceSlug)->first();
@@ -187,55 +188,7 @@ final class DeviceSyncController extends Controller
 
         // Revoke access with the provider if needed
         try {
-            switch ($sourceSlug) {
-                case 'fitbit':
-                    // Call the Fitbit unsubscriber service
-                    // $unsubscriber = new FitbitUnsubscriber($user, $dataSource);
-                    // $unsubscriber->unsubscribe();
-                    break;
-                case 'garmin':
-                    // Call the Garmin unsubscriber service
-                    // $unsubscriber = new GarminUnsubscriber($user, $dataSource);
-                    // $unsubscriber->unsubscribe();
-                    break;
-                case 'strava':
-                    // Call the Strava unsubscriber service
-                    $unsubscriber = new StravaUnsubscriber($user, $dataSource);
-                    $unsubscriber->unsubscribe();
-
-                    // Additionally, try to deauthorize with Strava API directly
-                    try {
-                        // Refresh token if needed
-                        if ($profile->token_expires_at && now()->gt($profile->token_expires_at)) {
-                            $refreshResponse = $this->tracker->get($sourceSlug)->refreshToken($profile->refresh_token);
-                            if (isset($refreshResponse['access_token'])) {
-                                $profile->access_token = $refreshResponse['access_token'];
-                                $profile->refresh_token = $refreshResponse['refresh_token'] ?? $profile->refresh_token;
-                                $profile->token_expires_at = $refreshResponse['token_expires_at'] ?? $profile->token_expires_at;
-                                $profile->save();
-                            }
-                        }
-
-                        // Make deauthorization request to Strava
-                        $response = $this->tracker->get($sourceSlug)
-                            ->setAccessToken($profile->access_token)
-                            ->deauthorize();
-
-                        Log::info('Strava deauthorization successful', [
-                            'user_id' => $user->id,
-                            'response' => $response,
-                        ]);
-                    } catch (Exception $e) {
-                        Log::error('Strava deauthorization failed but continuing with profile deletion', [
-                            'error' => $e->getMessage(),
-                            'user_id' => $user->id,
-                        ]);
-                    }
-                    break;
-                case 'apple':
-                    // Apple Health disconnection is handled differently
-                    break;
-            }
+            $deviceService->revoke($profile);
 
             // Delete the profile
             $profile->delete();
