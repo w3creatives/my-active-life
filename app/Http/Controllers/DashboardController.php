@@ -57,7 +57,7 @@ final class DashboardController extends Controller
         }
 
         // Get user's total distance for current event
-        $userTotalDistance = $user->points()
+        $userTotalDistance = $user->totalPoints()
             ->where('event_id', $currentEvent->id)
             ->sum('amount');
 
@@ -87,12 +87,7 @@ final class DashboardController extends Controller
             ->first();
 
         return Inertia::render('stats/index', [
-            'eventProgress' => [
-                'eventName' => $currentEvent->name,
-                'totalDistance' => (float) $currentEvent->total_points,
-                'coveredDistance' => $userTotalDistance,
-                'userGoal' => $userGoal,
-            ],
+
             'nextMilestone' => $nextMilestone ? [
                 'id' => $nextMilestone->id,
                 'name' => $nextMilestone->name,
