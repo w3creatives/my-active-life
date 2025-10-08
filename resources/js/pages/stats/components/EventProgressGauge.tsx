@@ -165,7 +165,7 @@ export default function EventProgressGauge({ className = '', dataFor = 'you' }: 
                 <TrendingUp className="text-muted-foreground h-4 w-4" />
                 Personal Goal
               </span>
-                                  <span className="font-medium">{data.goalPercentage}%</span>
+                                  <span className="font-medium">{data.goalPercentage.toFixed(2)}%</span>
                               </div>
                               <Progress value={data.goalPercentage} className="h-2" />
                               <div className="text-muted-foreground flex justify-between text-sm">

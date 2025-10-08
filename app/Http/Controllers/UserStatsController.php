@@ -632,6 +632,7 @@ final readonly class UserStatsController
             'remainingDistance' => $remainingDistance,
             'isCompleted' => $isCompleted,
             'userGoal' => $userGoal,
+            'goalPercentage' => $percentage,
         ]);
         /*
             'nextMilestone' => $nextMilestone ? [
