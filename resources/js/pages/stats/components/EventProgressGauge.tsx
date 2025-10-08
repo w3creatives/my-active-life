@@ -140,18 +140,18 @@ export default function EventProgressGauge({ className = '', dataFor = 'you' }: 
               <Target className="text-muted-foreground h-4 w-4" />
               Event Progress
             </span>
-                              <span className="font-medium">{data.percentage}%</span>
+                              <span className="font-medium">{data.percentage.toFixed(2)}%</span>
                           </div>
                           <Progress value={data.percentage} className="h-3" />
                           <div className="grid grid-cols-2 gap-4 text-sm">
                               <div>
                                   <p className="text-muted-foreground">Completed</p>
-                                  <p className="text-primary text-2xl font-bold">{formatDistance(data.coveredDistance)}</p>
+                                  <p className="text-primary text-2xl font-bold">{formatDistance(data.coveredDistance.toFixed(2))}</p>
                                   <p className="text-muted-foreground text-xs">miles</p>
                               </div>
                               <div>
                                   <p className="text-muted-foreground">Remaining</p>
-                                  <p className="text-2xl font-bold">{formatDistance(data.remainingDistance)}</p>
+                                  <p className="text-2xl font-bold">{formatDistance(data.remainingDistance.toFixed(2))}</p>
                                   <p className="text-muted-foreground text-xs">miles</p>
                               </div>
                           </div>
@@ -186,7 +186,7 @@ export default function EventProgressGauge({ className = '', dataFor = 'you' }: 
                           <div className="grid grid-cols-1 text-center">
                               <div>
                                   <p className="text-muted-foreground text-xs tracking-wide uppercase">Event Total Distance</p>
-                                  <p className="text-lg font-bold">{formatDistance(data.totalDistance)} miles</p>
+                                  <p className="text-lg font-bold">{formatDistance(data.totalDistance.toFixed(2))} miles</p>
                               </div>
                           </div>
                       </div>

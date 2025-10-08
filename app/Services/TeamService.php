@@ -11,12 +11,15 @@ use App\Models\TeamPoint;
 use App\Repositories\TeamRepository;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 
 final class TeamService
 {
     public function __construct(
         protected TeamRepository $teamRepository
-    ) {}
+    )
+    {
+    }
 
     public function formatTeam($team, $user)
     {
@@ -97,7 +100,7 @@ final class TeamService
                    ->
             */
             ->where(function ($query) use ($eventId) {
-                if (! $eventId) {
+                if (!$eventId) {
                     return $query;
                 }
 
@@ -128,7 +131,7 @@ final class TeamService
                     $followingTextStatus = 'Following';
                     $followingStatus = 'following';
                 } else {
-                    if (! $team->public_profile) {
+                    if (!$team->public_profile) {
                         $teamFollowingRequest = $user->teamFollowingRequests()->where(['event_id' => $eventId, 'team_id' => $team->id])->first();
 
                         if ($teamFollowingRequest && $teamFollowingRequest->status === 'request_to_follow_issued') {
@@ -152,7 +155,7 @@ final class TeamService
                 unset($team->invites);
                 unset($team->owner_id);
                 $team->total_members = $team->memberships()->where('event_id', $eventId)->count();
-                $team->total_miles = (float) $team->totalPoints()->where('event_id', $eventId)->sum('amount');
+                $team->total_miles = (float)$team->totalPoints()->where('event_id', $eventId)->sum('amount');
 
                 return $team;
             });
@@ -173,8 +176,8 @@ final class TeamService
             ->simplePaginate(...$paginationArgs)
             ->through(function ($item) {
                 $team = $item->team;
-                $teamTotalDistance = (float) $item->team->totalPoints()->where('event_id', $team->event_id)->sum('amount');
-                $teamTotalPoint = (float) $team->event->total_points;
+                $teamTotalDistance = (float)$item->team->totalPoints()->where('event_id', $team->event_id)->sum('amount');
+                $teamTotalPoint = (float)$team->event->total_points;
 
                 if ($teamTotalDistance > $teamTotalPoint) {
                     $teamTotalDistance = $teamTotalPoint;
@@ -203,7 +206,7 @@ final class TeamService
     {
         // Get team's monthly points for current year only (similar to UserRepository logic)
         $currentYear = Carbon::now()->year;
-        
+
         return TeamPointMonthly::where('team_id', $team->id)
             ->where('event_id', $eventId)
             ->whereYear('date', $currentYear)
@@ -217,28 +220,28 @@ final class TeamService
 
     public function total(int $eventId, Team $team): int
     {
-        return (int) $team->totalPoints()->where('event_id', $eventId)->sum('amount');
+        return (int)$team->totalPoints()->where('event_id', $eventId)->sum('amount');
     }
 
     public function last30DaysStats(Team $team, int $eventId): array
     {
         $endDate = Carbon::now();
         $startDate = $endDate->copy()->subDays(29); // 30 days total including today
-        
+
         $stats = collect();
-        
+
         for ($date = $startDate; $date <= $endDate; $date->addDay()) {
             $dayPoints = TeamPoint::where('team_id', $team->id)
                 ->where('event_id', $eventId)
                 ->where('date', $date->format('Y-m-d'))
                 ->sum('amount');
-                
+
             $stats->push([
                 'date' => $date->format('Y-m-d'),
-                'amount' => (float) $dayPoints
+                'amount' => (float)$dayPoints
             ]);
         }
-        
+
         return ['stats' => $stats];
     }
 
@@ -247,4 +250,33 @@ final class TeamService
         $membership = $user->memberships()->where('event_id', $eventId)->first();
         return $membership ? $membership->team : null;
     }
+
+    public function userEventTeam($user, $event)
+    {
+        return Team::where(function ($query) use ($user) {
+            return $query->where('owner_id', $user->id)
+                ->orWhereHas('memberships', function ($query) use ($user) {
+                    return $query->where('user_id', $user->id);
+                });
+        })->where('event_id', $event->id)->first();
+    }
+    public function chutzpahFactor($team)
+    {
+        $teamSettings = json_decode($team->settings, true);
+
+        if (!isset($teamSettings['chutzpah_factors'])) {
+            return 1;
+        }
+        $eventSlug = Str::slug($team->event->name);
+        $chutzpahFactor = collect($teamSettings['chutzpah_factors'])->filter(function ($value, $key) use ($eventSlug) {
+            return $value[$eventSlug] ?? false;
+        })
+            ->map(function ($value, $key) use ($eventSlug) {
+                return $value[$eventSlug];
+            })
+            ->first();
+
+        return (int)$chutzpahFactor??1;
+    }
+
 }

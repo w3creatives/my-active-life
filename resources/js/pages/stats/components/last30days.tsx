@@ -86,7 +86,7 @@ export default function Last30days({ dataFor }: Last30daysProps) {
             <Skeleton className="h-4 w-full" />
           </CardHeader>
           <CardContent>
-            <div className="flex h-80 w-full items-end gap-2 px-4">
+            <div className="flex h-50 w-full items-end gap-2 px-4">
               {[40, 60, 30, 50, 70, 20, 60, 80, 55, 45, 35, 65].map((height, idx) => (
                 <Skeleton key={idx} className="w-18 rounded-md" style={{ height: `${height}%` }} />
               ))}
@@ -105,7 +105,7 @@ export default function Last30days({ dataFor }: Last30daysProps) {
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig}>
-              <ComposedChart width={800} height={320} data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <ComposedChart width={800} height={50} data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="label"

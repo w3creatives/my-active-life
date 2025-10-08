@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AmerithonPathDistance;
 use App\Models\Event;
+use App\Models\Team;
 use App\Services\TeamService;
 use App\Services\UserPointService;
 use App\Services\UserService;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 final readonly class UserStatsController
 {
@@ -23,7 +25,7 @@ final readonly class UserStatsController
         private TeamService $teamService
     ) {}
 
-    public function getUserStats(Request $request, string $type)
+    public function getUserStats(Request $request, TeamService $teamService, string $type)
     {
         if ($type === 'last30days') {
             return $this->userLast30DaysStats($request);
@@ -46,7 +48,7 @@ final readonly class UserStatsController
         }
 
         if ($type === 'progress') {
-            return $this->progressStats($request);
+            return $this->progressStats($request, $teamService);
         }
 
         return false;
@@ -206,7 +208,7 @@ final readonly class UserStatsController
         return response()->json(['data' => $data]);
     }
 
-    public function getTeamStats(Request $request, string $type)
+    public function getTeamStats(Request $request,TeamService $teamService, string $type)
     {
         if ($type === 'last30days') {
             return $this->teamLast30DaysStats($request);
@@ -229,7 +231,7 @@ final readonly class UserStatsController
         }
 
         if ($type === 'progress') {
-            return $this->progressStats($request,'team');
+            return $this->progressStats($request, $teamService, 'team');
         }
 
         return false;
@@ -568,7 +570,7 @@ final readonly class UserStatsController
         ]);
     }
 
-    public function progressStats(Request $request, $type = 'you'): JsonResponse
+    public function progressStats(Request $request,$teamService, $type = 'you'): JsonResponse
     {
         $user = $request->user();
 
@@ -582,35 +584,46 @@ final readonly class UserStatsController
             return response()->json([]);
         }
 
-        // Get user/team total distance for current event
-        if ($type === 'team') {
-            $userTotalDistance = $user->totalPoints();
-        } else {
-            $userTotalDistance = $user->totalPoints();
-        }
 
-        $userTotalDistance = $userTotalDistance->where('event_id', $currentEvent->id)
-            ->sum('amount');
+        $totalDistance = $currentEvent->total_points;
 
-        // Get user's goal for this event
         $userGoal = null;
-        $userSettings = json_decode($user->settings, true) ?? [];
-        $rtyGoals = $userSettings['rty_goals'] ?? [];
-        $eventSlug = mb_strtolower(str_replace(' ', '-', $currentEvent->name));
+        if ($type === 'team') {
 
-        foreach ($rtyGoals as $goal) {
-            if (isset($goal[$eventSlug])) {
-                $userGoal = (float) $goal[$eventSlug];
-                break;
+            $team = $teamService->userEventTeam($user, $currentEvent);
+
+            $coveredTotalDistance = $team->totalPoints()->where('event_id', $currentEvent->id)
+                ->sum('amount');
+            $chutzpahFactorUnit = $teamService->chutzpahFactor($team);
+
+            $totalDistance = $chutzpahFactorUnit * $currentEvent->total_points;
+
+        } else {
+            // Get user's goal for this event
+            $userSettings = json_decode($user->settings, true) ?? [];
+            $rtyGoals = $userSettings['rty_goals'] ?? [];
+            $eventSlug = mb_strtolower(str_replace(' ', '-', $currentEvent->name));
+
+            foreach ($rtyGoals as $goal) {
+                if (isset($goal[$eventSlug])) {
+                    $userGoal = (float) $goal[$eventSlug];
+                    break;
+                }
             }
+
+            $totalDistance = $userGoal ?? $currentEvent->total_points;
+
+            $coveredTotalDistance = $user->totalPoints()->where('event_id', $currentEvent->id)
+                ->sum('amount');
         }
 
-        $totalDistance = (float) $currentEvent->total_points;
-        $coveredDistance = $userTotalDistance;
+        $totalDistance = (float) $totalDistance;
+        $coveredDistance = (float) $coveredTotalDistance;
 
-        $percentage = number_format(floor(($coveredDistance / $totalDistance) * 100),2);
-        $remainingDistance = number_format(round($totalDistance - $coveredDistance),2);
+        $percentage = (float)(($coveredDistance / $totalDistance) * 100);
+        $remainingDistance = (float)($totalDistance - $coveredDistance);
         $isCompleted = $coveredDistance >= $totalDistance;
+
         return response()->json([
             'eventName' => $currentEvent->name,
             'totalDistance' => $totalDistance,
