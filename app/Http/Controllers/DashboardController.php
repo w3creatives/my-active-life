@@ -56,55 +56,8 @@ final class DashboardController extends Controller
             return redirect()->route('preferred.event');
         }
 
-        // Get user's total distance for current event
-        $userTotalDistance = $user->totalPoints()
-            ->where('event_id', $currentEvent->id)
-            ->sum('amount');
 
-        // Get user's goal for this event
-        $userGoal = null;
-        $userSettings = json_decode($user->settings, true) ?? [];
-        $rtyGoals = $userSettings['rty_goals'] ?? [];
-        $eventSlug = mb_strtolower(str_replace(' ', '-', $currentEvent->name));
-
-        foreach ($rtyGoals as $goal) {
-            if (isset($goal[$eventSlug])) {
-                $userGoal = (float) $goal[$eventSlug];
-                break;
-            }
-        }
-
-        // Find next milestone
-        $nextMilestone = EventMilestone::where('event_id', $currentEvent->id)
-            ->where('distance', '>', $userTotalDistance)
-            ->orderBy('distance')
-            ->first();
-
-        // Find previous milestone for progress calculation
-        $previousMilestone = EventMilestone::where('event_id', $currentEvent->id)
-            ->where('distance', '<=', $userTotalDistance)
-            ->orderBy('distance', 'desc')
-            ->first();
-
-        return Inertia::render('stats/index', [
-            'eventProgress' => [
-                'eventName' => $currentEvent->name,
-                'totalDistance' => (float) $currentEvent->total_points,
-                'coveredDistance' => $userTotalDistance,
-                'userGoal' => $userGoal,
-            ],
-            'nextMilestone' => $nextMilestone ? [
-                'id' => $nextMilestone->id,
-                'name' => $nextMilestone->name,
-                'distance' => (float) $nextMilestone->distance,
-                'description' => $nextMilestone->description,
-                'logo' => $nextMilestone->logo,
-                'data' => json_decode($nextMilestone->data, true),
-                'userDistance' => $userTotalDistance,
-                'previousMilestoneDistance' => $previousMilestone ? (float) $previousMilestone->distance : 0,
-                'eventName' => $currentEvent->name,
-            ] : null,
-        ]);
+        return Inertia::render('stats/index');
     }
 
     public function tutorials(): Response

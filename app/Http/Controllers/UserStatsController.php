@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AmerithonPathDistance;
 use App\Models\Event;
+use App\Models\EventMilestone;
 use App\Models\Team;
 use App\Services\TeamService;
 use App\Services\UserPointService;
@@ -15,7 +16,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 
 final readonly class UserStatsController
 {
@@ -49,6 +49,10 @@ final readonly class UserStatsController
 
         if ($type === 'progress') {
             return $this->progressStats($request, $teamService);
+        }
+
+        if ($type === 'next-milestone') {
+            return $this->nextMilestone($request, $teamService);
         }
 
         return false;
@@ -208,7 +212,7 @@ final readonly class UserStatsController
         return response()->json(['data' => $data]);
     }
 
-    public function getTeamStats(Request $request,TeamService $teamService, string $type)
+    public function getTeamStats(Request $request, TeamService $teamService, string $type)
     {
         if ($type === 'last30days') {
             return $this->teamLast30DaysStats($request);
@@ -232,6 +236,10 @@ final readonly class UserStatsController
 
         if ($type === 'progress') {
             return $this->progressStats($request, $teamService, 'team');
+        }
+
+        if ($type === 'next-milestone') {
+            return $this->nextMilestone($request, $teamService, 'team');
         }
 
         return false;
@@ -570,7 +578,7 @@ final readonly class UserStatsController
         ]);
     }
 
-    public function progressStats(Request $request,$teamService, $type = 'you'): JsonResponse
+    public function progressStats(Request $request, $teamService, $type = 'you'): JsonResponse
     {
         $user = $request->user();
 
@@ -583,7 +591,6 @@ final readonly class UserStatsController
         if (! $currentEvent) {
             return response()->json([]);
         }
-
 
         $totalDistance = $currentEvent->total_points;
 
@@ -620,9 +627,107 @@ final readonly class UserStatsController
         $totalDistance = (float) $totalDistance;
         $coveredDistance = (float) $coveredTotalDistance;
 
-        $percentage = (float)(($coveredDistance / $totalDistance) * 100);
-        $remainingDistance = (float)($totalDistance - $coveredDistance);
+        $percentage = (float) (($coveredDistance / $totalDistance) * 100);
+        $remainingDistance = ($totalDistance - $coveredDistance);
+        $remainingDistance = (max($remainingDistance, 0));
         $isCompleted = $coveredDistance >= $totalDistance;
+
+        return response()->json([
+            'eventName' => $currentEvent->name,
+            'totalDistance' => $totalDistance,
+            'coveredDistance' => $coveredDistance,
+            'percentage' => $percentage,
+            'remainingDistance' => $remainingDistance,
+            'isCompleted' => $isCompleted,
+            'userGoal' => $userGoal,
+            'goalPercentage' => $percentage,
+        ]);
+        /*
+            'nextMilestone' => $nextMilestone ? [
+        'id' => $nextMilestone->id,
+        'name' => $nextMilestone->name,
+        'distance' => (float) $nextMilestone->distance,
+        'description' => $nextMilestone->description,
+        'logo' => $nextMilestone->logo,
+        'data' => json_decode($nextMilestone->data, true),
+        'userDistance' => $userTotalDistance,
+        'previousMilestoneDistance' => $previousMilestone ? (float) $previousMilestone->distance : 0,
+        'eventName' => $currentEvent->name,
+    ] : null,*/
+    }
+
+    public function nextMilestone(Request $request, $teamService, $type = 'you'): JsonResponse
+    {
+        $user = $request->user();
+
+        // Get current event
+        $currentEvent = null;
+        if ($user->preferred_event_id) {
+            $currentEvent = Event::find($user->preferred_event_id);
+        }
+
+        if (! $currentEvent) {
+            return response()->json([]);
+        }
+
+        $totalDistance = $currentEvent->total_points;
+
+        $userGoal = null;
+        if ($type === 'team') {
+            $team = $teamService->userEventTeam($user, $currentEvent);
+            $coveredTotalDistance = $team->totalPoints()->where('event_id', $currentEvent->id)
+                ->sum('amount');
+        } else {
+            $coveredTotalDistance = $user->totalPoints()->where('event_id', $currentEvent->id)
+                ->sum('amount');
+        }
+
+        $totalDistance = (float) $totalDistance;
+
+        // Find next milestone
+        $nextMilestone = EventMilestone::where('event_id', $currentEvent->id)
+            ->where('distance', '>', $coveredTotalDistance)
+            ->orderBy('distance')
+            ->first();
+
+        // Find previous milestone for progress calculation
+        $previousMilestone = EventMilestone::where('event_id', $currentEvent->id)
+            ->where('distance', '<=', $coveredTotalDistance)
+            ->orderBy('distance', 'desc')
+            ->first();
+
+        $data = [
+            'coveredDistance' => $coveredTotalDistance,
+            'previousMilestoneDistance' => $previousMilestone ? (float) $previousMilestone->distance : 0,
+            'eventName' => $currentEvent->name,
+            'milestone' => [],
+            'distanceToGo' => 0,
+            'segmentProgress' => 0,
+            'progress' => 100,
+            'segmentProgress' => 100,
+        ];
+
+        if ($nextMilestone) {
+
+            $distanceToGo = $nextMilestone->distance - $coveredTotalDistance;
+
+            $segmentStart = $data['previousMilestoneDistance'];
+            $segmentTotal = $nextMilestone->distance - $segmentStart;
+            $segmentCovered = $coveredTotalDistance - $segmentStart;
+            $segmentProgress = $segmentTotal > 0 ? ($segmentCovered / $segmentTotal) * 100 : 100;
+
+            $data['milestone']['id'] = $nextMilestone->id;
+            $data['milestone']['name'] = $nextMilestone->name;
+            $data['milestone']['distance'] = (float) $nextMilestone->distance;
+            $data['milestone']['description'] = $nextMilestone->description;
+            $data['milestone']['logo'] = $nextMilestone->logo;
+            $data['milestone']['data'] = json_decode($nextMilestone->data, true);
+            $data['distanceToGo'] = $distanceToGo;
+            $data['segmentProgress'] = $segmentProgress;
+            $data['progress'] = ($coveredTotalDistance / $nextMilestone->distance) * 100;
+        }
+
+        return response()->json($data);
 
         return response()->json([
             'eventName' => $currentEvent->name,

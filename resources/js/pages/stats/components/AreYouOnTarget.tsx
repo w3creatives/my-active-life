@@ -156,7 +156,7 @@ export default function AreYouOnTarget({ dataFor = 'you' }: AreYouOnTargetProps)
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <Target className={`h-5 w-5 ${
-                targetStats.statusColor === 'green' ? 'text-green-500' : 
+                targetStats.statusColor === 'green' ? 'text-green-500' :
                 targetStats.statusColor === 'red' ? 'text-red-500' : 'text-gray-500'
               }`} />
               <CardTitle className="text-lg">Are You On Target?</CardTitle>
@@ -168,7 +168,7 @@ export default function AreYouOnTarget({ dataFor = 'you' }: AreYouOnTargetProps)
           <CardContent className="space-y-4">
             {/* Status Badge */}
             <div className="flex items-center justify-between">
-              <Badge 
+              <Badge
                 variant={targetStats.statusColor === 'green' ? 'default' : 'secondary'}
                 className={`${
                   targetStats.statusColor === 'green' ? 'bg-green-500 hover:bg-green-600' :
@@ -181,7 +181,7 @@ export default function AreYouOnTarget({ dataFor = 'you' }: AreYouOnTargetProps)
               </Badge>
               {targetData && (
                 <div className="text-sm text-muted-foreground">
-                  {targetData.days_remaining} days left
+                  {targetData.days_remaining.toFixed(2)} days left
                 </div>
               )}
             </div>
@@ -189,7 +189,7 @@ export default function AreYouOnTarget({ dataFor = 'you' }: AreYouOnTargetProps)
             {/* Gauge Chart */}
             {targetData && (
               <div className="flex justify-center">
-                <GaugeChart 
+                <GaugeChart
                   value={targetData.on_target_percentage}
                   max={150} // Show up to 150% so we can see overachievement
                   color={targetStats.gaugeColor}

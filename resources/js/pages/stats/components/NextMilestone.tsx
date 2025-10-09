@@ -2,7 +2,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GaugeChart } from '@/components/ui/gauge-chart';
 import { ExternalLink, Image, MapPin, Target } from 'lucide-react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
+import { usePage } from '@inertiajs/react';
+import { SharedData } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Milestone {
   id: number;
@@ -26,22 +30,32 @@ interface NextMilestoneProps {
 }
 
 export default function NextMilestone({ milestone, userDistance, previousMilestoneDistance = 0, eventName, className = '', dataFor = 'you' }: NextMilestoneProps) {
-  const { progress, distanceToGo, segmentProgress } = useMemo(() => {
-    if (!milestone) {
-      return { progress: 100, distanceToGo: 0, segmentProgress: 100 };
-    }
 
-    const distanceToGo = Math.max(milestone.distance - userDistance, 0);
-    const progress = Math.min((userDistance / milestone.distance) * 100, 100);
+    const { auth } = usePage<SharedData>().props;
+    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState<Milestone | null>(null);
 
-    // Calculate progress within the current milestone segment
-    const segmentStart = previousMilestoneDistance;
-    const segmentTotal = milestone.distance - segmentStart;
-    const segmentCovered = Math.max(userDistance - segmentStart, 0);
-    const segmentProgress = segmentTotal > 0 ? Math.min((segmentCovered / segmentTotal) * 100, 100) : 100;
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const routeName = dataFor === 'team' ? 'teamstats' : 'userstats';
+            const response = await axios.get(route(routeName, ['next-milestone']), {
+                params: {
+                    event_id: auth.preferred_event.id,
+                    user_id: auth.user.id,
+                },
+            });
+            setData(response.data);
+            setLoading(false);
+        } catch (err) {
+            console.error('Error fetching data:', err);
+            setLoading(false);
+        }
+    };
 
-    return { progress, distanceToGo, segmentProgress };
-  }, [milestone, userDistance, previousMilestoneDistance]);
+    useEffect(() => {
+        fetchData();
+    }, [dataFor]);
 
   const formatDistance = (distance: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -50,7 +64,59 @@ export default function NextMilestone({ milestone, userDistance, previousMilesto
     }).format(distance);
   };
 
-  if (!milestone) {
+  if(loading) {
+      return (
+          <Card className={`${className}`}>
+              <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2 text-xl">
+                          <Skeleton className="text-lg font-bold h-4 w-full"/>
+                          <Skeleton className="h-4 w-full" />
+                      </CardTitle>
+
+                  </div>
+                  <CardDescription><Skeleton className="h-4 w-full" /></CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                  {/* Main Progress */}
+                  <div className="space-y-3">
+                      <div className="flex items-center justify-between text-sm">
+            <span className="flex items-center gap-1">
+
+               <Skeleton className="h-4 w-full" />
+            </span>
+                          <span className="font-medium"><Skeleton className="h-4 w-full" /></span>
+                      </div>
+                      <Skeleton className="h-3 w-full" />
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                              <div className="text-muted-foreground"> <Skeleton className="h-4 w-full" /></div>
+                              <div className="text-primary text-2xl font-bold"><Skeleton className="h-4 w-full" /></div>
+                              <div className="text-muted-foreground text-xs"> <Skeleton className="h-4 w-full" /></div>
+                          </div>
+                          <div>
+                              <div className="text-muted-foreground"> <Skeleton className="h-4 w-full" /></div>
+                              <div className="text-2xl font-bold"><Skeleton className="h-4 w-full" /></div>
+                              <div className="text-muted-foreground text-xs"> <Skeleton className="h-4 w-full" /></div>
+                          </div>
+                      </div>
+                  </div>
+
+                  {/* Event Total Information */}
+                  <div className="border-t pt-4">
+                      <div className="grid grid-cols-1 text-center">
+                          <div>
+                              <div className="text-muted-foreground text-xs tracking-wide uppercase"><Skeleton className="text-lg font-bold h-4 w-full"/></div>
+                              <Skeleton className="text-lg font-bold h-4 w-full"/>
+                          </div>
+                      </div>
+                  </div>
+              </CardContent>
+          </Card>
+      );
+  }
+
+  if (!data.milestone) {
     return (
       <Card className={`${className}`}>
         <CardHeader>
@@ -80,69 +146,69 @@ export default function NextMilestone({ milestone, userDistance, previousMilesto
             Your Next Milestone
           </CardTitle>
         </div>
-        <CardDescription>Next landmark on your {eventName} journey</CardDescription>
+        <CardDescription>Next landmark on your {data.eventName} journey</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Milestone Info */}
         <div className="flex gap-4">
-          {milestone.logo && (
+          {data.milestone.logo && (
             <div className="flex-shrink-0">
-              <img src={milestone.logo} alt={milestone.name} className="bg-muted h-16 w-16 rounded-lg object-contain p-2" />
+              <img src={data.milestone.logo} alt={data.milestone.name} className="bg-muted h-16 w-16 rounded-lg object-contain p-2" />
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="mb-1 text-xl font-semibold">{milestone.name}</h3>
+            <h3 className="mb-1 text-xl font-semibold">{data.milestone.name}</h3>
             <p className="text-muted-foreground mb-2 text-sm">
-              Mile {formatDistance(milestone.distance)} of {eventName}
+              Mile {formatDistance(data.milestone.distance)} of {data.eventName}
             </p>
-            {milestone.description && <p className="text-muted-foreground text-sm">{milestone.description}</p>}
+            {data.milestone.description && <p className="text-muted-foreground text-sm">{data.milestone.description}</p>}
           </div>
         </div>
 
         {/* Gauge Chart */}
         <div className="flex flex-col items-center py-4">
           <GaugeChart
-            value={Math.max(userDistance - previousMilestoneDistance, 0)}
-            max={milestone.distance - previousMilestoneDistance}
+            value={Math.max(data.coveredDistance - data.previousMilestoneDistance, 0)}
+            max={data.milestone.distance - data.previousMilestoneDistance}
             label="miles to go"
-            description={`Progress to ${milestone.name}`}
+            description={`Progress to ${data.milestone.name}`}
             color="hsl(var(--primary))"
             size={180}
             className="mb-2"
           />
           <div className="text-muted-foreground mt-2 flex w-full justify-between text-xs">
-            <span>Mile {formatDistance(previousMilestoneDistance)}</span>
-            <span className="font-medium">{segmentProgress.toFixed(1)}% complete</span>
-            <span>Mile {formatDistance(milestone.distance)}</span>
+            <span>Mile {formatDistance(data.previousMilestoneDistance)}</span>
+            <span className="font-medium">{data.segmentProgress.toFixed(1)}% complete</span>
+            <span>Mile {formatDistance(data.milestone.distance)}</span>
           </div>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4 pt-2">
           <div className="bg-muted/50 rounded-lg p-3 text-center">
-            <p className="text-primary text-2xl font-bold">{formatDistance(userDistance)}</p>
+            <p className="text-primary text-2xl font-bold">{formatDistance(data.coveredDistance)}</p>
             <p className="text-muted-foreground text-xs">Miles Completed</p>
           </div>
           <div className="bg-muted/50 rounded-lg p-3 text-center">
-            <p className="text-2xl font-bold">{formatDistance(distanceToGo)}</p>
+            <p className="text-2xl font-bold">{formatDistance(data.distanceToGo)}</p>
             <p className="text-muted-foreground text-xs">Miles Remaining</p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        {milestone.data && (
+        {data.milestone.data && (
           <div className="flex gap-2 pt-2">
-            {milestone.data.flyover_url && (
+            {data.milestone.data.flyover_url && (
               <Button variant="outline" size="sm" className="flex-1" asChild>
-                <a href={milestone.data.flyover_url} target="_blank" rel="noopener noreferrer">
+                <a href={data.milestone.data.flyover_url} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="mr-1 h-4 w-4" />
                   View Flyover
                 </a>
               </Button>
             )}
-            {milestone.data.landmark_image && (
+            {data.milestone.data.landmark_image && (
               <Button variant="outline" size="sm" className="flex-1" asChild>
-                <a href={milestone.data.landmark_image} target="_blank" rel="noopener noreferrer">
+                <a href={data.milestone.data.landmark_image} target="_blank" rel="noopener noreferrer">
                   <Image className="mr-1 h-4 w-4" />
                   View Image
                 </a>
@@ -152,11 +218,11 @@ export default function NextMilestone({ milestone, userDistance, previousMilesto
         )}
 
         {/* Milestone Achievement Preview */}
-        {distanceToGo < 10 && (
+        {data.distanceToGo < 10 && (
           <div className="bg-primary/5 border-primary/20 rounded-lg border p-3">
             <p className="text-primary mb-1 text-sm font-medium">🎉 Almost there!</p>
             <p className="text-muted-foreground text-xs">
-              Just {formatDistance(distanceToGo)} miles until you reach {milestone.name}!
+              Just {formatDistance(data.distanceToGo)} miles until you reach {data.milestone.name}!
             </p>
           </div>
         )}

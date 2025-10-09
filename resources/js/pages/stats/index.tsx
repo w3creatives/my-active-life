@@ -82,10 +82,7 @@ export default function Stats() {
           />
 
           <NextMilestone
-            milestone={nextMilestone}
-            userDistance={nextMilestone?.userDistance || eventProgress.coveredDistance}
-            previousMilestoneDistance={nextMilestone?.previousMilestoneDistance || 0}
-            eventName={nextMilestone?.eventName || eventProgress.eventName}
+
             dataFor={dataFor}
           />
 
