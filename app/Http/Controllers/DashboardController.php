@@ -68,9 +68,12 @@ final class DashboardController extends Controller
     /**
      * Get tutorials data for progressive loading.
      */
-    public function getTutorialsData(): JsonResponse
+    public function getTutorialsData(Request $request): JsonResponse
     {
-        $tutorials = GetEventTutorials::run(['event_id' => 64]);
+        $user = $request->user();
+        $eventId = $user->preferred_event_id ?? $user->event_participations()->first()?->event_id;
+
+        $tutorials = GetEventTutorials::run(['event_id' => $eventId]);
 
         return response()->json([
             'tutorials' => $tutorials,
