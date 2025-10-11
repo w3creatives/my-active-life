@@ -105,7 +105,7 @@ export default function AreYouOnTarget({ dataFor = 'you' }: AreYouOnTargetProps)
   const formatDistance = (distance: number) => {
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 1,
+      maximumFractionDigits:2,
     }).format(distance);
   };
 

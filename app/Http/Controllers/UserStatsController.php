@@ -414,8 +414,10 @@ final readonly class UserStatsController
 
         [$achievementData, $totalPoints, $yearwisePoints] = $this->teamService->achievements($event, [$today, $startOfMonth, $endOfMonth, $startOfWeek, $endOfWeek], $team);
 
+        $teamAchievement = $this->teamService->teamAchievement($team);
+
         $data = [
-            'achievement' => $achievementData,
+            'achievement' => $teamAchievement,
             'miles' => [
                 'total' => $totalPoints,
                 'chart' => $yearwisePoints,
@@ -496,11 +498,11 @@ final readonly class UserStatsController
         return response()->json([
             'current_distance' => $currentDistance,
             'target_goal' => $targetGoal,
-            'on_target_mileage' => round($onTargetMileage, 2),
-            'on_target_percentage' => round($onTargetPercentage, 2),
+            'on_target_mileage' => (float)($onTargetMileage),
+            'on_target_percentage' => (float)($onTargetPercentage),
             'days_remaining' => $daysRemaining,
-            'daily_average_needed' => round($neededDailyAverage, 2),
-            'current_daily_average' => round($currentDailyAverage, 2),
+            'daily_average_needed' => (float)($neededDailyAverage),
+            'current_daily_average' => (float)($currentDailyAverage),
             'is_on_track' => $onTargetPercentage >= 100,
             'goal_indicator' => $goalMessage['indicator'] ?? '',
             'goal_message' => $goalMessage['message'] ?? '',
@@ -565,11 +567,11 @@ final readonly class UserStatsController
         return response()->json([
             'current_distance' => $currentDistance,
             'target_goal' => $targetGoal,
-            'on_target_mileage' => round($onTargetMileage, 2),
-            'on_target_percentage' => round($onTargetPercentage, 2),
+            'on_target_mileage' => (float)($onTargetMileage),
+            'on_target_percentage' => (float)($onTargetPercentage),
             'days_remaining' => $daysRemaining,
-            'daily_average_needed' => round($neededDailyAverage, 2),
-            'current_daily_average' => round($currentDailyAverage, 2),
+            'daily_average_needed' => (float)($neededDailyAverage),
+            'current_daily_average' => (float)($currentDailyAverage),
             'is_on_track' => $onTargetPercentage >= 100,
             'goal_indicator' => $goalMessage['indicator'] ?? '',
             'goal_message' => $goalMessage['message'] ?? '',
@@ -642,18 +644,6 @@ final readonly class UserStatsController
             'userGoal' => $userGoal,
             'goalPercentage' => $percentage,
         ]);
-        /*
-            'nextMilestone' => $nextMilestone ? [
-        'id' => $nextMilestone->id,
-        'name' => $nextMilestone->name,
-        'distance' => (float) $nextMilestone->distance,
-        'description' => $nextMilestone->description,
-        'logo' => $nextMilestone->logo,
-        'data' => json_decode($nextMilestone->data, true),
-        'userDistance' => $userTotalDistance,
-        'previousMilestoneDistance' => $previousMilestone ? (float) $previousMilestone->distance : 0,
-        'eventName' => $currentEvent->name,
-    ] : null,*/
     }
 
     public function nextMilestone(Request $request, $teamService, $type = 'you'): JsonResponse
@@ -728,29 +718,6 @@ final readonly class UserStatsController
         }
 
         return response()->json($data);
-
-        return response()->json([
-            'eventName' => $currentEvent->name,
-            'totalDistance' => $totalDistance,
-            'coveredDistance' => $coveredDistance,
-            'percentage' => $percentage,
-            'remainingDistance' => $remainingDistance,
-            'isCompleted' => $isCompleted,
-            'userGoal' => $userGoal,
-            'goalPercentage' => $percentage,
-        ]);
-        /*
-            'nextMilestone' => $nextMilestone ? [
-        'id' => $nextMilestone->id,
-        'name' => $nextMilestone->name,
-        'distance' => (float) $nextMilestone->distance,
-        'description' => $nextMilestone->description,
-        'logo' => $nextMilestone->logo,
-        'data' => json_decode($nextMilestone->data, true),
-        'userDistance' => $userTotalDistance,
-        'previousMilestoneDistance' => $previousMilestone ? (float) $previousMilestone->distance : 0,
-        'eventName' => $currentEvent->name,
-    ] : null,*/
     }
 
     private function getGoalMessage($attitude, $onTargetPercentage, $expectedFinishDate): array

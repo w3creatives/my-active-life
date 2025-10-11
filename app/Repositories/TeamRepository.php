@@ -14,6 +14,36 @@ final class TeamRepository
         return Team::find($id);
     }
 
+    public function teamAchievement($team)
+    {
+        $achievementData = [
+            'best_day' => [
+                'achievement' => 'best_day',
+                'accomplishment' => null,
+                'date' => null,
+            ],
+            'best_week' => [
+                'achievement' => 'best_week',
+                'accomplishment' => null,
+                'date' => null,
+            ],
+            'best_month' => [
+                'achievement' => 'best_month',
+                'accomplishment' => null,
+                'date' => null,
+            ],
+        ];
+
+        $achievements = $team->achievements()->select(['accomplishment', 'date', 'achievement'])->hasEvent($team->event_id)->latest('accomplishment')->get();
+
+        foreach ($achievements as $achievement) {
+            $achievementData[$achievement->achievement]['accomplishment'] = $achievement->accomplishment;
+            $achievementData[$achievement->achievement]['date'] = $achievement->date;
+        }
+
+        return $achievementData;
+    }
+
     public function achievements($event, $dateRange, $team)
     {
         $eventId = $event->id;

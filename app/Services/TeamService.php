@@ -59,6 +59,11 @@ final class TeamService
         return $this->teamRepository->achievements($event, $dateRange, $team);
     }
 
+    public function teamAchievement($team)
+    {
+        return $this->teamRepository->teamAchievement($team);
+    }
+
     public function followingRequests(User $user, int $eventId, int $page = 1)
     {
         return $user->teamFollowingRequests()->where('event_id', $eventId)->with('team')->simplePaginate(100);
@@ -218,9 +223,9 @@ final class TeamService
             });
     }
 
-    public function total(int $eventId, Team $team): int
+    public function total(int $eventId, Team $team): float
     {
-        return (int)$team->totalPoints()->where('event_id', $eventId)->sum('amount');
+        return (float)$team->totalPoints()->where('event_id', $eventId)->sum('amount');
     }
 
     public function last30DaysStats(Team $team, int $eventId): array

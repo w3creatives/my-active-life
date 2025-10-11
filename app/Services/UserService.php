@@ -165,8 +165,8 @@ final class UserService
         return $this->userRepository->getMonthlyPoints($eventId, $user);
     }
 
-    public function total(int $eventId, User $user): int
+    public function total(int $eventId, User $user): float
     {
-        return (int) $user->totalPoints()->where('event_id', $eventId)->sum('amount');
+        return (float) $user->totalPoints()->where('event_id', $eventId)->sum('amount');
     }
 }
