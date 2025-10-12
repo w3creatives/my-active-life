@@ -59,6 +59,11 @@ final class TeamService
         return $this->teamRepository->achievements($event, $dateRange, $team);
     }
 
+    public function currentAchievements($event, $dateRange, $team)
+    {
+        return $this->teamRepository->currentAchievements($event, $dateRange, $team);
+    }
+
     public function teamAchievement($team)
     {
         return $this->teamRepository->teamAchievement($team);

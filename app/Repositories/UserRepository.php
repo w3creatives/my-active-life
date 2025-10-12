@@ -219,7 +219,7 @@ final class UserRepository
         $currentYear = Carbon::now()->year;
         $currentYearStart = Carbon::create($currentYear, 1, 1)->startOfDay();
         $currentYearEnd = Carbon::create($currentYear, 12, 31)->endOfDay();
-        
+
         // Use the intersection of event dates and current year
         $startDate = $eventStartDate->max($currentYearStart);
         $endDate = $eventEndDate->min($currentYearEnd);
@@ -255,5 +255,38 @@ final class UserRepository
 
                 return $item;
             });
+    }
+
+    public function currentAchievements($eventId, $dateRange, $user)
+    {
+
+        [$today, $startOfMonth, $endOfMonth, $startOfWeek, $endOfWeek] = $dateRange;
+
+        $dayPoint = $user->points()->where('event_id', $eventId)->where('date', $today)->sum('amount');
+        $weekPoint = $user->points()->where('event_id', $eventId)->where('date', '>=', $startOfWeek)->where('date', '<=', $endOfWeek)->sum('amount');
+        $monthPoint = $user->points()->where('event_id', $eventId)->where('date', '>=', $startOfMonth)->where('date', '<=', $endOfMonth)->sum('amount');
+
+
+        $achievementData = [];
+
+        $achievementData['current_day'] = [
+            'achievement' => 'day',
+            'accomplishment' => $dayPoint,
+            'date' => $today,
+        ];
+
+        $achievementData['current_week'] = [
+            'achievement' => 'week',
+            'accomplishment' => $weekPoint,
+            'date' => $endOfWeek,
+        ];
+
+        $achievementData['current_month'] = [
+            'achievement' => 'month',
+            'accomplishment' => $monthPoint,
+            'date' => $endOfMonth,
+        ];
+
+        return $achievementData;
     }
 }

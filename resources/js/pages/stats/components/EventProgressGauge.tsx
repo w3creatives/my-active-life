@@ -143,22 +143,22 @@ export default function EventProgressGauge({ className = '', dataFor = 'you' }: 
                               <span className="font-medium">{data.percentage.toFixed(2)}%</span>
                           </div>
                           <Progress value={data.percentage} className="h-3" />
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                              <div>
-                                  <p className="text-muted-foreground">Completed</p>
-                                  <p className="text-primary text-2xl font-bold">{formatDistance(data.coveredDistance.toFixed(2))}</p>
-                                  <p className="text-muted-foreground text-xs">miles</p>
-                              </div>
-                              <div>
-                                  <p className="text-muted-foreground">Remaining</p>
-                                  <p className="text-2xl font-bold">{formatDistance(data.remainingDistance.toFixed(2))}</p>
-                                  <p className="text-muted-foreground text-xs">miles</p>
-                              </div>
+
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm space-y-10">
+                          <div>
+                              <p className="text-muted-foreground">Completed</p>
+                              <p className="text-primary text-2xl font-bold">{formatDistance(data.coveredDistance.toFixed(2))}</p>
+                              <p className="text-muted-foreground text-xs">miles</p>
+                          </div>
+                          <div>
+                              <p className="text-muted-foreground">Remaining</p>
+                              <p className="text-2xl font-bold">{formatDistance(data.remainingDistance.toFixed(2))}</p>
+                              <p className="text-muted-foreground text-xs">miles</p>
                           </div>
                       </div>
-
                       {/* User Goal Progress (if set) */}
-                      {data.userGoal && data.goalPercentage !== null && (
+                      { /*data.userGoal && data.goalPercentage !== null && (
                           <div className="space-y-3 border-t pt-4">
                               <div className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-1">
@@ -179,7 +179,7 @@ export default function EventProgressGauge({ className = '', dataFor = 'you' }: 
                                   </Badge>
                               )}
                           </div>
-                      )}
+                      ) */}
 
                       {/* Event Total Information */}
                       <div className="border-t pt-4">

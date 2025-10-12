@@ -56,8 +56,15 @@ final class DashboardController extends Controller
             return redirect()->route('preferred.event');
         }
 
+        $team = Team::where(function ($query) use ($user) {
+            return $query->where('owner_id', $user->id)
+                ->orWhereHas('memberships', function ($query) use ($user) {
+                    return $query->where('user_id', $user->id);
+                });
+        })->where('event_id', $user->preferred_event_id)->first();
 
-        return Inertia::render('stats/index');
+
+        return Inertia::render('stats/index',['team' => $team]);
     }
 
     public function tutorials(): Response

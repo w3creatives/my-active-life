@@ -37,6 +37,11 @@ final class UserService
         return $this->userRepository->achievements($event, $dateRange, $user);
     }
 
+    public function currentAchievements($event, $dateRange, $user)
+    {
+        return $this->userRepository->currentAchievements($event, $dateRange, $user);
+    }
+
     public function createShopifyUser($sopifyOrder, $data, $metafields)
     {
         if (! $data || ! (isset($metafields['subtitle']))) {

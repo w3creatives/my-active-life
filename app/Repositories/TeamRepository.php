@@ -155,4 +155,36 @@ final class TeamRepository
             DB::table($table->table_name)->where('team_id', $teamId)->delete();
         }
     }
+
+    public function currentAchievements($eventId, $dateRange, $team)
+    {
+
+        [$today, $startOfMonth, $endOfMonth, $startOfWeek, $endOfWeek] = $dateRange;
+
+        $dayPoint = $team->points()->where('event_id', $eventId)->where('date', $today)->sum('amount');
+        $weekPoint = $team->points()->where('event_id', $eventId)->where('date', '>=', $startOfWeek)->where('date', '<=', $endOfWeek)->sum('amount');
+        $monthPoint = $team->points()->where('event_id', $eventId)->where('date', '>=', $startOfMonth)->where('date', '<=', $endOfMonth)->sum('amount');
+
+        $data = [];
+
+        $data['current_day'] = [
+            'achievement' => 'day',
+            'accomplishment' => $dayPoint,
+            'date' => $today,
+        ];
+
+        $data['current_week'] = [
+            'achievement' => 'week',
+            'accomplishment' => $weekPoint,
+            'date' => $endOfWeek,
+        ];
+
+        $data['current_month'] = [
+            'achievement' => 'month',
+            'accomplishment' => $monthPoint,
+            'date' => $endOfMonth,
+        ];
+
+        return $data;
+    }
 }

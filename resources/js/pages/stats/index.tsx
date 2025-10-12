@@ -52,7 +52,9 @@ interface StatsPageProps extends SharedData {
 }
 
 export default function Stats() {
-  const { auth, eventProgress, nextMilestone } = usePage<StatsPageProps>().props;
+  const { auth, team, eventProgress, nextMilestone } = usePage<StatsPageProps>().props;
+  const teamData = team as { name?: string } | null;
+
   const [dataFor, setDataFor] = useState('you');
 
   return (
@@ -63,17 +65,17 @@ export default function Stats() {
         <div className="flex justify-between gap-5">
           <div className="page-title">
             <h1 className="text-4xl font-normal">
-              {auth.user.display_name}'s {auth.preferred_event.name} Journey
+              {auth.user.display_name}'s {auth.preferred_event.name} Journey  {teamData?.name}
             </h1>
           </div>
-          <div className="flex gap-2">
+            {teamData && (<div className="flex gap-2">
             <Button variant={dataFor === 'you' ? 'default' : 'secondary'} onClick={() => setDataFor('you')}>
               <User /> You
             </Button>
             <Button variant={dataFor === 'team' ? 'default' : 'secondary'} onClick={() => setDataFor('team')}>
               <Users /> Team
             </Button>
-          </div>
+          </div>)}
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">

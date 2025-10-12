@@ -9,8 +9,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 type MonthlyPointsData = {
-  label: string;
-  amount: number;
+    label: string;
+    amount: number;
+};
+type PointStatData = {
+    current_day: object;
+    current_week: object;
+    current_month:object;
 };
 
 export const description = 'A bar chart';
@@ -29,7 +34,8 @@ interface MonthlyPointsProps {
 export default function MonthlyPoints({ dataFor }: MonthlyPointsProps) {
   const { auth } = usePage<SharedData>().props;
   const [loading, setLoading] = useState(true);
-  const [monthlies, setMonthlies] = useState<MonthlyPointsData[]>([]);
+    const [monthlies, setMonthlies] = useState<MonthlyPointsData[]>([]);
+    const [pointStat, setPointStat] = useState<PointStatData[]>([]);
 
   useEffect(() => {
     const fetchMonthlies = async () => {
@@ -42,7 +48,8 @@ export default function MonthlyPoints({ dataFor }: MonthlyPointsProps) {
             user_id: auth.user.id,
           },
         });
-        setMonthlies(response.data);
+          setMonthlies(response.data.data);
+          setPointStat(response.data.pointStat);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching monthlies:', err);
@@ -124,28 +131,24 @@ export default function MonthlyPoints({ dataFor }: MonthlyPointsProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Stats Summary */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-primary/5 rounded-lg border p-3 text-center">
-                <div className="text-primary text-xl font-bold">{formatDistance(statsData.totalMiles)}</div>
-                <div className="text-muted-foreground text-xs">Total Miles</div>
-              </div>
-              <div className="bg-muted/30 rounded-lg border p-3 text-center">
-                <div className="text-xl font-bold">{formatDistance(statsData.averageMiles)}</div>
-                <div className="text-muted-foreground text-xs">Avg per Month</div>
-              </div>
-              <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center dark:border-green-800 dark:bg-green-950/20">
-                <div className="text-xl font-bold text-green-600 dark:text-green-400">
-                  {statsData.bestMonth ? formatDistance(statsData.bestMonth.amount) : '0'}
+            <div className="grid grid-cols-4 gap-3">
+                <div className="bg-muted/30 rounded-lg border p-3 text-center">
+                    <div className="text-xl font-bold">{formatDistance(statsData.averageMiles)}</div>
+                    <div className="text-muted-foreground text-xs">Avg per Month</div>
                 </div>
-                <div className="text-muted-foreground flex items-center justify-center gap-1 text-xs">
-                  <span>Best Month</span>
-                  {statsData.bestMonth && (
-                    <>
-                      - <span className="font-bold">{statsData.bestMonth.label}</span>
-                    </>
-                  )}
+                <div className="bg-primary/5 rounded-lg border p-3 text-center">
+                    <div className="text-primary text-xl font-bold">{formatDistance(pointStat.current_day.accomplishment)} miles</div>
+                    <div className="text-muted-foreground text-xs">Today</div>
                 </div>
-              </div>
+                <div className="bg-primary/5 rounded-lg border p-3 text-center">
+                    <div className="text-primary text-xl font-bold">{formatDistance(pointStat.current_week.accomplishment)} miles</div>
+                    <div className="text-muted-foreground text-xs">This Week</div>
+                </div>
+                <div className="bg-primary/5 rounded-lg border p-3 text-center">
+                    <div className="text-primary text-xl font-bold">{formatDistance(pointStat.current_month.accomplishment)} miles</div>
+                    <div className="text-muted-foreground text-xs">This Month</div>
+                </div>
+
             </div>
 
             {/* Chart */}

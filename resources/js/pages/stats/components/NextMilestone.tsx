@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GaugeChart } from '@/components/ui/gauge-chart';
+import { Progress } from '@/components/ui/progress';
 import { ExternalLink, Image, MapPin, Target } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
@@ -150,38 +150,35 @@ export default function NextMilestone({ milestone, userDistance, previousMilesto
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Milestone Info */}
-        <div className="flex gap-4">
-          {data.milestone.logo && (
-            <div className="flex-shrink-0">
-              <img src={data.milestone.logo} alt={data.milestone.name} className="bg-muted h-16 w-16 rounded-lg object-contain p-2" />
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <h3 className="mb-1 text-xl font-semibold">{data.milestone.name}</h3>
-            <p className="text-muted-foreground mb-2 text-sm">
-              Mile {formatDistance(data.milestone.distance)} of {data.eventName}
-            </p>
-            {data.milestone.description && <p className="text-muted-foreground text-sm">{data.milestone.description}</p>}
-          </div>
-        </div>
+          <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-1">
+                  <Target className="text-muted-foreground h-4 w-4" />
+                    Progress to {data.milestone.name}
+                </span><span className="font-medium">{data.segmentProgress.toFixed(2)}%</span>
+              </div>
+              <Progress value={data.segmentProgress.toFixed(2)} className="h-3" />
+              <div className="text-muted-foreground mt-2 flex w-full justify-between text-xs">
+                  <span>Mile {formatDistance(data.previousMilestoneDistance)}</span>
 
-        {/* Gauge Chart */}
-        <div className="flex flex-col items-center py-4">
-          <GaugeChart
-            value={Math.max(data.coveredDistance - data.previousMilestoneDistance, 0)}
-            max={data.milestone.distance - data.previousMilestoneDistance}
-            label="miles to go"
-            description={`Progress to ${data.milestone.name}`}
-            color="hsl(var(--primary))"
-            size={180}
-            className="mb-2"
-          />
-          <div className="text-muted-foreground mt-2 flex w-full justify-between text-xs">
-            <span>Mile {formatDistance(data.previousMilestoneDistance)}</span>
-            <span className="font-medium">{data.segmentProgress.toFixed(1)}% complete</span>
-            <span>Mile {formatDistance(data.milestone.distance)}</span>
+                  <span>Mile {formatDistance(data.milestone.distance)}</span>
+              </div>
           </div>
-        </div>
+
+          <div className="flex gap-4">
+              {data.milestone.logo && (
+                  <div className="flex-shrink-0">
+                      <img src={data.milestone.logo} alt={data.milestone.name} className="bg-muted h-16 w-16 rounded-lg object-contain p-2" />
+                  </div>
+              )}
+              <div className="min-w-0 flex-1">
+                  <h3 className="mb-1 text-xl font-semibold">{data.milestone.name}</h3>
+                  <p className="text-muted-foreground mb-2 text-sm">
+                      Mile {formatDistance(data.milestone.distance)} of {data.eventName}
+                  </p>
+                  {data.milestone.description && <p className="text-muted-foreground text-sm">{data.milestone.description}</p>}
+              </div>
+          </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4 pt-2">

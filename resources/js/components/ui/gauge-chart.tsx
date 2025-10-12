@@ -20,10 +20,10 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function GaugeChart({ 
-  value, 
-  max, 
-  label, 
+export function GaugeChart({
+  value,
+  max,
+  label,
   description,
   color = 'hsl(var(--primary))',
   size = 180,
@@ -33,10 +33,10 @@ export function GaugeChart({
   // Safety checks for invalid data
   const safeValue = Math.max(0, value || 0);
   const safeMax = Math.max(1, max || 1);
-  
+
   const percentage = Math.min((safeValue / safeMax) * 100, 100);
   const remaining = Math.max(safeMax - safeValue, 0);
-  
+
   // Create chart data for semi-circle gauge
   const chartData = [
     {
@@ -55,10 +55,10 @@ export function GaugeChart({
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      <ChartContainer 
-        config={chartConfig} 
+      <ChartContainer
+        config={chartConfig}
         className="mx-auto aspect-square"
-        style={{ maxHeight: `${size}px`, maxWidth: `${size}px` }}
+        style={{ maxHeight: `${size}px`, maxWidth: `${size}px`, height: `${size}px`, width: `${size}px` }}
       >
         <RadialBarChart
           data={chartData}
@@ -83,31 +83,31 @@ export function GaugeChart({
             background={{ fill: 'hsl(var(--muted))' }}
             className="stroke-2"
           />
-          <PolarRadiusAxis 
-            tick={false} 
-            tickLine={false} 
+          <PolarRadiusAxis
+            tick={false}
+            tickLine={false}
             axisLine={false}
           >
             <Label
               content={({ viewBox }) => {
                 if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
                   return (
-                    <text 
-                      x={viewBox.cx} 
-                      y={viewBox.cy} 
-                      textAnchor="middle" 
+                    <text
+                      x={viewBox.cx}
+                      y={viewBox.cy}
+                      textAnchor="middle"
                       dominantBaseline="middle"
                     >
-                      <tspan 
-                        x={viewBox.cx} 
-                        y={viewBox.cy} 
+                      <tspan
+                        x={viewBox.cx}
+                        y={viewBox.cy}
                         className="fill-foreground text-3xl font-bold"
                       >
                         {showPercentage ? `${Math.round(percentage)}%` : formatValue(remaining)}
                       </tspan>
-                      <tspan 
-                        x={viewBox.cx} 
-                        y={(viewBox.cy || 0) + 24} 
+                      <tspan
+                        x={viewBox.cx}
+                        y={(viewBox.cy || 0) + 24}
                         className="fill-muted-foreground text-sm"
                       >
                         {showPercentage ? 'complete' : (label || 'remaining')}
@@ -120,13 +120,13 @@ export function GaugeChart({
           </PolarRadiusAxis>
         </RadialBarChart>
       </ChartContainer>
-      
+
       {description && (
         <p className="mt-2 text-center text-sm text-muted-foreground">
           {description}
         </p>
       )}
-      
+
       {/* Progress indicators */}
       <div className="mt-2 flex justify-between w-full text-xs text-muted-foreground">
         <span>0</span>

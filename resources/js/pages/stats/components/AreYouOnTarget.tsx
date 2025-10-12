@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { GaugeChart } from '@/components/ui/gauge-chart';
+import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
@@ -167,27 +167,36 @@ export default function AreYouOnTarget({ dataFor = 'you' }: AreYouOnTargetProps)
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Status Badge */}
-            <div className="flex items-center justify-between">
-              <Badge
-                variant={targetStats.statusColor === 'green' ? 'default' : 'secondary'}
-                className={`${
-                  targetStats.statusColor === 'green' ? 'bg-green-500 hover:bg-green-600' :
-                  targetStats.statusColor === 'red' ? 'bg-red-500 hover:bg-red-600' :
-                  targetStats.statusColor === 'yellow' ? 'bg-yellow-500 hover:bg-yellow-600' :
-                  'bg-gray-500 hover:bg-gray-600'
-                } text-white`}
-              >
-                {targetStats.statusText}
-              </Badge>
-              {targetData && (
-                <div className="text-sm text-muted-foreground">
-                  {targetData.days_remaining.toFixed(2)} days left
-                </div>
-              )}
-            </div>
 
+              {targetData && (<div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-1">
+
+                    </span>
+                      <span className="font-medium">{targetData.on_target_percentage.toFixed(2)}%</span>
+                  </div>
+                  <Progress value={targetData.on_target_percentage} className="h-3" />
+                  <div className="flex items-center justify-between">
+                      <Badge
+                          variant={targetStats.statusColor === 'green' ? 'default' : 'secondary'}
+                          className={`${
+                              targetStats.statusColor === 'green' ? 'bg-green-500 hover:bg-green-600' :
+                                  targetStats.statusColor === 'red' ? 'bg-red-500 hover:bg-red-600' :
+                                      targetStats.statusColor === 'yellow' ? 'bg-yellow-500 hover:bg-yellow-600' :
+                                          'bg-gray-500 hover:bg-gray-600'
+                          } text-white`}
+                      >
+                          {targetStats.statusText}
+                      </Badge>
+                      {targetData && (
+                          <div className="text-sm text-muted-foreground">
+                              {targetData.days_remaining.toFixed(2)} days left
+                          </div>
+                      )}
+                  </div>
+              </div>)}
             {/* Gauge Chart */}
-            {targetData && (
+            {/*targetData && (
               <div className="flex justify-center">
                 <GaugeChart
                   value={targetData.on_target_percentage}
@@ -199,7 +208,7 @@ export default function AreYouOnTarget({ dataFor = 'you' }: AreYouOnTargetProps)
                   description={`${formatDistance(targetData.current_distance)} of ${formatDistance(targetData.on_target_mileage)} expected miles`}
                 />
               </div>
-            )}
+            ) */}
 
             {/* Goal Message */}
             {targetData && targetData.goal_message && (

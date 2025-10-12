@@ -75,12 +75,25 @@ final readonly class UserStatsController
         });
     }
 
-    public function userMonthlyPoints(Request $request): Collection
+    public function userMonthlyPoints(Request $request): array
     {
         $eventId = (int) $request->query('event_id');
         $user = $request->user();
 
-        return $this->userService->monthlies($eventId, $user);
+        $startOfMonth = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->startOfMonth()->format('Y-m-d');
+        $endOfMonth = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->endOfMonth()->format('Y-m-d');
+
+        $startOfWeek = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->startOfWeek()->format('Y-m-d');
+        $endOfWeek = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->endOfWeek()->format('Y-m-d');
+
+        $today = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->format('Y-m-d');
+
+        $pointStat = $this->userService->currentAchievements($eventId, [$today, $startOfMonth, $endOfMonth, $startOfWeek, $endOfWeek], $user);
+
+        $data = $this->userService->monthlies($eventId, $user);
+
+        return compact('data','pointStat');
+
     }
 
     public function userYearlyPoints(Request $request): Collection
@@ -277,7 +290,18 @@ final readonly class UserStatsController
             return response()->json(['error' => 'User is not part of any team'], 404);
         }
 
-        return $this->teamService->monthlies($eventId, $team);
+        $startOfMonth = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->startOfMonth()->format('Y-m-d');
+        $endOfMonth = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->endOfMonth()->format('Y-m-d');
+
+        $startOfWeek = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->startOfWeek()->format('Y-m-d');
+        $endOfWeek = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->endOfWeek()->format('Y-m-d');
+
+        $today = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->format('Y-m-d');
+
+        $pointStat = $this->teamService->currentAchievements($eventId, [$today, $startOfMonth, $endOfMonth, $startOfWeek, $endOfWeek], $team);
+
+        $data = $this->teamService->monthlies($eventId, $team);
+        return compact('data','pointStat');
     }
 
     public function teamYearlyPoints(Request $request): Collection|JsonResponse
