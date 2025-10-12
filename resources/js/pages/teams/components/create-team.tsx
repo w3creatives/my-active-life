@@ -11,6 +11,7 @@ import { FormEventHandler } from 'react';
 import { toast } from 'sonner';
 import AdminControls from './admin-controls';
 import TeamInvitations from './team-invitations';
+import { CheckCircle2 } from 'lucide-react';
 
 type CreateTeamForm = {
   name: string;
@@ -21,6 +22,7 @@ type CreateTeamForm = {
 
 export default function CreateTeam({ status }: { status?: string }) {
   // @ts-ignore
+  const { auth } = usePage().props as any;
   const { team, chutzpahFactorUnit, teamPublicProfile } = usePage<SharedData>().props;
   const teamData = team as any; // Type assertion to avoid TypeScript errors
   // @ts-ignore
@@ -94,19 +96,33 @@ export default function CreateTeam({ status }: { status?: string }) {
               title={teamData ? 'Change Team Chutzpah Factor' : 'Would you like to spice things up?'}
               description='Set a goal for your team to double, triple, quadruple...all the way up to 10X the miles for the year! Each "Chutzpah Factor" increases your team mileage goal by 100 miles and changes the stats you will see as your team embarks on your journey. How far can you go?!'
             />
-            <div className="grid gap-2">
-              Chutzpah Factor = {data.chutzpah_factor}
-              <input
-                onChange={(e) => {
-                  // @ts-ignore
-                  setData('chutzpah_factor', e.target.value);
-                }}
-                value={data.chutzpah_factor}
-                type="range"
-                min="1"
-                max="10"
-              />
-              Your team will need to complete {data.chutzpah_factor * 100} miles.
+            <div className="space-y-2">
+              <Label className="text-sm font-medium block">Chutzpah Factor = <strong>{data.chutzpah_factor}x</strong></Label>
+              <div className="flex flex-wrap gap-3">
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((factor) => (
+                  <div
+                    key={factor}
+                    onClick={() => setData('chutzpah_factor', factor)}
+                    className={`relative cursor-pointer rounded-lg border-2 px-4 py-3 transition-all duration-200 hover:shadow-sm flex-1 max-w-25 ${data.chutzpah_factor === factor
+                        ? 'border-primary'
+                        : 'border-border hover:border-primary/50'
+                      }`}
+                  >
+                    {data.chutzpah_factor === factor && (
+                      <div className="absolute -top-1 -right-1">
+                        <CheckCircle2 className="text-primary bg-background size-4 rounded-full" />
+                      </div>
+                    )}
+                    <div className="text-center">
+                      <div className="text-primary text-2xl font-semibold">
+                        {factor}
+                        <small>x</small>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p>Your team will need to complete <strong>{data.chutzpah_factor * auth.preferred_event?.total_points} miles</strong>.</p>
             </div>
             <HeadingSmall
               title={teamData ? 'Change Team Visibility' : 'To be, or not to be...public?'}

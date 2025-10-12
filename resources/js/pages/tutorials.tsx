@@ -52,8 +52,6 @@ export default function Tutorials() {
             const parsedItems = JSON.parse(tutorials.tutorial_text);
             setTutorialItems(parsedItems);
 
-            console.log(tutorialItems);
-
             // Set page title from first heading if available
             const firstHeading = parsedItems.find((item) => item.type === 'heading' && item.level === 1);
             if (firstHeading) {

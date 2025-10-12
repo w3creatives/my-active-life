@@ -8,6 +8,14 @@ import { type BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
+    title: 'Home',
+    href: route('dashboard'),
+  },
+  {
+    title: 'Settings',
+    href: route('profile.edit'),
+  },
+  {
     title: 'Device Syncing',
     href: route('profile.device-sync.edit'),
   },

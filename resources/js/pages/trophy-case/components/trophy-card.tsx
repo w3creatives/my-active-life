@@ -20,13 +20,7 @@ interface TrophyCardProps {
   className?: string;
 }
 
-export default function TrophyCard({ 
-  milestone, 
-  isCompleted, 
-  showTeamView = false, 
-  onClick, 
-  className = "" 
-}: TrophyCardProps) {
+export default function TrophyCard({ milestone, isCompleted, showTeamView = false, onClick, className = '' }: TrophyCardProps) {
   const formatDistance = (distance: number) => {
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
@@ -65,7 +59,7 @@ export default function TrophyCard({
       </div>
 
       <div className="mt-2 text-center">
-        <p className="truncate px-1 text-xs font-medium">{milestone.name}</p>
+        <p className="truncate px-1 text-sm font-medium">{milestone.name}</p>
         <p className="text-muted-foreground text-xs">{formatDistance(milestone.distance)} mi</p>
       </div>
     </div>

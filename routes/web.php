@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SharedMilestoneController;
 use App\Http\Controllers\TeamsController;
 use App\Http\Controllers\UserStatsController;
 use Illuminate\Support\Facades\Route;
@@ -133,6 +134,9 @@ Route::get('test-email', function () {
 Route::get('/', function () {
     return redirect()->route('dashboard');
 });
+
+// Public shared milestone route (no auth required)
+Route::get('/shared-milestone/{milestoneId}', [SharedMilestoneController::class, 'show'])->name('shared.milestone');
 
 Route::middleware(['auth'])->group(function () {
     // Dashboard routes

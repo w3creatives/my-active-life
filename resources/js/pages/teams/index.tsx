@@ -24,13 +24,13 @@ export default function FollowPage() {
             <div className="flex gap-2">
               <Link href={route('teams.invites')}>
                 <Button variant="outline-primary" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
+                  <Mail className="size-4" />
                   View Invites
                 </Button>
               </Link>
               <Link href={route('stats')}>
                 <Button variant="default" className="flex items-center gap-2">
-                  <ChartPie className="h-4 w-4" />
+                  <ChartPie className="size-4" />
                   Show Stats
                 </Button>
               </Link>

@@ -13,6 +13,14 @@ import { type BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
+    title: 'Home',
+    href: route('dashboard'),
+  },
+  {
+    title: 'Settings',
+    href: route('profile.edit'),
+  },
+  {
     title: 'Privacy settings',
     href: '/settings/privacy',
   },
@@ -31,9 +39,9 @@ export default function Privacy() {
         <div className="space-y-8">
           {/* Page Header */}
           <div className="space-y-2">
-            <HeadingSmall 
-              title="Privacy Settings" 
-              description="Manage your profile visibility and control who can see your fitness journey" 
+            <HeadingSmall
+              title="Privacy Settings"
+              description="Manage your profile visibility and control who can see your fitness journey"
             />
           </div>
 
@@ -83,7 +91,7 @@ export default function Privacy() {
                   <div className="text-sm">
                     <p className="font-medium text-amber-800">Privacy Notice</p>
                     <p className="text-amber-700 mt-1">
-                      When your profile is public, other participants can follow your progress and see your achievements. 
+                      When your profile is public, other participants can follow your progress and see your achievements.
                       Private profiles are only visible to you and approved followers.
                     </p>
                   </div>
@@ -119,7 +127,7 @@ export default function Privacy() {
                       Public
                     </Badge>
                   </div>
-                  
+
                   <div className="flex items-center justify-between pt-4 border-t border-green-200">
                     <div>
                       <Label htmlFor="team-visibility" className="text-sm font-medium">
@@ -145,7 +153,7 @@ export default function Privacy() {
                   <div className="text-sm">
                     <p className="font-medium text-blue-800">Team Admin Controls</p>
                     <p className="text-blue-700 mt-1">
-                      If you are a team admin, you can also set team's visibility in this section. 
+                      If you are a team admin, you can also set team's visibility in this section.
                       Team visibility settings affect how your team appears to other participants.
                     </p>
                   </div>
@@ -168,7 +176,7 @@ export default function Privacy() {
                 </div>
                 <Switch />
               </div>
-              
+
               <div className="flex items-center justify-between py-3 border-b border-gray-100">
                 <div>
                   <Label className="text-sm font-medium">Show activity feed</Label>
@@ -176,7 +184,7 @@ export default function Privacy() {
                 </div>
                 <Switch />
               </div>
-              
+
               <div className="flex items-center justify-between py-3">
                 <div>
                   <Label className="text-sm font-medium">Allow direct messages</Label>

@@ -12,6 +12,14 @@ import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
+    title: 'Home',
+    href: route('dashboard'),
+  },
+  {
+    title: 'Settings',
+    href: route('profile.edit'),
+  },
+  {
     title: 'RTY Goals',
     href: '/settings/rty-goals',
   },
@@ -21,24 +29,44 @@ const breadcrumbs: BreadcrumbItem[] = [
  * RTY Goals Settings Page Component
  * Allows users to set their yearly mileage goals and configure which activity types to include
  */
-interface PreferredEvent {
-  id: number;
-  name: string;
-}
-
-export default function RtyGoals({ eventId, preferredEvent }: {
+export default function RtyGoals({ eventId }: {
   eventId?: number;
-  preferredEvent?: PreferredEvent;
 }) {
+  const { auth } = usePage().props as any;
   const { flash } = usePage().props as { flash: { success?: string; error?: string } };
 
-  const goals = [
-    { value: '500', label: '500 Miles' },
-    { value: '1000', label: '1000 Miles' },
-    { value: '1500', label: '1500 Miles' },
-    { value: '2000', label: '2000 Miles' },
-    { value: '2500', label: '2500 Miles' },
-  ];
+  // Normalize goals from event to ensure it's a clean array of strings
+  const normalizeGoals = (input: unknown): string[] => {
+    if (!input) return [];
+    // Already an array
+    if (Array.isArray(input)) {
+      return input
+        .map((item: any) => {
+          if (item == null) return null;
+          // Handle array of objects with value property
+          if (typeof item === 'object' && 'value' in item) return String(item.value);
+          return String(item);
+        })
+        .filter(Boolean) as string[];
+    }
+    // JSON string
+    if (typeof input === 'string') {
+      const str = input.trim();
+      try {
+        const parsed = JSON.parse(str);
+        if (Array.isArray(parsed)) {
+          return parsed.map((v) => String(v));
+        }
+      } catch (_) {
+        // Not JSON; try comma/semicolon/whitespace-delimited
+        const parts = str.split(/[\s,;]+/).filter(Boolean);
+        if (parts.length) return parts.map((v) => String(v));
+      }
+    }
+    return [];
+  };
+
+  const goals = normalizeGoals(auth?.preferredEvent?.goals ?? auth?.preferred_event?.goals);
 
   const [goal, setGoal] = useState('');
   const [includeBiking, setIncludeBiking] = useState(false);
@@ -60,7 +88,7 @@ export default function RtyGoals({ eventId, preferredEvent }: {
    */
   const loadCurrentSettings = useCallback(async () => {
     try {
-      const currentEventId = eventId || preferredEvent?.id;
+      const currentEventId = eventId || auth?.preferredEvent?.id;
 
       // Fetch goal
       const goalResponse = await fetch(`/settings/rty-goals/goal?event_id=${currentEventId}`, {
@@ -102,14 +130,14 @@ export default function RtyGoals({ eventId, preferredEvent }: {
       console.error('Failed to load current settings:', error);
       toast.error('Failed to load settings');
     }
-  }, [eventId, preferredEvent?.id]);
+  }, [eventId, auth?.preferredEvent?.id]);
 
   // Load current settings on component mount
   useEffect(() => {
-    if (eventId || preferredEvent?.id) {
+    if (eventId || auth?.preferredEvent?.id) {
       loadCurrentSettings();
     }
-  }, [eventId, preferredEvent?.id, loadCurrentSettings]);
+  }, [eventId, auth?.preferredEvent?.id, loadCurrentSettings]);
 
   /**
    * Handle goal selection change
@@ -117,14 +145,14 @@ export default function RtyGoals({ eventId, preferredEvent }: {
   const handleGoalChange = (selectedGoal: string) => {
     setGoal(selectedGoal);
 
-    if (!eventId && !preferredEvent?.id) {
+    if (!eventId && !auth?.preferredEvent?.id) {
       toast.error('No event selected');
       return;
     }
 
     router.post('/settings/rty-goals/goal', {
       mileage_goal: selectedGoal,
-      event_id: eventId || preferredEvent?.id,
+      event_id: eventId || auth?.preferredEvent?.id,
     }, {
       preserveScroll: true,
       onError: () => {
@@ -142,7 +170,7 @@ export default function RtyGoals({ eventId, preferredEvent }: {
     if (modalityName === 'swim') setIncludeSwimming(enabled);
     if (modalityName === 'other') setIncludeOther(enabled);
 
-    if (!eventId && !preferredEvent?.id) {
+    if (!eventId && !auth?.preferredEvent?.id) {
       toast.error('No event selected');
       return;
     }
@@ -150,7 +178,7 @@ export default function RtyGoals({ eventId, preferredEvent }: {
     router.post('/settings/rty-goals/modality', {
       name: modalityName,
       enabled: enabled,
-      event_id: eventId || preferredEvent?.id,
+      event_id: eventId || auth?.preferredEvent?.id,
     }, {
       preserveScroll: true,
       onError: () => {
@@ -208,24 +236,27 @@ export default function RtyGoals({ eventId, preferredEvent }: {
                   <Target className="text-primary h-5 w-5" />
                   Run The Year your way! Pick a goal that is right for you!
                 </CardTitle>
-                <CardDescription>My mileage goal for Run The Year 2026 is:</CardDescription>
+                <CardDescription>My mileage goal for {auth?.preferred_event?.name} is:</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium block">Choose your mileage goal for Run The Year 2026:</Label>
+                  <Label className="text-sm font-medium block">Choose your mileage goal for {auth?.preferred_event?.name}:</Label>
 
                   {/* Goal Selection Cards - Single Row with Equal Width */}
                   <div className="flex flex-wrap gap-3">
+                    {goals.length === 0 && (
+                      <div className="text-sm text-muted-foreground">No goals configured for this event.</div>
+                    )}
                     {goals.map((goalOption) => (
                       <div
-                        key={goalOption.value}
-                        onClick={() => handleGoalChange(goalOption.value)}
+                        key={goalOption}
+                        onClick={() => handleGoalChange(goalOption)}
                         className={`relative cursor-pointer rounded-lg border-2 px-4 py-3 transition-all duration-200 hover:shadow-sm flex-1 max-w-25 ${
-                          goal === goalOption.value ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/50'
+                          goal === goalOption ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/50'
                         } `}
                       >
                         {/* Selection Indicator */}
-                        {goal === goalOption.value && (
+                        {goal === goalOption && (
                           <div className="absolute -top-1 -right-1">
                             <CheckCircle2 className="text-primary bg-background size-4 rounded-full" />
                           </div>
@@ -233,7 +264,7 @@ export default function RtyGoals({ eventId, preferredEvent }: {
 
                         {/* Goal Content */}
                         <div className="text-center">
-                          <div className="text-primary text-lg font-semibold">{goalOption.value}</div>
+                          <div className="text-primary text-lg font-semibold">{goalOption}</div>
                           <div className="text-muted-foreground text-xs">Miles</div>
                         </div>
                       </div>

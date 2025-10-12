@@ -14,14 +14,7 @@ interface TrophyModalProps {
   onShare?: (milestone: Milestone) => void;
 }
 
-export default function TrophyModal({ 
-  milestone, 
-  isOpen, 
-  onOpenChange, 
-  isCompleted, 
-  showTeamView = false, 
-  onShare 
-}: TrophyModalProps) {
+export default function TrophyModal({ milestone, isOpen, onOpenChange, isCompleted, showTeamView = false, onShare }: TrophyModalProps) {
   if (!milestone) return null;
 
   const formatDistance = (distance: number) => {
@@ -96,12 +89,7 @@ export default function TrophyModal({
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleShare} 
-              disabled={!isCompleted}
-            >
+            <Button variant="outline" size="sm" onClick={handleShare} disabled={!isCompleted}>
               <Share2 className="mr-2 h-4 w-4" />
               Share
             </Button>
