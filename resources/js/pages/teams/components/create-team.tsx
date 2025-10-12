@@ -148,9 +148,6 @@ export default function CreateTeam({ status }: { status?: string }) {
           </form>
         </CardContent>
       </Card>
-
-      {/* Admin Controls - Show only if user is team owner */}
-      {teamData && <AdminControls />}
     </>
   );
 }
