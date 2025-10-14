@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\API\ProfilesController;
+use App\Http\Controllers\API\UserPointsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SharedMilestoneController;
 use App\Http\Controllers\TeamsController;
@@ -146,6 +148,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/follow', [DashboardController::class, 'follow'])->name('follow');
     Route::get('/trophy-case', [DashboardController::class, 'trophyCase'])->name('trophyCase');
     Route::get('/preferred-event', [DashboardController::class, 'preferredEvent'])->name('preferred.event');
+    Route::get('/profile', [DashboardController::class, 'profile'])->name('profile');
 
     Route::post('/unfollow/{type}', [DashboardController::class, 'unfollow'])->name('unfollow');
     Route::post('/follow/{type}', [DashboardController::class, 'follow_request'])->name('follow.request');
@@ -195,8 +198,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/teams/members', [TeamsController::class, 'teamMembers'])->name('teams.members');
     Route::post('/teams/leave-team', [TeamsController::class, 'leaveTeam'])->name('teams.leave-team');
     Route::post('/teams/invite-members', [TeamsController::class, 'inviteMembers'])->name('teams.invite-members');
-    Route::get('/teams/team-to-join', [TeamsController::class, 'findTeamstoJoin'])->name('teams.team-to-join');
+    Route::get('/teams/team-to-join', [TeamsController::class, 'findTeamsToJoin'])->name('teams.team-to-join');
     Route::post('/teams/team-to-join-request', [TeamsController::class, 'teamJoinRequest'])->name('teams.team-to-join-request');
+    // User team invitations route (for users to see invites they received)
+    Route::get('/users/team-invitations', [TeamsController::class, 'getUserTeamInvitations'])->name('user.team-invitations');
 
     // Team invite management routes
     Route::get('/teams/invites', [TeamsController::class, 'viewInvites'])->name('teams.invites');
@@ -219,6 +224,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/teams/transfer-admin-role', [TeamsController::class, 'transferTeamAdminRole'])->name('teams.transfer-admin-role');
     Route::post('/teams/member/remove', [TeamsController::class, 'removeMember'])->name('teams.remove-member');
 
+    // settings
+    Route::post('/settings/update/privacy', [DashboardController::class, 'updateEventParticipantPrivacy'])->name('settings.update.privacy');
 });
 
 require __DIR__.'/settings.php';

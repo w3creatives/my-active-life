@@ -225,6 +225,8 @@ export default function TeamMembers() {
               <UserRowSkeleton />
               <UserRowSkeleton />
               <UserRowSkeleton />
+              <UserRowSkeleton />
+              <UserRowSkeleton />
             </>
           ) : error ? (
             <div className="p-8 text-center text-red-500">{error}</div>
@@ -245,7 +247,7 @@ export default function TeamMembers() {
                   </div>
                 </div>
 
-                <div className="w-1/4 lg:w-1/3">{member.miles}</div>
+                <div className="w-1/4 lg:w-1/3">{ member.miles }</div>
                 <div className="mt-2 w-full lg:mt-0 lg:w-1/3 lg:text-right">
                   <div className="flex justify-end gap-2">
                     {member.id === auth.user.id ? (

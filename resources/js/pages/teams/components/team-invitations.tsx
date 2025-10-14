@@ -29,7 +29,6 @@ export default function TeamInvitations() {
       setLoading(true);
       const response = await fetch(route('api.user.team.invitations'));
       const data = await response.json();
-
       if (data.success) {
         setInvitations(data.data || []);
       }

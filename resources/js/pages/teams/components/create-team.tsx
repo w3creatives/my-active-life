@@ -9,8 +9,6 @@ import { Switch } from '@headlessui/react';
 import { useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 import { toast } from 'sonner';
-import AdminControls from './admin-controls';
-import TeamInvitations from './team-invitations';
 import { CheckCircle2 } from 'lucide-react';
 
 type CreateTeamForm = {
@@ -21,8 +19,7 @@ type CreateTeamForm = {
 };
 
 export default function CreateTeam({ status }: { status?: string }) {
-  // @ts-ignore
-  const { auth } = usePage().props as any;
+  const { auth } = usePage().props;
   const { team, chutzpahFactorUnit, teamPublicProfile } = usePage<SharedData>().props;
   const teamData = team as any; // Type assertion to avoid TypeScript errors
   // @ts-ignore
@@ -56,26 +53,20 @@ export default function CreateTeam({ status }: { status?: string }) {
         console.log(errors);
         if (errors.event_id) {
           toast.error(errors.event_id);
-          // reset('password', 'password_confirmation');
-          //passwordInput.current?.focus();
         }
       },
     });
   };
 
+  const cardTitle: string = !teamData ? 'Create Your Team' : 'Rename Your Team';
+  const cardDescription: null|string = !teamData ? 'What do you want your team to be named?' : null;
+
   return (
     <>
-      {/* Team Invitations Section - Show above create team if user has invitations */}
-      <TeamInvitations />
-
       <Card>
         <CardHeader>
-          {!teamData ? <CardTitle>Create Your Team</CardTitle> : <CardTitle>Rename Your Team</CardTitle>}
-          {!teamData ? (
-            <CardDescription>What do you want your team to be named?</CardDescription>
-          ) : (
-            <CardDescription>What do you want your team to be named?</CardDescription>
-          )}
+          {cardTitle ?? <CardTitle>{ cardTitle }</CardTitle>}
+          {cardDescription ?? <CardDescription>{ cardDescription }</CardDescription>}
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-6">
@@ -86,7 +77,7 @@ export default function CreateTeam({ status }: { status?: string }) {
                 className="mt-1 block w-full"
                 onChange={(e) => setData('name', e.target.value)}
                 autoComplete="name"
-                placeholder="Enter Your Run The Month Imagine Communications August-2025 Team Name"
+                placeholder="Enter Your Team Name"
                 value={data.name}
               />
               <InputError className="mt-2" message={errors.name} />
@@ -124,6 +115,7 @@ export default function CreateTeam({ status }: { status?: string }) {
               </div>
               <p>Your team will need to complete <strong>{data.chutzpah_factor * auth.preferred_event?.total_points} miles</strong>.</p>
             </div>
+
             <HeadingSmall
               title={teamData ? 'Change Team Visibility' : 'To be, or not to be...public?'}
               description="Choose to make your team public or private. Public teams will show up in searches and allow others to follow your progress. Private teams will be invisible from others."

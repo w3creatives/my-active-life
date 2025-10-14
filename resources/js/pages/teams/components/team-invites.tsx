@@ -166,7 +166,7 @@ export default function TeamInvites({ pendingInvites, team }: TeamInvitesProps) 
                       <div className="mt-1 flex items-center gap-2">
                         <Clock className="h-3 w-3 text-gray-400" />
                         <span className="text-xs text-gray-500">
-                          Invited {invite.created_at} ({invite.days_ago} days ago)
+                          Invited {invite.created_at}
                         </span>
                       </div>
                     </div>
