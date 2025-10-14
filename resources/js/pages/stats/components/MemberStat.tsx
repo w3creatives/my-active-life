@@ -105,19 +105,19 @@ export default function MemberStat({dateFor}: MemberStatProps) {
   return (
     <Card className="pb-0">
       <CardHeader>
-        <CardTitle className="text-lg">Team Members Bests</CardTitle>
-        <CardDescription className="text-sm">Team Members best performances across different time periods</CardDescription>
+        <CardTitle className="text-lg">{ loading?<Skeleton className="h-4 12" />:"Team Members Bests"}</CardTitle>
+        <CardDescription className="text-sm">{ loading?<Skeleton className="h-4 w-full" />:"Team Members best performances across different time periods"}</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-6">
           <div className="text-md font-semibold grid grid-cols-7 border-b px-4 py-2 text-sm font-medium md:grid-cols-7">
-            <div>Member Name</div>
-            <div className="text-center">Best Day</div>
-            <div className="text-center">Best Week</div>
-            <div className="text-center">Best Month</div>
-            <div className="text-center">Today</div>
-            <div className="text-center">This Week</div>
-            <div className="text-center">This Month</div>
+            <div>{ loading?<Skeleton className="h-4 w-12" />:"Member Name"}</div>
+            <div className="text-center">{ loading?<Skeleton className="h-4 w-12" />:"Best Day"}</div>
+            <div className="text-center">{ loading?<Skeleton className="h-4 w-12" />:"Best Week"}</div>
+            <div className="text-center">{ loading?<Skeleton className="h-4 w-12" />:"Best Month"}</div>
+            <div className="text-center">{ loading?<Skeleton className="h-4 w-12" />:"Today"}</div>
+            <div className="text-center">{ loading?<Skeleton className="h-4 w-12" />:"This Week"}</div>
+            <div className="text-center">{ loading?<Skeleton className="h-4 w-12" />:"This Month"}</div>
           </div>
           {loading ? (
             // Show skeleton rows while loading
@@ -129,7 +129,7 @@ export default function MemberStat({dateFor}: MemberStatProps) {
           ) : error ? (
             <div className="p-8 text-center text-red-500">{error}</div>
           ) : !users || users.length === 0 ? (
-            <div className="text-muted-foreground p-8 text-center">No team members found.</div>
+            <div className="text-muted-foreground p-8 text-center">No record found.</div>
           ) : (
             users.map((member) => (
               <div key={member.id} className="flex flex-wrap border-b p-4 text-sm lg:items-center">
