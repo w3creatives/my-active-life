@@ -288,5 +288,17 @@ final class TeamService
 
         return (int)$chutzpahFactor??1;
     }
+    public function memberAchievements($event, $user, $team)
+    {
+        $startOfMonth = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->startOfMonth()->format('Y-m-d');
+        $endOfMonth = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->endOfMonth()->format('Y-m-d');
+
+        $startOfWeek = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->startOfWeek()->format('Y-m-d');
+        $endOfWeek = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->endOfWeek()->format('Y-m-d');
+
+        $today = Carbon::now()->setTimezone($user->time_zone_name ?? 'UTC')->format('Y-m-d');
+
+        return $this->teamRepository->memberAchievements($event, [$today, $startOfMonth, $endOfMonth, $startOfWeek, $endOfWeek], $team);
+    }
 
 }

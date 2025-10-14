@@ -12,9 +12,9 @@ import MileageByActivityType from '@/pages/stats/components/MileageByActivityTyp
 import MonthlyPoints from '@/pages/stats/components/monthlyPoints';
 import NextMilestone from '@/pages/stats/components/NextMilestone';
 import PersonalBests from '@/pages/stats/components/PersonalBests';
-import ProgressCard from '@/pages/stats/components/progressCard';
 import { User, Users } from 'lucide-react';
 import { useState } from 'react';
+import MemberStat from './components/MemberStat';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -65,46 +65,41 @@ export default function Stats() {
         <div className="flex justify-between gap-5">
           <div className="page-title">
             <h1 className="text-4xl font-normal">
-              {auth.user.display_name}'s {auth.preferred_event.name} Journey  {teamData?.name}
+              {auth.user.display_name}'s {auth.preferred_event.name} Journey {teamData?.name}
             </h1>
           </div>
-            {teamData && (<div className="flex gap-2">
-            <Button variant={dataFor === 'you' ? 'default' : 'secondary'} onClick={() => setDataFor('you')}>
-              <User /> You
-            </Button>
-            <Button variant={dataFor === 'team' ? 'default' : 'secondary'} onClick={() => setDataFor('team')}>
-              <Users /> Team
-            </Button>
-          </div>)}
+          {teamData && (
+            <div className="flex gap-2">
+              <Button variant={dataFor === 'you' ? 'default' : 'secondary'} onClick={() => setDataFor('you')}>
+                <User /> You
+              </Button>
+              <Button variant={dataFor === 'team' ? 'default' : 'secondary'} onClick={() => setDataFor('team')}>
+                <Users /> Team
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
-          <EventProgressGauge
-            dataFor={dataFor}
-          />
+          <EventProgressGauge dataFor={dataFor} />
 
-          <NextMilestone
-
-            dataFor={dataFor}
-          />
+          <NextMilestone dataFor={dataFor} />
 
           <AreYouOnTarget dataFor={dataFor} />
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-1">
-          {/*<BasicStatsCard />*/}
-          {/*<AchievementsCards />*/}
-
           {/* Conditionally show Amerithon Map for Amerithon events */}
           {auth.preferred_event.name.toLowerCase().includes('amerithon') && <AmerithonMap dataFor={dataFor} />}
 
           <Last30days dataFor={dataFor} />
-
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[40%_60%]">
+        </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
             <PersonalBests dataFor={dataFor} />
             <MonthlyPoints dataFor={dataFor} />
           </div>
-
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-1">
+              {dataFor == 'team' && <MemberStat />}
           {/* Conditionally show Activity Type breakdown for Amerithon and JOGLE events */}
           {(auth.preferred_event.name.toLowerCase().includes('amerithon') || auth.preferred_event.name.toLowerCase().includes('jogle')) && (
             <MileageByActivityType dataFor={dataFor} />

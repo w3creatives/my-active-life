@@ -7,6 +7,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Lab404\Impersonate\Models\Impersonate;
@@ -184,6 +185,11 @@ final class User extends Authenticatable
     public function displayedStreaks(): HasMany
     {
         return $this->hasMany(DisplayedUserStreak::class);
+    }
+
+    public function preferredEvent(): HasOne
+    {
+        return $this->hasOne(Event::class, 'id', 'preferred_event_id');
     }
 
     /**

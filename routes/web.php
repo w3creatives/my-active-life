@@ -185,6 +185,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/team/achievements', [UserStatsController::class, 'getTeamAchievements'])->name('web.team.achievements');
     Route::get('/user/event/{type}', [DashboardController::class, 'getUserEventDetails'])->name('user.event.details');
 
+    Route::get('/stats/team/members', [UserStatsController::class, 'teamMemberStats'])->name('stat.team.members');
+
     // Teams route
     Route::get('/teams', [TeamsController::class, 'index'])->name('teams');
     Route::post('/teams/create', [TeamsController::class, 'store'])->name('teams.create');

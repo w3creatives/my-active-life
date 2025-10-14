@@ -103,7 +103,7 @@ export default function MonthlyPoints({ dataFor }: MonthlyPointsProps) {
   return (
     <>
       {loading ? (
-        <Card>
+        <Card className="grid grid-cols-1">
           <CardHeader>
             <Skeleton className="mb-2 h-6 w-full" />
             <Skeleton className="h-4 w-full" />

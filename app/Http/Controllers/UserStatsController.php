@@ -764,4 +764,21 @@ final readonly class UserStatsController
 
         return $goalMessage;
     }
+
+    public function teamMemberStats(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+       $event = $user->preferredEvent;
+
+        $team = $this->teamService->getUserTeam($user, $event->id);
+
+        if (! $team) {
+            return response()->json(['error' => 'User is not part of any team'], 404);
+        }
+
+        $data = $this->teamService->memberAchievements($event, $user, $team);
+
+        return response()->json($data);
+    }
 }
