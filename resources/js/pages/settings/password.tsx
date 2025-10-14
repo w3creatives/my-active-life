@@ -17,6 +17,10 @@ const breadcrumbs: BreadcrumbItem[] = [
     href: route('dashboard'),
   },
   {
+    title: 'Settings',
+    href: route('profile.edit'),
+  },
+  {
     title: 'Password Settings',
     href: route('password.edit'),
   },

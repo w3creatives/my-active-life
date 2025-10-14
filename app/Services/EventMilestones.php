@@ -69,9 +69,30 @@ final class EventMilestones
         // Handle regular event types
         $milestones = $event->milestones()->orderBy('distance', 'asc')->get();
 
+        // Eager load all displayed milestones for this user and event to avoid N+1 queries
+        $milestoneIds = $milestones->pluck('id')->toArray();
+        $displayedMilestones = $user->displayedMilestones()
+            ->whereIn('event_milestone_id', $milestoneIds)
+            ->get()
+            ->groupBy(function ($item) {
+                return $item->event_milestone_id.'_'.$item->individual;
+            });
+
         foreach ($milestones as $milestone) {
             $isCompleted = $userDistance >= $milestone->distance;
             $isTeamCompleted = $teamDistance >= $milestone->distance;
+
+            // Calculate actual earned date for individual milestone
+            $userEarnedAt = null;
+            if ($isCompleted) {
+                $userEarnedAt = $this->calculateMilestoneEarnedDate($user, $event, (float) $milestone->distance);
+            }
+
+            // Calculate actual earned date for team milestone
+            $teamEarnedAt = null;
+            if ($isTeamCompleted && $team) {
+                $teamEarnedAt = $this->calculateTeamMilestoneEarnedDate($team, $event, (float) $milestone->distance);
+            }
 
             $milestoneData = [
                 'id' => $milestone->id,
@@ -83,6 +104,8 @@ final class EventMilestones
                 'team_logo_image_url' => $milestone->team_logo,
                 'video_url' => $milestone->video_url,
                 'is_team_completed' => $isTeamCompleted,
+                'earned_at' => $userEarnedAt?->toIso8601String(),
+                'team_earned_at' => $teamEarnedAt?->toIso8601String(),
             ];
 
             $result[] = $milestoneData;
@@ -162,5 +185,69 @@ final class EventMilestones
             'status' => true,
             'milestones' => $result,
         ];
+    }
+
+    /**
+     * Calculate when a user earned a milestone by finding the first date
+     * their cumulative points reached or exceeded the milestone distance
+     *
+     * @param  User  $user  The user
+     * @param  Event  $event  The event
+     * @param  float  $milestoneDistance  The milestone distance
+     * @return \Carbon\Carbon|null The date when the milestone was earned
+     */
+    private function calculateMilestoneEarnedDate(User $user, Event $event, float $milestoneDistance): ?\Carbon\Carbon
+    {
+        // Get all user points for this event ordered by date
+        $points = $user->points()
+            ->where('event_id', $event->id)
+            ->where('date', '>=', $event->start_date)
+            ->orderBy('date')
+            ->get();
+
+        $cumulativeDistance = 0;
+
+        foreach ($points as $point) {
+            $cumulativeDistance += $point->amount;
+
+            // Check if this is the date the milestone was reached
+            if ($cumulativeDistance >= $milestoneDistance) {
+                return \Carbon\Carbon::parse($point->date);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Calculate when a team earned a milestone by finding the first date
+     * their cumulative points reached or exceeded the milestone distance
+     *
+     * @param  Team  $team  The team
+     * @param  Event  $event  The event
+     * @param  float  $milestoneDistance  The milestone distance
+     * @return \Carbon\Carbon|null The date when the milestone was earned
+     */
+    private function calculateTeamMilestoneEarnedDate(Team $team, Event $event, float $milestoneDistance): ?\Carbon\Carbon
+    {
+        // Get all team points for this event ordered by date
+        $points = $team->points()
+            ->where('event_id', $event->id)
+            ->where('date', '>=', $event->start_date)
+            ->orderBy('date')
+            ->get();
+
+        $cumulativeDistance = 0;
+
+        foreach ($points as $point) {
+            $cumulativeDistance += $point->amount;
+
+            // Check if this is the date the milestone was reached
+            if ($cumulativeDistance >= $milestoneDistance) {
+                return \Carbon\Carbon::parse($point->date);
+            }
+        }
+
+        return null;
     }
 }

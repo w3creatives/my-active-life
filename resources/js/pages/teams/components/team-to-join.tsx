@@ -31,10 +31,10 @@ interface Pagination<T> {
 export default function TeamToJoin() {
   const { auth } = usePage<SharedData>().props;
 
-  const [users, setUsers] = useState<Pagination<User> | null>(null);
+  const [teams, setTeams] = useState<Pagination<User> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchUser, setSearchUser] = useState('');
+  const [searchTeam, setSearchTeam] = useState('');
   const [perPage, setperPage] = useState('5');
   const [currentPage, setCurrentPage] = useState(1);
   const [teamJoinActionProcessing, setTeamJoinActionProcessing] = useState(false);
@@ -43,12 +43,12 @@ export default function TeamToJoin() {
     try {
       setLoading(true);
       const params = new URLSearchParams();
-      if (searchUser) params.append('searchUser', searchUser);
+      if (searchTeam) params.append('searchTeam', searchTeam);
       if (perPage) params.append('perPage', perPage);
       params.append('page', page.toString());
 
       const response = await axios.get(route('teams.team-to-join') + '?' + params.toString());
-      setUsers(response.data.teams);
+      setTeams(response.data.teams);
       setCurrentPage(page);
     } catch (err) {
       setError('Failed to load available team members');
@@ -69,7 +69,7 @@ export default function TeamToJoin() {
       fetchTeams(1);
     }, 500);
     return () => clearTimeout(timeout);
-  }, [searchUser, perPage]);
+  }, [searchTeam, perPage]);
 
   const handlePagination = (page: number) => {
     fetchTeams(page);
@@ -129,8 +129,8 @@ export default function TeamToJoin() {
               type="search"
               placeholder="Search..."
               className="h-full pl-10"
-              value={searchUser}
-              onChange={(e) => setSearchUser(e.target.value)}
+              value={searchTeam}
+              onChange={(e) => setSearchTeam(e.target.value)}
             />
           </div>
 
@@ -150,12 +150,12 @@ export default function TeamToJoin() {
         </div>
 
         {/* User Listing */}
-        <div className="rounded-md border">
-          <div className="bg-muted text-muted-foreground grid grid-cols-3 border-b px-4 py-2 text-sm font-medium md:grid-cols-3">
+        <div className="rounded-md border text-center">
+          <div className="bg-muted text-muted-foreground grid grid-cols-4 border-b px-4 py-2 text-sm font-medium md:grid-cols-4">
             <div>Team</div>
             <div>Members</div>
             <div>Mileage</div>
-            <div className="md:text-right"></div>
+            <div className="md:text-right">&nbsp;</div>
           </div>
 
           {loading ? (
@@ -165,13 +165,14 @@ export default function TeamToJoin() {
               <UserRowSkeleton />
               <UserRowSkeleton />
               <UserRowSkeleton />
+              <UserRowSkeleton />
             </>
           ) : error ? (
             <div className="p-8 text-center text-red-500">{error}</div>
-          ) : !users || users.data.length === 0 ? (
-            <div className="text-muted-foreground p-8 text-center">No team members found.</div>
+          ) : !teams || teams.data.length === 0 ? (
+            <div className="text-muted-foreground p-8 text-center">No team found.</div>
           ) : (
-            users.data.map((member) => (
+            teams.data.map((member) => (
               <div key={member.id} className="flex flex-wrap border-b p-4 text-sm lg:items-center">
                 <div className="flex w-3/4 items-center gap-3 lg:w-1/4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 font-bold text-gray-500">
@@ -205,10 +206,10 @@ export default function TeamToJoin() {
           </div>
         ) : (
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => handlePagination((users?.current_page || 1) - 1)} disabled={!users?.prev_page_url}>
+            <Button variant="outline-primary" onClick={() => handlePagination((teams?.current_page || 1) - 1)} disabled={!teams?.prev_page_url}>
               Previous
             </Button>
-            <Button variant="outline" onClick={() => handlePagination((users?.current_page || 1) + 1)} disabled={!users?.next_page_url}>
+            <Button variant="outline-primary" onClick={() => handlePagination((teams?.current_page || 1) + 1)} disabled={!teams?.next_page_url}>
               Next
             </Button>
           </div>

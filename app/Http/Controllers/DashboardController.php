@@ -183,6 +183,11 @@ final class DashboardController extends Controller
         ]);
     }
 
+    public function profile(): Response
+    {
+        return Inertia::render('profile/index');
+    }
+
     /**
      * Get user followings data.
      */
@@ -868,5 +873,24 @@ final class DashboardController extends Controller
 
         return response()->json(['message' => 'Points have been added']);
 
+    }
+
+    public function updateEventParticipantPrivacy(Request $request)
+    {
+        $request->validate([
+            'event_id' => [
+                'required',
+                Rule::exists((new Event)->getTable(), 'id'),
+            ],
+            'public_profile' => 'required|boolean',
+        ]);
+
+        $user = $request->user();
+
+        $participation = $user->participations()->where('event_id', $request->event_id)->first();
+
+        $participation->fill(['public_profile' => (bool) $request->public_profile])->save();
+
+        return back()->with('message', 'Privacy updated successfully!');
     }
 }

@@ -3,13 +3,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
+import { SocialShareButtons } from '@/components/ui/social-share-buttons';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
-import { Calendar, ExternalLink, Play, Share2, Star, Target, Trophy } from 'lucide-react';
+import { Calendar, ExternalLink, Play, Star, Target, Trophy, User, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -33,6 +32,8 @@ interface Milestone {
   logo_image_url: string;
   team_logo_image_url: string;
   video_url?: string;
+  earned_at?: string;
+  team_earned_at?: string;
 }
 
 interface Achievement {
@@ -83,15 +84,10 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
   };
 
   const DisplayLogo = function (milestone: Milestone) {
-    let logoUrl = showTeamView ? milestone.team_logo_image_url : milestone.logo_image_url;
+    const logoUrl = showTeamView ? milestone.team_logo_image_url : milestone.logo_image_url;
 
     if (logoUrl) {
-        logoUrl = logoUrl.replace('https://rte-api-git.test', 'rtel.w3creatives.com');
-      return (
-        <>
-          <img src={logoUrl} alt={milestone.name} className="h-full w-full object-cover" loading="lazy" />
-        </>
-      );
+      return <img src={logoUrl} alt={milestone.name} className="h-full w-full object-cover" loading="lazy" />;
     }
 
     return (
@@ -197,7 +193,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-3">
-                <Trophy className="h-8 w-8 text-amber-500" />
+                <Trophy className="h-8 w-8 text-primary" />
                 <h1 className="text-4xl font-bold">Trophy Case</h1>
               </div>
               <p className="text-muted-foreground text-xl">
@@ -207,146 +203,36 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
 
             {/* Toggle Switch for Team View */}
             {trophyData.team && (
-              <Card className="w-fit">
-                <CardContent className="flex items-center space-x-3 p-4">
-                  <Label htmlFor="team-view" className="text-sm font-medium">
-                    Personal
-                  </Label>
-                  <Switch id="team-view" checked={showTeamView} onCheckedChange={setShowTeamView} />
-                  <Label htmlFor="team-view" className="text-sm font-medium">
-                    Team
-                  </Label>
-                </CardContent>
-              </Card>
+              <div className="flex gap-2">
+                <Button variant={!showTeamView ? 'default' : 'secondary'} onClick={() => setShowTeamView(false)}>
+                  <User /> You
+                </Button>
+                <Button variant={showTeamView ? 'default' : 'secondary'} onClick={() => setShowTeamView(true)}>
+                  <Users /> Team
+                </Button>
+              </div>
             )}
           </div>
 
-          {/* Stats Overview */}
-          {/*<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/20">
-                    <Trophy className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Trophies Earned</p>
-                    <p className="text-2xl font-bold">{trophyStats.earned}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/20">
-                    <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Distance</p>
-                    <p className="text-2xl font-bold">{formatDistance(trophyData.user_distance)} mi</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/20">
-                    <Award className="h-5 w-5 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Completion</p>
-                    <p className="text-2xl font-bold">{trophyStats.percentage.toFixed(0)}%</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-purple-100 dark:bg-purple-900/20">
-                    <Star className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Progress</p>
-                    <p className="text-2xl font-bold">{trophyStats.earned}/{trophyStats.total}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>*/}
-
-          {/* Personal Achievements */}
-          {/*<Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-amber-500" />
-                Personal Achievements
-              </CardTitle>
-              <CardDescription>
-                Your best performances across different time periods
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {achievementItems.map((item, index) => {
-                  const Icon = item.icon;
-                  return (
-                    <div key={index} className="relative overflow-hidden rounded-lg bg-gradient-to-br from-muted/50 to-muted/20 p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`rounded-full bg-gradient-to-br ${item.gradient} p-2 text-white shadow-lg`}>
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-sm">{item.title}</h3>
-                            {item.date && (
-                              <p className="text-xs text-muted-foreground">
-                                {formatDate(item.date)}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold">
-                            {formatDistance(item.value)}
-                          </div>
-                          <Badge variant="secondary" className="text-xs">
-                            miles
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-            */}
           {/* Trophy Grid */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-amber-500" />
                     {showTeamView ? 'Team ' : ''}Milestone Trophies
                   </CardTitle>
                   <CardDescription>
                     {trophyStats.earned} of {trophyStats.total} badges earned ({trophyStats.percentage.toFixed(1)}%)
                   </CardDescription>
                 </div>
-                <Badge variant="outline" className="px-3 py-1 text-lg">
+                <Badge variant="outline" className="px-3 py-1 text-md">
                   {trophyStats.earned}/{trophyStats.total}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {trophyData.milestones.map((milestone) => (
                   <Dialog key={milestone.id}>
                     <DialogTrigger asChild>
@@ -357,7 +243,6 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                         onClick={() => setSelectedTrophy(milestone)}
                       >
                         {' '}
-
                         <div className="relative">
                           <div className="bg-muted/20 group-hover:border-primary/20 aspect-square overflow-hidden rounded-lg border-2 border-transparent transition-colors">
                             {DisplayLogo(milestone)}
@@ -372,6 +257,11 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                         <div className="mt-2 text-center">
                           <p className="truncate px-1 text-xs font-medium">{milestone.name}</p>
                           <p className="text-muted-foreground text-xs">{formatDistance(milestone.distance)} mi</p>
+                          {isMilestoneCompleted(milestone) &&
+                            (() => {
+                              const earnedDate = showTeamView ? milestone.team_earned_at : milestone.earned_at;
+                              return earnedDate ? <p className="text-muted-foreground text-xs">Earned {formatDate(earnedDate)}</p> : null;
+                            })()}
                         </div>
                       </div>
                     </DialogTrigger>
@@ -380,23 +270,21 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                          <Trophy className="h-5 w-5 text-amber-500" />
+                          <Trophy className="h-5 w-5 text-primary" />
                           {milestone.name}
                         </DialogTitle>
                         <DialogDescription>{milestone.distance} mile milestone</DialogDescription>
                       </DialogHeader>
 
-                      <div className="space-y-4">
+                      <div className="space-y-10">
                         {/* Trophy Image */}
                         <div className="flex justify-center">
                           <div className="relative">
-                            <div className="bg-muted/10 aspect-square w-32 overflow-hidden rounded-lg border">
-                              { DisplayLogo(milestone) }
-                            </div>
+                            <div className="bg-muted/10 aspect-square w-80 overflow-hidden rounded-lg border">{DisplayLogo(milestone)}</div>
 
                             {isMilestoneCompleted(milestone) && (
-                              <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 transform bg-green-500 hover:bg-green-600">
-                                <Trophy className="mr-1 h-3 w-3" />
+                              <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 transform bg-green-500">
+                                <Trophy className="mr-1 size-3" />
                                 Earned
                               </Badge>
                             )}
@@ -410,32 +298,72 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
                           </div>
                         )}
 
-                        {/* Video Link */}
-                        {milestone.video_url && (
-                          <Button variant="outline" className="w-full" asChild>
-                            <a href={milestone.video_url} target="_blank" rel="noopener noreferrer">
-                              <Play className="mr-2 h-4 w-4" />
-                              Watch Video
-                            </a>
-                          </Button>
-                        )}
+                        {/* Video */}
+                        {milestone.video_url &&
+                          (() => {
+                            const vimeoMatch = milestone.video_url.match(/vimeo\.com\/(\d+)/);
+                            if (vimeoMatch) {
+                              return (
+                                <div className="aspect-video w-full overflow-hidden rounded-lg">
+                                  <iframe
+                                    src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
+                                    className="h-full w-full"
+                                    frameBorder="0"
+                                    allow="autoplay; fullscreen; picture-in-picture"
+                                    allowFullScreen
+                                    title={milestone.name}
+                                  />
+                                </div>
+                              );
+                            }
+                            return (
+                              <Button variant="outline" className="w-full" asChild>
+                                <a href={milestone.video_url} target="_blank" rel="noopener noreferrer">
+                                  <Play className="mr-2 h-4 w-4" />
+                                  Watch Video
+                                </a>
+                              </Button>
+                            );
+                          })()}
 
                         <Separator />
 
-                        {/* Action Buttons */}
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button variant="outline" size="sm" onClick={() => shareAchievement(milestone)} disabled={!isMilestoneCompleted(milestone)}>
-                            <Share2 className="mr-2 h-4 w-4" />
-                            Share
-                          </Button>
+                        {/* Social Share Section */}
+                        {isMilestoneCompleted(milestone) && (
+                          <div className="space-y-3">
+                            <div className="text-center">
+                              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Share Your Achievement</h4>
+                              <div className="flex justify-center">
+                                <SocialShareButtons
+                                  title={
+                                    showTeamView
+                                      ? `My team and I just reached ${milestone.name} in our ${trophyData.event.name} journey. That's ${Math.floor(milestone.distance)} miles y'all!`
+                                      : `I just reached ${milestone.name} in ${trophyData.event.name} journey. That's ${Math.floor(milestone.distance)} miles y'all!`
+                                  }
+                                  url={route('shared.milestone', {
+                                    milestoneId: milestone.id,
+                                    ...(showTeamView && { team: true })
+                                  })}
+                                  imageUrl={showTeamView ? milestone.team_logo_image_url : milestone.logo_image_url}
+                                />
+                              </div>
+                            </div>
 
-                          <Button variant="outline" size="sm" asChild>
-                            <a href="#" target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="mr-2 h-4 w-4" />
-                              Bib
-                            </a>
-                          </Button>
-                        </div>
+                            {/* Bib Button */}
+                            <Button variant="outline" size="sm" asChild className="w-full">
+                              <a href="#" target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                View Custom Bib
+                              </a>
+                            </Button>
+                          </div>
+                        )}
+
+                        {!isMilestoneCompleted(milestone) && (
+                          <div className="pt-2 text-center">
+                            <p className="text-muted-foreground text-sm">Complete this milestone to unlock sharing!</p>
+                          </div>
+                        )}
 
                         {isMilestoneCompleted(milestone) && (
                           <div className="pt-2 text-center">

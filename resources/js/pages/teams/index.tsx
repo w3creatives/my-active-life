@@ -9,12 +9,14 @@ import { ChartPie, Mail } from 'lucide-react';
 import AdminControls from './components/admin-controls';
 import InviteMembers from './components/invite-members';
 import TeamMembers from './components/team-members';
+import TeamInvitations from '@/pages/teams/components/team-invitations';
 
 export default function FollowPage() {
-  const { team } = usePage<SharedData>().props;
-  const teamData = team as { name?: string } | null;
+  const { team, auth } = usePage<SharedData>().props;
+  const teamData: any = team;
+  const isTeamOwner = teamData && teamData.owner_id === auth.user.id;
 
-  return (
+    return (
     <AppLayout>
       <Head title="Teams" />
       <PageContent>
@@ -24,22 +26,24 @@ export default function FollowPage() {
             <div className="flex gap-2">
               <Link href={route('teams.invites')}>
                 <Button variant="outline-primary" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
+                  <Mail className="size-4" />
                   View Invites
                 </Button>
               </Link>
               <Link href={route('stats')}>
                 <Button variant="default" className="flex items-center gap-2">
-                  <ChartPie className="h-4 w-4" />
+                  <ChartPie className="size-4" />
                   Show Stats
                 </Button>
               </Link>
             </div>
           )}
         </div>
-        <CreateTeam />
-        {!teamData && <TeamToJoin />}
-        {teamData && <TeamMembers />}
+
+        {isTeamOwner && <CreateTeam /> }
+        {!teamData && <TeamInvitations /> }
+        {!teamData && <TeamToJoin /> }
+        {teamData && <TeamMembers /> }
         {teamData && <InviteMembers />}
         {/* Admin Controls Section - Only shown for team owners */}
         {teamData && <AdminControls />}

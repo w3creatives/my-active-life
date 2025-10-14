@@ -1,8 +1,9 @@
+import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { router } from '@inertiajs/react';
-import { Clock, Mail, RefreshCw, Trash2, UserCheck, UserX } from 'lucide-react';
+import { Link, router } from '@inertiajs/react';
+import { ChevronLeft, Clock, Mail, RefreshCw, Trash2, UserCheck, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Invite {
@@ -114,18 +115,25 @@ export default function TeamInvites({ pendingInvites, team }: TeamInvitesProps) 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Team Invites</h2>
-          <p className="text-gray-600">Manage pending invitations for {team?.name}</p>
-        </div>
-        <div className="flex gap-2">
-          {getExpiredInvitesCount() > 0 && (
-            <Button variant="outline" onClick={handleCancelExpiredInvites} className="flex items-center gap-2">
-              <Trash2 className="h-4 w-4" />
-              Cancel Expired ({getExpiredInvitesCount()})
-            </Button>
-          )}
+      <div className="flex items-top justify-between">
+        <Heading title='Team Invites' description={`Manage pending invitations for ${team?.name}`} />
+        <div className="actions">
+          <div>
+            <Link href={route('teams')}>
+              <Button className="flex items-center gap-2">
+                <ChevronLeft />
+                Back to Teams
+              </Button>
+            </Link>
+          </div>
+          <div className="flex gap-2">
+            {getExpiredInvitesCount() > 0 && (
+              <Button variant="outline" onClick={handleCancelExpiredInvites} className="flex items-center gap-2">
+                <Trash2 className="h-4 w-4" />
+                Cancel Expired ({getExpiredInvitesCount()})
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -158,7 +166,7 @@ export default function TeamInvites({ pendingInvites, team }: TeamInvitesProps) 
                       <div className="mt-1 flex items-center gap-2">
                         <Clock className="h-3 w-3 text-gray-400" />
                         <span className="text-xs text-gray-500">
-                          Invited {invite.created_at} ({invite.days_ago} days ago)
+                          Invited {invite.created_at}
                         </span>
                       </div>
                     </div>

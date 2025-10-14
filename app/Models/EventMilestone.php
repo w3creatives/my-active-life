@@ -89,6 +89,11 @@ final class EventMilestone extends Model
         return $this->belongsTo(EmailTemplate::class, 'email_template_id', 'id');
     }
 
+    public function event()
+    {
+        return $this->belongsTo(Event::class, 'event_id', 'id');
+    }
+
     public function images(): array
     {
         return [

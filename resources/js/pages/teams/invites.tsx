@@ -10,7 +10,6 @@ export default function TeamInvitesPage() {
     <AppLayout>
       <Head title="Team Invites" />
       <div className="flex flex-col gap-6 p-4">
-        <h1 className="text-4xl font-normal">Team Invites</h1>
         <TeamInvites pendingInvites={pendingInvites} team={team} />
       </div>
     </AppLayout>

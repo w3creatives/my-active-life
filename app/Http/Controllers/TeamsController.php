@@ -760,15 +760,20 @@ final class TeamsController extends Controller
         return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => 'Team member has been removed successfully.']);
     }
 
-    public function findTeamstoJoin(Request $request): JsonResponse
+    public function findTeamsToJoin(Request $request): JsonResponse
     {
-
         $user = $request->user();
 
         $eventId = $user->preferred_event_id;
 
+        $perPage = $request->input('perPage', 5);
+        $searchTeam = $request->input('searchTeam');
+
         $teams = Team::where('event_id', $eventId)
-            ->limit($request->input('perPage', 5))->paginate()
+            ->when($searchTeam, function ($query, $searchTeam) {
+                return $query->where('name', 'ILIKE', "%{$searchTeam}%");
+            })
+            ->paginate($perPage)
             ->through(function ($team) use ($eventId, $user) {
 
                 $totalMiles = $team->totalPoints()->where('event_id', $eventId)->sum('amount');
@@ -870,24 +875,54 @@ final class TeamsController extends Controller
     }
 
     /**
-     * Get user's team invitations
+     * Get user's team invitations (for web view)
      */
-    public function getUserTeamInvitations(Request $request)
+    public function getUserTeamInvitations(Request $request): Response
     {
         $user = $request->user();
+        $eventId = $user->preferred_event_id;
 
+        // Check if user is already in a team (either as owner or member)
+        $hasTeam = Team::where(function ($query) use ($user) {
+            return $query->where('owner_id', $user->id)
+                ->orWhereHas('memberships', function ($query) use ($user) {
+                    return $query->where('user_id', $user->id);
+                });
+        })->where('event_id', $eventId)->exists();
+
+        // Get user's pending invitations
         $invitations = $user->invites()
-            ->with(['team', 'event'])
+            ->with(['team:id,name,event_id', 'event:id,name'])
+            ->where('event_id', $eventId)
             ->where('status', 'invite_to_join_issued')
-            ->get();
+            ->get()
+            ->map(function ($invite) {
+                return [
+                    'id' => $invite->id,
+                    'team_id' => $invite->team_id,
+                    'team_name' => $invite->team->name,
+                    'event_id' => $invite->event_id,
+                    'event_name' => $invite->event->name ?? 'Current Challenge',
+                    'created_at' => $invite->created_at->format('M j, Y g:i A'),
+                    'days_ago' => $invite->created_at->diffInDays(now()),
+                    'status' => $invite->status,
+                ];
+            });
 
-        return response()->json($invitations);
+        $membershipRequests = Team::whereHas('invites', function ($query) use ($user, $eventId) {
+            return $query->where('prospective_member_id', $user->id)->where('event_id', $eventId);
+        })->get();
+
+        return Inertia::render('teams/user-invitations', [
+            'invitations' => $invitations,
+            'hasTeam' => $hasTeam,
+        ]);
     }
 
     /**
      * Accept a team invitation
      */
-    public function acceptTeamInvitation(Request $request)
+    public function acceptTeamInvitation(Request $request): RedirectResponse
     {
         $request->validate([
             'team_id' => [
@@ -902,31 +937,49 @@ final class TeamsController extends Controller
 
         $user = $request->user();
 
+        // Check if user is already in a team
+        $hasTeam = Team::where(function ($query) use ($user) {
+            return $query->where('owner_id', $user->id)
+                ->orWhereHas('memberships', function ($query) use ($user) {
+                    return $query->where('user_id', $user->id);
+                });
+        })->where('event_id', $request->event_id)->exists();
+
+        if ($hasTeam) {
+            return redirect()->back()->with('alert', ['type' => 'error', 'message' => 'You are already a member of a team. Please leave your current team first.']);
+        }
+
         $invitation = $user->invites()
             ->where(['team_id' => $request->team_id, 'event_id' => $request->event_id])
             ->where('status', 'invite_to_join_issued')
             ->first();
 
         if (is_null($invitation)) {
-            return response()->json(['error' => 'Team invitation not found'], 404);
+            return redirect()->back()->with('alert', ['type' => 'error', 'message' => 'Team invitation not found or already processed.']);
         }
 
         $team = $invitation->team;
 
         if (is_null($team)) {
-            return response()->json(['error' => 'Team not found'], 404);
+            return redirect()->back()->with('alert', ['type' => 'error', 'message' => 'Team not found.']);
         }
 
-        // Add your invitation acceptance logic here
-        // Update invitation status, add user to team, etc.
+        // Add user to team
+        $team->memberships()->create([
+            'user_id' => $user->id,
+            'event_id' => $request->event_id,
+        ]);
 
-        return response()->json(['message' => 'Invitation accepted successfully']);
+        // Update invitation status
+        $invitation->update(['status' => 'accepted']);
+
+        return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => "Welcome to {$team->name}! You have successfully joined the team."]);
     }
 
     /**
      * Decline a team invitation
      */
-    public function declineTeamInvitation(Request $request)
+    public function declineTeamInvitation(Request $request): RedirectResponse
     {
         $request->validate([
             'team_id' => [
@@ -947,13 +1000,13 @@ final class TeamsController extends Controller
             ->first();
 
         if (is_null($invitation)) {
-            return response()->json(['error' => 'Team invitation not found'], 404);
+            return redirect()->back()->with('alert', ['type' => 'error', 'message' => 'Team invitation not found or already processed.']);
         }
 
         // Update invitation status to declined
         $invitation->update(['status' => 'invite_declined']);
 
-        return response()->json(['message' => 'Invitation declined successfully']);
+        return redirect()->route('user.team-invitations')->with('alert', ['type' => 'success', 'message' => 'Invitation declined successfully.']);
     }
 
     /**
