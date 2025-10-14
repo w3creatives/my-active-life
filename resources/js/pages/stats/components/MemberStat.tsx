@@ -61,7 +61,7 @@ const MemberStatRowSkeleton = () => (
 
 
 function Accomplishment({ accomplishment, date }: AccomplishmentProps) {
-  console.log(accomplishment);
+
   return (
     <div className="w-1/7 lg:w-1/7">
       <div className="text-center">
