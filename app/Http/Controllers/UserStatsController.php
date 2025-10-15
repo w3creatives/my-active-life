@@ -280,7 +280,7 @@ final readonly class UserStatsController
         });
     }
 
-    public function teamMonthlyPoints(Request $request): Collection|JsonResponse
+    public function teamMonthlyPoints(Request $request)
     {
         $eventId = (int) $request->query('event_id');
         $user = $request->user();

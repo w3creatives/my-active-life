@@ -205,17 +205,17 @@ final class TeamRepository
         $achievementData = [
             'best_day' => [
                 'achievement' => 'best_day',
-                'accomplishment' => null,
+                'accomplishment' => (float)0,
                 'date' => null,
             ],
             'best_week' => [
                 'achievement' => 'best_week',
-                'accomplishment' => null,
+                'accomplishment' => (float)0,
                 'date' => null,
             ],
             'best_month' => [
                 'achievement' => 'best_month',
-                'accomplishment' => null,
+                'accomplishment' => (float)0,
                 'date' => null,
             ],
         ];
@@ -234,26 +234,26 @@ final class TeamRepository
 
             if ($achievements->count()) {
                 foreach ($achievements as $achievement) {
-                    $data[$achievement->achievement]['accomplishment'] = $achievement->accomplishment;
+                    $data[$achievement->achievement]['accomplishment'] = (float)$achievement->accomplishment;
                     $data[$achievement->achievement]['date'] = $achievement->date;
                 }
             }
 
             $data['current_day'] = [
                 'achievement' => 'day',
-                'accomplishment' => $dayPoint,
+                'accomplishment' => (float)$dayPoint,
                 'date' => $today,
             ];
 
             $data['current_week'] = [
                 'achievement' => 'week',
-                'accomplishment' => $weekPoint,
+                'accomplishment' => (float)$weekPoint,
                 'date' => $endOfWeek,
             ];
 
             $data['current_month'] = [
                 'achievement' => 'month',
-                'accomplishment' => $monthPoint,
+                'accomplishment' => (float)$monthPoint,
                 'date' => $endOfMonth,
             ];
 
