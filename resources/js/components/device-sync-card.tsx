@@ -200,7 +200,7 @@ export default function DeviceSyncCard({
   return (
     <Card>
       <CardHeader className="gap-4">
-        <img src={imageSrc} alt={name} className="h-16 w-fit" />
+        <img src={imageSrc} alt={name} className="h-16 w-fit" onError={(e) => {e.currentTarget.src="/images/default-placeholder.png";}}/>
         <CardTitle className="text-2xl">{name}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>

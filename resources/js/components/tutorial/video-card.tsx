@@ -55,7 +55,7 @@ export default function VideoCard({ source, title, thumb, url }: VideoProps) {
         </CardHeader>
         <CardContent>
           <div className="group relative aspect-video w-full cursor-pointer" onClick={() => setIsOpen(true)}>
-            <img src={getThumbnail()} alt={title} className="h-full w-full rounded-md object-cover" />
+            <img src={getThumbnail()} alt={title} className="h-full w-full rounded-md object-cover" onError={(e) => {e.currentTarget.src="/images/default-placeholder.png";}}/>
             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
               <div className="bg-primary text-primary-foreground transform rounded-full p-4 transition-transform duration-300 group-hover:scale-120">
                 <Play size={24} />

@@ -111,7 +111,7 @@ export default function NextMilestoneCard({
                 <img
                   src={imageUrl}
                   alt={nextMilestone.name}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain" onError={(e) => {e.currentTarget.src="/images/default-placeholder.png";}}
                 />
               ) : (
                 <Trophy className="h-12 w-12 text-muted-foreground/50" />

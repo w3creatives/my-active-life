@@ -79,7 +79,7 @@ export default function Privacy() {
                 <CardContent className="flex flex-col md:flex-row justify-between gap-2">
                   <div className="space-y-2">
                     <p className="text-2xl font-semibold">{participation.event.name}</p>
-                    <img className="max-w-xs" src={participation.event.logo_url} alt={participation.event.name} />
+                    <img className="max-w-xs" src={participation.event.logo_url} alt={participation.event.name} onError={(e) => {e.currentTarget.src="/images/default-placeholder.png";}}/>
                     <p className="text-muted-foreground">
                       Your profile for this event is <span className="font-semibold">{participation.public_profile ? 'Public' : 'Private'}</span>.
                     </p>

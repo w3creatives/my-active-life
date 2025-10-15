@@ -315,7 +315,7 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
                                             e.stopPropagation();
                                             setSelectedMilestone(point.milestone);
                                             setIsBibModalOpen(true);
-                                          }}
+                                          }} onError={(e) => {e.currentTarget.src="/images/default-placeholder.png";}}
                                         />
                                       </div>
                                     )}

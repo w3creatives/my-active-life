@@ -63,7 +63,7 @@ export default function PreferredEvent({ events }: { events: any[] }) {
           {localEvents.map((event) => (
             <Card key={event.id} className='pt-0'>
               <CardHeader className='p-0'>
-                <img src={event.logo_url} alt={event.name} className="w-full rounded-t-xl" />
+                <img src={event.logo_url} alt={event.name} className="w-full rounded-t-xl" onError={(e) => {e.currentTarget.src="/images/default-placeholder.png";}}/>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col items-center justify-center gap-4">

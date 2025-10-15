@@ -75,7 +75,7 @@ export default function SharedMilestone({ milestone, event, shareTitle, isTeam }
                       <img
                         src={milestone.image_url}
                         alt={milestone.name}
-                        className="h-full w-full object-contain"
+                        className="h-full w-full object-contain" onError={(e) => {e.currentTarget.src="/images/default-placeholder.png";}}
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">

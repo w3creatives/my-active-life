@@ -50,7 +50,7 @@ export default function TrophyModal({ milestone, isOpen, onOpenChange, isComplet
                   <img
                     src={showTeamView ? milestone.team_logo_image_url || milestone.logo_image_url : milestone.logo_image_url}
                     alt={milestone.name}
-                    className="h-full w-full object-contain"
+                    className="h-full w-full object-contain" onError={(e) => {e.currentTarget.src="/images/default-placeholder.png";}}
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">

@@ -13,12 +13,12 @@ interface BibModalProps {
   onShare?: (milestone: Milestone) => void;
 }
 
-export default function BibModal({ 
-  milestone, 
-  isOpen, 
-  onOpenChange, 
-  showTeamView = false, 
-  onShare 
+export default function BibModal({
+  milestone,
+  isOpen,
+  onOpenChange,
+  showTeamView = false,
+  onShare
 }: BibModalProps) {
   if (!milestone) return null;
 
@@ -33,9 +33,9 @@ export default function BibModal({
   // Get the appropriate image URL based on team view
   const getImageUrl = () => {
     if (showTeamView) {
-      return milestone.calendar_team_logo_url || 
-             milestone.calendar_logo_url || 
-             milestone.team_bib_image_url || 
+      return milestone.calendar_team_logo_url ||
+             milestone.calendar_logo_url ||
+             milestone.team_bib_image_url ||
              milestone.bib_image_url;
     }
     return milestone.calendar_logo_url || milestone.bib_image_url;
@@ -77,7 +77,7 @@ export default function BibModal({
                   <img
                     src={getImageUrl()}
                     alt={milestone.name}
-                    className="h-full w-full object-contain"
+                    className="h-full w-full object-contain" onError={(e) => {e.currentTarget.src="/images/default-placeholder.png";}}
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
@@ -104,9 +104,9 @@ export default function BibModal({
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => shareAchievement(milestone)}
             >
               <Share2 className="mr-2 h-4 w-4" />

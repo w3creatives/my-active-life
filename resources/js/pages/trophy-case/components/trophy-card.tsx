@@ -42,7 +42,7 @@ export default function TrophyCard({ milestone, isCompleted, showTeamView = fals
               src={showTeamView ? milestone.team_logo_image_url || milestone.logo_image_url : milestone.logo_image_url}
               alt={milestone.name}
               className="h-full w-full object-contain"
-              loading="lazy"
+              loading="lazy" onError={(e) => {e.currentTarget.src="/images/default-placeholder.png";}}
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">

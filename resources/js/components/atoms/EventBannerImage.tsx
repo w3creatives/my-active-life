@@ -8,7 +8,7 @@ export default function EventBannerImage() {
     <>
       {auth.preferred_event && (
         <div className="mb-4">
-          <img src={auth.preferred_event.logo_url} alt={auth.preferred_event.name} className="max-h-[280px]" />
+          <img src={auth.preferred_event.logo_url} alt={auth.preferred_event.name} className="max-h-[280px]" onError={(e) => {e.currentTarget.src="/images/placeholder-banner.png";}}/>
         </div>
       )}
     </>

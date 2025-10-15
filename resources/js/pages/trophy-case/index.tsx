@@ -87,7 +87,7 @@ export default function TrophyCase({ trophyData, error }: TrophyCaseProps) {
     const logoUrl = showTeamView ? milestone.team_logo_image_url : milestone.logo_image_url;
 
     if (logoUrl) {
-      return <img src={logoUrl} alt={milestone.name} className="h-full w-full object-cover" loading="lazy" />;
+      return <img src={logoUrl} alt={milestone.name} className="h-full w-full object-cover" loading="lazy" onError={(e) => {e.currentTarget.src="/images/default-placeholder.png";}}/>;
     }
 
     return (

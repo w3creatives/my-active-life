@@ -168,7 +168,7 @@ export default function NextMilestone({ milestone, userDistance, previousMilesto
           <div className="flex gap-4">
               {data.milestone.logo && (
                   <div className="flex-shrink-0">
-                      <img src={data.milestone.logo} alt={data.milestone.name} className="bg-muted h-16 w-16 rounded-lg object-contain p-2" />
+                      <img src={data.milestone.logo} alt={data.milestone.name} className="bg-muted h-16 w-16 rounded-lg object-contain p-2" onError={(e) => {e.currentTarget.src="/images/default-placeholder.png";}}/>
                   </div>
               )}
               <div className="min-w-0 flex-1">
