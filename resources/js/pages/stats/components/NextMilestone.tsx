@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ExternalLink, Image, MapPin, Target } from 'lucide-react';
+import { ExternalLink, Image, MapPin, Milestone, Target } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { usePage } from '@inertiajs/react';
@@ -152,7 +152,7 @@ export default function NextMilestone({ milestone, userDistance, previousMilesto
           <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-1">
-                  <Target className="text-muted-foreground h-4 w-4" />
+                  <Milestone className="text-muted-foreground h-4 w-4" />
                   {formatDistance(data.distanceToGo)} Miles Remaining
                 </span><span className="font-medium">{data.segmentProgress.toFixed(2)}%</span>
               </div>

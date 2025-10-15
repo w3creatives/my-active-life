@@ -104,7 +104,7 @@ export default function Last30days({ dataFor }: Last30daysProps) {
             <CardDescription>{dataFor === 'team' ? 'Team' : 'Your'} daily points for the last 30 days</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfig} className='max-h-100 w-full'>
+            <ChartContainer config={chartConfig} className='max-h-75 w-full'>
               <ComposedChart width={800} height={50} data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis

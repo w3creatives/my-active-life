@@ -3,7 +3,7 @@ import { NavMain } from '@/components/nav-main';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { usePage } from '@inertiajs/react';
-import { CalendarDays, ChartSpline, Handshake, Settings, Trophy, Users } from 'lucide-react';
+import { CalendarDays, ChartSpline, Handshake, Settings, Trophy, Users, UserPlus } from 'lucide-react';
 import { EventSwitcher } from './event-switcher';
 
 const mainNavItems: NavItem[] = [
@@ -30,7 +30,7 @@ const mainNavItems: NavItem[] = [
   {
     title: 'Follow',
     href: '/follow',
-    icon: Users,
+    icon: UserPlus,
   },
   {
     title: 'Tutorials',

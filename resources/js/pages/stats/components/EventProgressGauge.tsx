@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Target, TrendingUp, Trophy } from 'lucide-react';
+import { ChartNoAxesCombined, Target, TrendingUp, Trophy } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { usePage } from '@inertiajs/react';
@@ -102,8 +102,6 @@ export default function EventProgressGauge({ className = '', dataFor = 'you' }: 
                             </div>
                         </div>
 
-
-
                         {/* Event Total Information */}
                         <div className="border-t pt-4">
                             <div className="grid grid-cols-1 text-center">
@@ -120,8 +118,8 @@ export default function EventProgressGauge({ className = '', dataFor = 'you' }: 
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                             <CardTitle className="flex items-center gap-2 text-xl">
-                                <Trophy className="text-primary h-5 w-5" />
-                                {data.eventName} Progress
+                                <Trophy className="text-primary size-5" />
+                                Your Progress
                             </CardTitle>
                             {data.isCompleted && (
                                 <Badge variant="default" className="bg-green-500">
@@ -136,13 +134,12 @@ export default function EventProgressGauge({ className = '', dataFor = 'you' }: 
                         <div className="space-y-3">
                             <div className="flex items-center justify-between text-sm">
                                 <span className="flex items-center gap-1">
-                                    <Target className="text-muted-foreground size-4" />
+                                    <ChartNoAxesCombined className="text-muted-foreground size-4" />
                                     Event Progress
                                 </span>
                                 <span className="font-medium">{data.percentage.toFixed(2)}%</span>
                             </div>
                             <Progress value={data.percentage} className="h-3" />
-
                         </div>
                         <div className="grid grid-cols-2 gap-3 text-sm">
                             <div className='bg-muted/30 rounded-lg border p-2 text-center'>
@@ -158,7 +155,7 @@ export default function EventProgressGauge({ className = '', dataFor = 'you' }: 
                         </div>
 
                         {/* Event Total Information */}
-                        <div className="border-t pt-4">
+                        <div className="bg-muted/30 rounded-lg border p-4 text-center">
                             <div className="flex flex-col text-center">
                                 <p className="text-muted-foreground text-xs tracking-wide uppercase">Event Total Distance</p>
                                 <p className="text-lg font-bold">{formatDistance(data.totalDistance.toFixed(2))} miles</p>
