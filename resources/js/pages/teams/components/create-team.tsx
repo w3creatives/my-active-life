@@ -59,14 +59,14 @@ export default function CreateTeam({ status }: { status?: string }) {
   };
 
   const cardTitle: string = !teamData ? 'Create Your Team' : 'Rename Your Team';
-  const cardDescription: null|string = !teamData ? 'What do you want your team to be named?' : null;
+  const cardDescription: null | string = !teamData ? 'What do you want your team to be named?' : null;
 
   return (
     <>
       <Card>
         <CardHeader>
-          {cardTitle ?? <CardTitle>{ cardTitle }</CardTitle>}
-          {cardDescription ?? <CardDescription>{ cardDescription }</CardDescription>}
+          {cardTitle ?? <CardTitle>{cardTitle}</CardTitle>}
+          {cardDescription ?? <CardDescription>{cardDescription}</CardDescription>}
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-6">
@@ -95,8 +95,8 @@ export default function CreateTeam({ status }: { status?: string }) {
                     key={factor}
                     onClick={() => setData('chutzpah_factor', factor)}
                     className={`relative cursor-pointer rounded-lg border-2 px-4 py-3 transition-all duration-200 hover:shadow-sm flex-1 max-w-25 ${data.chutzpah_factor === factor
-                        ? 'border-primary'
-                        : 'border-border hover:border-primary/50'
+                      ? 'border-primary'
+                      : 'border-border hover:border-primary/50'
                       }`}
                   >
                     {data.chutzpah_factor === factor && (
@@ -120,18 +120,20 @@ export default function CreateTeam({ status }: { status?: string }) {
               title={teamData ? 'Change Team Visibility' : 'To be, or not to be...public?'}
               description="Choose to make your team public or private. Public teams will show up in searches and allow others to follow your progress. Private teams will be invisible from others."
             />
-            <div className="grid gap-2">
-              {!teamData ? <Label>Make this team's profile public?</Label> : ''}
-              <Switch
-                defaultChecked={data.public_profile}
-                onChange={(e) => {
-                  // @ts-ignore
-                  setData('public_profile', !data.public_profile);
-                }}
-                className="group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 data-checked:bg-blue-600 data-disabled:cursor-not-allowed data-disabled:opacity-50"
-              >
-                <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-checked:translate-x-6" />
-              </Switch>
+            <div className="flex flex-col gap-2 flex-wrap">
+              {!teamData ? <Label className='flex-1'>Make this team's profile public?</Label> : ''}
+              <div className='flex items-center gap-2 mt-2 text-sm'>
+                Private <Switch
+                  defaultChecked={data.public_profile}
+                  onChange={(e) => {
+                    // @ts-ignore
+                    setData('public_profile', !data.public_profile);
+                  }}
+                  className="group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 data-checked:bg-blue-600 data-disabled:cursor-not-allowed data-disabled:opacity-50"
+                >
+                  <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-checked:translate-x-6" />
+                </Switch> Public
+              </div>
             </div>
 
             <div className="flex items-center gap-4">

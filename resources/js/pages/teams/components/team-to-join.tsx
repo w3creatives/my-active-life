@@ -4,9 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { SharedData } from '@/types';
-import { usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { Lock, Search } from 'lucide-react';
+import { router, usePage } from '@inertiajs/react';
+import { Lock, Search, Unlock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -77,18 +77,25 @@ export default function TeamToJoin() {
 
   const handleTeamJoinAction = (team: object) => {
     setTeamJoinActionProcessing(true);
-    axios
-      .post(route('teams.team-to-join-request'), {
-        action: team.membership.status,
-        team_id: team.id,
-      })
-      .then((response) => {
+    router.post(route('teams.team-to-join-request'), {
+      event_id: auth.preferred_event.id,
+      team_id: team.id,
+    }, {
+      onSuccess: () => {
         setTeamJoinActionProcessing(false);
-      })
-      .catch((error) => {
+        // Refresh the teams list after successful join
+        fetchTeams(currentPage);
+      },
+      onError: (errors) => {
         setTeamJoinActionProcessing(false);
-        toast.error(error.response.data.message);
-      });
+        // Handle validation errors or other errors
+        const errorMessage = errors.message || Object.values(errors)[0] || 'An error occurred';
+        toast.error(errorMessage);
+      },
+      onFinish: () => {
+        setTeamJoinActionProcessing(false);
+      }
+    });
   };
 
   // Skeleton component for individual user rows
@@ -182,7 +189,7 @@ export default function TeamToJoin() {
                     <div className="font-medium">{member.name}</div>
                   </div>
                   <div>
-                    <Lock />
+                    {member.public_profile ? <Unlock className="size-4" /> : <Lock className="size-4" />}
                   </div>
                 </div>
                 <div className="w-1/4 lg:w-1/4">{member.members}</div>
