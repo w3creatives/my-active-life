@@ -230,6 +230,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/teams/membership-requests', [TeamsController::class, 'membershipRequests'])->name('teams.membership-requests');
     Route::post('/teams/membership-requests/handle', [TeamsController::class, 'handleMembershipRequest'])->name('teams.handle-membership-request');
 
+    // User's outgoing join requests routes
+    Route::get('/teams/user-join-requests', [TeamsController::class, 'getUserJoinRequests'])->name('teams.user-join-requests');
+    Route::post('/teams/user-join-requests/cancel', [TeamsController::class, 'cancelUserJoinRequest'])->name('teams.cancel-user-join-request');
+
     // settings
     Route::post('/settings/update/privacy', [DashboardController::class, 'updateEventParticipantPrivacy'])->name('settings.update.privacy');
 });

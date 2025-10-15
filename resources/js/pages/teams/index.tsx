@@ -11,6 +11,7 @@ import InviteMembers from './components/invite-members';
 import TeamMembers from './components/team-members';
 import TeamInvitations from '@/pages/teams/components/team-invitations';
 import TeamMembershipRequests from '@/pages/teams/components/team-membership-requests';
+import UserJoinRequests from '@/pages/teams/components/user-join-requests';
 
 export default function FollowPage() {
   const { team, auth } = usePage<SharedData>().props;
@@ -43,6 +44,7 @@ export default function FollowPage() {
 
         <CreateTeam />
         {!teamData && <TeamInvitations />}
+        {!teamData && <UserJoinRequests />}
         {!teamData && <TeamToJoin />}
         {teamData && <TeamMembershipRequests />}
         {teamData && <TeamMembers />}

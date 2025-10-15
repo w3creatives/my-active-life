@@ -105,7 +105,7 @@ export default function AreYouOnTarget({ dataFor = 'you' }: AreYouOnTargetProps)
   const formatDistance = (distance: number) => {
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
-      maximumFractionDigits:2,
+      maximumFractionDigits: 2,
     }).format(distance);
   };
 
@@ -155,46 +155,37 @@ export default function AreYouOnTarget({ dataFor = 'you' }: AreYouOnTargetProps)
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <Target className={`h-5 w-5 ${
-                targetStats.statusColor === 'green' ? 'text-green-500' :
+              <Target className={`size-5 ${targetStats.statusColor === 'green' ? 'text-green-500' :
                 targetStats.statusColor === 'red' ? 'text-red-500' : 'text-gray-500'
-              }`} />
+                }`} />
               <CardTitle className="text-lg">Are You On Target?</CardTitle>
             </div>
-            <CardDescription className="text-sm">
-              {dataFor === 'team' ? 'Team progress' : 'Your progress'} toward the next milestone
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Status Badge */}
-
-              {targetData && (<div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-1">
-
-                    </span>
-                      <span className="font-medium">{targetData.on_target_percentage.toFixed(2)}%</span>
+            {targetData && (<div className="space-y-3">
+              <div className="flex items-center justify-end text-sm">
+                <span className="font-medium">{targetData.on_target_percentage.toFixed(2)}%</span>
+              </div>
+              <Progress value={targetData.on_target_percentage} className="h-3" />
+              <div className="flex items-center justify-between">
+                <Badge
+                  variant={targetStats.statusColor === 'green' ? 'default' : 'secondary'}
+                  className={`${targetStats.statusColor === 'green' ? 'bg-green-500 hover:bg-green-600' :
+                    targetStats.statusColor === 'red' ? 'bg-red-500 hover:bg-red-600' :
+                      targetStats.statusColor === 'yellow' ? 'bg-yellow-500 hover:bg-yellow-600' :
+                        'bg-gray-500 hover:bg-gray-600'
+                    } text-white`}
+                >
+                  {targetStats.statusText}
+                </Badge>
+                {targetData && (
+                  <div className="text-sm text-muted-foreground">
+                    {targetData.days_remaining.toFixed(2)} days left
                   </div>
-                  <Progress value={targetData.on_target_percentage} className="h-3" />
-                  <div className="flex items-center justify-between">
-                      <Badge
-                          variant={targetStats.statusColor === 'green' ? 'default' : 'secondary'}
-                          className={`${
-                              targetStats.statusColor === 'green' ? 'bg-green-500 hover:bg-green-600' :
-                                  targetStats.statusColor === 'red' ? 'bg-red-500 hover:bg-red-600' :
-                                      targetStats.statusColor === 'yellow' ? 'bg-yellow-500 hover:bg-yellow-600' :
-                                          'bg-gray-500 hover:bg-gray-600'
-                          } text-white`}
-                      >
-                          {targetStats.statusText}
-                      </Badge>
-                      {targetData && (
-                          <div className="text-sm text-muted-foreground">
-                              {targetData.days_remaining.toFixed(2)} days left
-                          </div>
-                      )}
-                  </div>
-              </div>)}
+                )}
+              </div>
+            </div>)}
             {/* Gauge Chart */}
             {/*targetData && (
               <div className="flex justify-center">
@@ -209,13 +200,6 @@ export default function AreYouOnTarget({ dataFor = 'you' }: AreYouOnTargetProps)
                 />
               </div>
             ) */}
-
-            {/* Goal Message */}
-            {targetData && targetData.goal_message && (
-              <div className="bg-muted/30 rounded-lg border p-4 text-center">
-                <p className="text-sm text-foreground">{targetData.goal_message}</p>
-              </div>
-            )}
 
             {/* Stats Grid */}
             {targetData && (
@@ -235,31 +219,10 @@ export default function AreYouOnTarget({ dataFor = 'you' }: AreYouOnTargetProps)
               </div>
             )}
 
-            {/* Additional Stats */}
-            {targetData && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-blue-50 rounded-lg border border-blue-200 p-3 text-center dark:bg-blue-950/20 dark:border-blue-800">
-                  <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                    {formatDistance(targetData.target_goal - targetData.current_distance)}
-                  </div>
-                  <div className="text-muted-foreground text-xs">Miles to Goal</div>
-                </div>
-                <div className="bg-purple-50 rounded-lg border border-purple-200 p-3 text-center dark:bg-purple-950/20 dark:border-purple-800">
-                  <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                    {formatDistance(targetData.target_goal)}
-                  </div>
-                  <div className="text-muted-foreground text-xs">Target Goal</div>
-                </div>
-              </div>
-            )}
-
-            {/* Action Message for Behind Target */}
-            {targetData && targetData.goal_indicator === 'behind' && (
-              <div className="flex items-center gap-2 mt-4">
-                <TrendingUp className="h-4 w-4 text-orange-500" />
-                <span className="text-sm text-orange-600 dark:text-orange-400">
-                  Need to average {formatDistance(targetData.daily_average_needed)} miles per day
-                </span>
+            {/* Goal Message */}
+            {targetData && targetData.goal_message && (
+              <div className="bg-muted/30 rounded-lg border p-4 text-center">
+                <p className="text-sm text-foreground">{targetData.goal_message}</p>
               </div>
             )}
           </CardContent>

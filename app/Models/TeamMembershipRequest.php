@@ -14,4 +14,9 @@ final class TeamMembershipRequest extends Model
     {
         return $this->belongsTo(User::class, 'prospective_member_id', 'id');
     }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class, 'team_id', 'id');
+    }
 }

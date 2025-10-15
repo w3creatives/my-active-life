@@ -146,7 +146,6 @@ export default function NextMilestone({ milestone, userDistance, previousMilesto
             Your Next Milestone
           </CardTitle>
         </div>
-        <CardDescription>Next landmark on your {data.eventName} journey</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Milestone Info */}
@@ -154,7 +153,7 @@ export default function NextMilestone({ milestone, userDistance, previousMilesto
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-1">
                   <Target className="text-muted-foreground h-4 w-4" />
-                    Progress to {data.milestone.name}
+                  {formatDistance(data.distanceToGo)} Miles Remaining
                 </span><span className="font-medium">{data.segmentProgress.toFixed(2)}%</span>
               </div>
               <Progress value={data.segmentProgress.toFixed(2)} className="h-3" />
@@ -181,7 +180,7 @@ export default function NextMilestone({ milestone, userDistance, previousMilesto
           </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-4 pt-2">
+        <div className="grid grid-cols-2 gap-4 pt-2 hidden">
           <div className="bg-muted/50 rounded-lg p-3 text-center">
             <p className="text-primary text-2xl font-bold">{formatDistance(data.coveredDistance)}</p>
             <p className="text-muted-foreground text-xs">Miles Completed</p>

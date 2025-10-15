@@ -1014,6 +1014,65 @@ final class TeamsController extends Controller
     }
 
     /**
+     * Get user's outgoing join requests (teams the user has requested to join)
+     */
+    public function getUserJoinRequests(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $eventId = $user->preferred_event_id;
+
+        $joinRequests = $user->requests()
+            ->with(['team' => function ($query) {
+                return $query->select(['id', 'name', 'event_id', 'public_profile']);
+            }])
+            ->where('event_id', $eventId)
+            ->where('status', 'request_to_join_issued')
+            ->get()
+            ->map(function ($request) {
+                return [
+                    'id' => $request->id,
+                    'team_id' => $request->team_id,
+                    'team_name' => $request->team->name,
+                    'status' => $request->status,
+                    'created_at' => $request->created_at->format('M j, Y g:i A'),
+                    'days_ago' => $request->created_at->diffInDays(now()),
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $joinRequests,
+        ]);
+    }
+
+    /**
+     * Cancel user's outgoing join request
+     */
+    public function cancelUserJoinRequest(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'request_id' => 'required|exists:team_membership_requests,id',
+        ]);
+
+        $user = $request->user();
+        $eventId = $user->preferred_event_id;
+
+        $joinRequest = $user->requests()
+            ->where('id', $request->request_id)
+            ->where('event_id', $eventId)
+            ->where('status', 'request_to_join_issued')
+            ->first();
+
+        if (! $joinRequest) {
+            return redirect()->route('teams')->with('alert', ['type' => 'error', 'message' => 'Request not found or already processed.']);
+        }
+
+        $joinRequest->delete();
+
+        return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => 'Join request has been cancelled.']);
+    }
+
+    /**
      * Get team membership requests (users requesting to join the team)
      */
     public function membershipRequests(Request $request): JsonResponse

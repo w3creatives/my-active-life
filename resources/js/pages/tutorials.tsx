@@ -1,4 +1,5 @@
-import EventBannerImage from '@/components/atoms/EventBannerImage';
+import PageContent from '@/components/atoms/page-content';
+import Heading from '@/components/heading';
 import VideoCard from '@/components/tutorial/video-card';
 import { Card, CardContent } from '@/components/ui/card';
 import { SkeletonGrid, VideoCardSkeleton } from '@/components/ui/skeleton-components';
@@ -85,10 +86,8 @@ export default function Tutorials() {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={pageTitle} />
-      <div className="flex flex-col gap-6 p-4">
-        <EventBannerImage />
-        <h1 className="text-4xl font-normal">{pageTitle}</h1>
-
+      <PageContent>
+        <Heading title={pageTitle} headingSize='3xl' />
         {loading ? (
           <SkeletonGrid count={4} columns={2} component={VideoCardSkeleton} />
         ) : error ? (
@@ -100,7 +99,7 @@ export default function Tutorials() {
         ) : (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">{tutorialItems.map((item, index) => renderTutorialItem(item, index))}</div>
         )}
-      </div>
+      </PageContent>
     </AppLayout>
   );
 }

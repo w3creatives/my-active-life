@@ -15,6 +15,8 @@ import PersonalBests from '@/pages/stats/components/PersonalBests';
 import { User, Users } from 'lucide-react';
 import { useState } from 'react';
 import MemberStat from './components/MemberStat';
+import PageContent from '@/components/atoms/page-content';
+import PageTitle from '@/components/atoms/PageTitle';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -60,13 +62,10 @@ export default function Stats() {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Stats" />
-      <div className="flex flex-col gap-6 p-4">
-        <EventBannerImage />
+      <PageContent>
         <div className="flex justify-between gap-5">
           <div className="page-title">
-            <h1 className="text-4xl font-normal">
-              {auth.user.display_name}'s {auth.preferred_event.name} Journey {teamData?.name}
-            </h1>
+            <PageTitle title={`${auth.user.display_name}'s ${auth.preferred_event.name} Journey ${teamData?.name}`} />
           </div>
           {teamData && (
             <div className="flex gap-2">
@@ -94,18 +93,20 @@ export default function Stats() {
 
           <Last30days dataFor={dataFor} />
         </div>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
-            <PersonalBests dataFor={dataFor} />
-            <MonthlyPoints dataFor={dataFor} />
-          </div>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-1">
-              {dataFor == 'team' && <MemberStat />}
+        
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
+          <PersonalBests dataFor={dataFor} />
+          <MonthlyPoints dataFor={dataFor} />
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-1">
+          {dataFor == 'team' && <MemberStat />}
           {/* Conditionally show Activity Type breakdown for Amerithon and JOGLE events */}
           {(auth.preferred_event.name.toLowerCase().includes('amerithon') || auth.preferred_event.name.toLowerCase().includes('jogle')) && (
             <MileageByActivityType dataFor={dataFor} />
           )}
         </div>
-      </div>
+      </PageContent>
     </AppLayout>
   );
 }
