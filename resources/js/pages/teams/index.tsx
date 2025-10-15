@@ -10,13 +10,14 @@ import AdminControls from './components/admin-controls';
 import InviteMembers from './components/invite-members';
 import TeamMembers from './components/team-members';
 import TeamInvitations from '@/pages/teams/components/team-invitations';
+import TeamMembershipRequests from '@/pages/teams/components/team-membership-requests';
 
 export default function FollowPage() {
   const { team, auth } = usePage<SharedData>().props;
   const teamData: any = team;
   const isTeamOwner = teamData && teamData.owner_id === auth.user.id;
 
-    return (
+  return (
     <AppLayout>
       <Head title="Teams" />
       <PageContent>
@@ -40,10 +41,11 @@ export default function FollowPage() {
           )}
         </div>
 
-        {isTeamOwner && <CreateTeam /> }
-        {!teamData && <TeamInvitations /> }
-        {!teamData && <TeamToJoin /> }
-        {teamData && <TeamMembers /> }
+        <CreateTeam />
+        {!teamData && <TeamInvitations />}
+        {!teamData && <TeamToJoin />}
+        {teamData && <TeamMembershipRequests />}
+        {teamData && <TeamMembers />}
         {teamData && <InviteMembers />}
         {/* Admin Controls Section - Only shown for team owners */}
         {teamData && <AdminControls />}

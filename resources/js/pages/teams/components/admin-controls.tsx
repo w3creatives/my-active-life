@@ -1,3 +1,4 @@
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -35,6 +36,7 @@ export default function AdminControls() {
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
   const [searchMember, setSearchMember] = useState('');
+  const [isDissolveDialogOpen, setIsDissolveDialogOpen] = useState(false);
 
   const { processing } = useForm();
 
@@ -61,13 +63,7 @@ export default function AdminControls() {
     }
   };
 
-  const handleDissolveTeam: FormEventHandler = (e) => {
-    e.preventDefault();
-
-    if (!confirm('Are you sure you want to dissolve this team? This action cannot be undone and will remove all team members.')) {
-      return;
-    }
-
+  const handleDissolveTeam = () => {
     router.post(
       route('teams.dissolve'),
       {
@@ -77,7 +73,7 @@ export default function AdminControls() {
         preserveScroll: true,
         onSuccess: () => {
           toast.success('Team has been dissolved successfully');
-          // Redirect to teams page
+          setIsDissolveDialogOpen(false);
           router.visit(route('teams'));
         },
         onError: (errors: any) => {
@@ -136,116 +132,144 @@ export default function AdminControls() {
   }
 
   return (
-    <Card className="border-red-200 bg-red-50">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-red-800">
-          <AlertTriangle className="h-5 w-5" />
-          Other Admin Controls
-        </CardTitle>
-        <CardDescription className="text-red-700">These actions are irreversible and will affect all team members.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button variant="destructive" onClick={handleDissolveTeam} disabled={processing} className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4" />
-            Dissolve Team
-          </Button>
+    <>
+      <Card className="border-red-200 bg-red-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-red-800">
+            <AlertTriangle className="h-5 w-5" />
+            Other Admin Controls
+          </CardTitle>
+          <CardDescription className="text-red-700">These actions are irreversible and will affect all team members.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <AlertDialog open={isDissolveDialogOpen} onOpenChange={setIsDissolveDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  className="flex items-center gap-2"
+                  disabled={processing}
+                >
+                  <AlertTriangle className="size-4" />
+                  Dissolve Team
+                </Button>
+              </AlertDialogTrigger>
 
-          <Dialog open={isTransferDialogOpen} onOpenChange={setIsTransferDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                onClick={openTransferDialog}
-                className="flex items-center gap-2 border-orange-300 text-orange-700 hover:bg-orange-50"
-              >
-                <Crown className="h-4 w-4" />
-                Transfer Admin Role
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Crown className="h-5 w-5" />
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Dissolve Team</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to dissolve this team? This action cannot be undone and will remove all team members.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDissolveTeam}
+                    disabled={processing}
+                  >
+                    {processing ? 'Dissolving...' : 'Continue'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <Dialog open={isTransferDialogOpen} onOpenChange={setIsTransferDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={openTransferDialog}
+                  className="flex items-center gap-2 border-red-300 text-red-700 hover:bg-red-50"
+                >
+                  <Crown className="size-4" />
                   Transfer Admin Role
-                </DialogTitle>
-                <DialogDescription>
-                  Select a team member to transfer the admin role to. You will no longer be the team admin after this action.
-                </DialogDescription>
-              </DialogHeader>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Crown className="size-5" />
+                    Transfer Admin Role
+                  </DialogTitle>
+                  <DialogDescription>
+                    Select a team member to transfer the admin role to. You will no longer be the team admin after this action.
+                  </DialogDescription>
+                </DialogHeader>
 
-              <div className="space-y-4">
-                {/* Search Input */}
-                <div className="relative">
-                  <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                  <Input
-                    type="search"
-                    placeholder="Search team members..."
-                    className="pl-10"
-                    value={searchMember}
-                    onChange={(e) => setSearchMember(e.target.value)}
-                  />
-                </div>
-
-                {loadingMembers ? (
-                  <div className="py-4 text-center">
-                    <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
-                    <p className="mt-2 text-sm text-gray-600">Loading team members...</p>
+                <div className="space-y-4">
+                  {/* Search Input */}
+                  <div className="relative">
+                    <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                    <Input
+                      type="search"
+                      placeholder="Search team members..."
+                      className="pl-10"
+                      value={searchMember}
+                      onChange={(e) => setSearchMember(e.target.value)}
+                    />
                   </div>
-                ) : teamMembers && teamMembers.data.length > 0 ? (
-                  <div className="max-h-60 space-y-2 overflow-y-auto">
-                    {teamMembers.data
-                      .filter((member) => member.id !== teamData.owner_id) // Filter out current admin
-                      .map((member) => (
-                        <div
-                          key={member.id}
-                          className={`flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors ${
-                            selectedMemberId === member.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                          onClick={() => setSelectedMemberId(member.id)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
-                              <Users className="h-4 w-4 text-gray-600" />
+
+                  {loadingMembers ? (
+                    <div className="py-4 text-center">
+                      <div className="mx-auto size-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
+                      <p className="mt-2 text-sm text-gray-600">Loading team members...</p>
+                    </div>
+                  ) : teamMembers && teamMembers.data.length > 0 ? (
+                    <div className="max-h-60 space-y-2 overflow-y-auto">
+                      {teamMembers.data
+                        .filter((member) => member.id !== teamData.owner_id) // Filter out current admin
+                        .map((member) => (
+                          <div
+                            key={member.id}
+                            className={`flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors ${selectedMemberId === member.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                              }`}
+                            onClick={() => setSelectedMemberId(member.id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
+                                <Users className="h-4 w-4 text-gray-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">{member.name}</p>
+                                <p className="text-xs text-gray-500">{member.miles} miles</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-sm font-medium">{member.name}</p>
-                              <p className="text-xs text-gray-500">{member.miles} miles</p>
-                            </div>
+                            {selectedMemberId === member.id && <Crown className="h-4 w-4 text-blue-600" />}
                           </div>
-                          {selectedMemberId === member.id && <Crown className="h-4 w-4 text-blue-600" />}
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <div className="py-4 text-center">
-                    <p className="text-sm text-gray-600">
-                      {teamMembers && teamMembers.data.length > 0 ? 'No other team members found to transfer admin role to' : 'No team members found'}
-                    </p>
-                  </div>
-                )}
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="py-4 text-center">
+                      <p className="text-sm text-gray-600">
+                        {teamMembers && teamMembers.data.length > 0 ? 'No other team members found to transfer admin role to' : 'No team members found'}
+                      </p>
+                    </div>
+                  )}
 
-                {selectedMemberId && (
-                  <div className="flex gap-2 pt-4">
-                    <Button onClick={handleTransferAdminRole} disabled={processing} className="flex-1">
-                      {processing ? 'Transferring...' : 'Transfer Admin Role'}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setIsTransferDialogOpen(false);
-                        setSelectedMemberId(null);
-                      }}
-                      className="flex-1"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </CardContent>
-    </Card>
+                  {selectedMemberId && (
+                    <div className="flex gap-2 pt-4">
+                      <Button onClick={handleTransferAdminRole} disabled={processing} className="flex-1">
+                        {processing ? 'Transferring...' : 'Transfer Admin Role'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsTransferDialogOpen(false);
+                          setSelectedMemberId(null);
+                        }}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardContent>
+      </Card>
+    </>
   );
 }

@@ -226,6 +226,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/teams/transfer-admin-role', [TeamsController::class, 'transferTeamAdminRole'])->name('teams.transfer-admin-role');
     Route::post('/teams/member/remove', [TeamsController::class, 'removeMember'])->name('teams.remove-member');
 
+    // Team membership requests routes
+    Route::get('/teams/membership-requests', [TeamsController::class, 'membershipRequests'])->name('teams.membership-requests');
+    Route::post('/teams/membership-requests/handle', [TeamsController::class, 'handleMembershipRequest'])->name('teams.handle-membership-request');
+
     // settings
     Route::post('/settings/update/privacy', [DashboardController::class, 'updateEventParticipantPrivacy'])->name('settings.update.privacy');
 });

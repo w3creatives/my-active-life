@@ -53,8 +53,6 @@ export default function PreferredEvent({ events }: { events: any[] }) {
     );
   };
 
-  console.log(localEvents);
-
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Your Current Challenges" />
