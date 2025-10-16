@@ -56,7 +56,7 @@ export function EventSwitcher() {
                 onClick={() => setPreferredEvent(participation.event.id)}
                 disabled={isUpdating === participation.event.id}
               >
-                <span className="text-sm flex gap-1 items-center">{participation.event.mobile_event ? <Smartphone /> : ''}{participation.event.name}</span>
+                <span className="text-sm flex gap-1 items-center">{participation.event.name}</span>
                 {participation.event.id === auth.user.preferred_event_id && <Check className="ml-auto" />}
                 {isUpdating === participation.event.id && <span className="ml-auto text-xs opacity-70">Updating...</span>}
               </DropdownMenuItem>
