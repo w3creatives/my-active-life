@@ -7,7 +7,7 @@
             aria-label="Vinnie Mostowy" data-bs-original-title="{{ $title }}">
             <a href="{{ route('admin.events.milestones.view', [$item->event_id,$item->id]) }}" data-bs-toggle="modal"
                data-bs-target="#view-milestone-modal">
-                <img class="rounded-circle" src="{{ $image_url }}" alt="{{ $title }}">
+                <img class="rounded-circle" src="{{ $image_url }}" alt="{{ $title }}" onerror="this.src='{{ url('/images/default-placeholder.png') }}'">
             </a>
         </li>
     @else
@@ -16,7 +16,7 @@
             <p class="card-text">
             <div class="mx-auto my-6">
                 <img src="{{ $image_url }}" alt="{{ $title }}"
-                     class="img-fluid">
+                     class="img-fluid" onerror="this.src='{{ url('/images/default-placeholder.png') }}'"/>
             </div>
             </p>
         </div>

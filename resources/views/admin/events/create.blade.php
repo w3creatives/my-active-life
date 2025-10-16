@@ -119,7 +119,7 @@
                                 <div
                                     class="logo-preview {{ (($event && !$event->logo_url) || !$event)?'d-none':'' }} mt-3">
                                     <img src="{{ $event->logo_url??'' }}" class="img-fluid img"
-                                         style="height: 100px;" />
+                                         style="height: 100px;" onerror="this.src='{{ url('/images/default-placeholder.png') }}'"/>
                                 </div>
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">

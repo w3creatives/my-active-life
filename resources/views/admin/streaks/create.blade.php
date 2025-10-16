@@ -51,7 +51,7 @@
                                 <input type="file" id="logo" name="logo" data-preview=".logo-preview"
                                        class="form-control choose-file" {{ isset($eventStreak->logo) && $eventStreak->logo?'':'required' }}>
                                 <div class="logo-preview {{ isset($eventStreak->logo) && $eventStreak->logo?'':'d-none' }} mt-3">
-                                    <img src="{{ $eventStreak->logo??'' }}" alt="" class="img-fluid img" style="height: 100px;" />
+                                    <img src="{{ $eventStreak->logo??'' }}" alt="" class="img-fluid img" style="height: 100px;" onerror="this.src='{{ url('/images/default-placeholder.png') }}'"/>
                                 </div>
                             </div>
 
@@ -60,7 +60,7 @@
                                 <input type="file" id="calendar_logo" data-preview=".calendar-logo-preview"
                                        name="calendar_logo" class="form-control choose-file" {{ isset($eventStreak->calendar_logo) && $eventStreak->calendar_logo?'':'required' }}>
                                 <div class="calendar-logo-preview {{ isset($eventStreak->calendar_logo) && $eventStreak->calendar_logo?'':'d-none' }} mt-3">
-                                    <img src="{{ $eventStreak->calendar_logo??'' }}" class="img-fluid img" style="height: 100px;" />
+                                    <img  src="{{ $eventStreak->calendar_logo??'' }}" class="img-fluid img" style="height: 100px;" onerror="this.src='{{ url('/images/default-placeholder.png') }}'"/>
                                 </div>
                             </div>
                             @php
