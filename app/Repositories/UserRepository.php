@@ -344,12 +344,12 @@ final class UserRepository
                     ->where('user_id', $user->id)
                     ->whereMonth('date', $monthDigit)->sum('amount');
 
-                $events[] = ['name' => $event->name, 'color' => '#' . str_pad(dechex(mt_rand(0x000000, 0xFFFFFF)), 6, '0', STR_PAD_LEFT)];
+                $events[$event->name] = ['name' => $event->name, 'color' => '#' . str_pad(dechex(mt_rand(0x000000, 0xFFFFFF)), 6, '0', STR_PAD_LEFT)];
             }
 
             $data[] = $item;
         }
 
-        return collect(['data' => $data, 'events' => $events]);
+        return collect(['data' => $data, 'events' => collect($events)->values()]);
     }
 }
