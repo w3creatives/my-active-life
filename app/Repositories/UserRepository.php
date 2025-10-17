@@ -6,8 +6,10 @@ namespace App\Repositories;
 
 use App\Models\Event;
 use App\Models\PointMonthly;
+use App\Models\PointTotal;
 use App\Models\User;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -288,5 +290,68 @@ final class UserRepository
         ];
 
         return $achievementData;
+    }
+
+    public function yearlyTotal($eventId, $user){
+        $currentEvent = Event::find($eventId);
+
+        $events = Event::select(['id','event_group','name'])->where('id', $eventId)->orWhere('event_group', $currentEvent->event_group)->orderBy('id','ASC')->get();
+
+        $data = [];
+
+        foreach ($events as $eventKey => $event) {
+            $miles = PointTotal::where('event_id', $event->id)
+                ->where('user_id', $user->id)->sum('amount');
+                $event->color = '#' . str_pad(dechex(mt_rand(0x000000, 0xFFFFFF)), 6, '0', STR_PAD_LEFT);
+
+            $data[] = ['event' => $event->name, 'miles' => (float)$miles];
+
+            $events[$eventKey] = $event;
+        }
+
+        return collect(['data' => $data, 'events' => $events->map(function($event){
+            return [
+                'name' => $event->name,
+                'color' => $event->color,
+            ];
+        })]);
+    }
+    public function yearlyMonthTotal($eventId, $user){
+
+        $currentEvent = Event::find($eventId);
+
+        $events = Event::select(['id','event_group','name'])->where('id', $eventId)->orWhere('event_group', $currentEvent->event_group)->orderBy('id','ASC')->get();
+
+        $months = range(1, 12);
+
+        $data = [];
+
+        foreach ($months as $month) {
+
+            $monthDate = CarbonImmutable::createFromFormat('m',$month);
+
+            $monthDigit = $monthDate->format('m');
+
+            $item = ['month' => $monthDate->format('M')];
+
+            foreach ($events as $eventKey => $event) {
+                $item[$event->name] = (float)PointMonthly::select(['amount', 'date'])
+                    ->where('event_id', $event->id)
+                    ->where('user_id', $user->id)
+                    ->whereMonth('date', $monthDigit)->sum('amount');
+                $event->color = '#' . str_pad(dechex(mt_rand(0x000000, 0xFFFFFF)), 6, '0', STR_PAD_LEFT);
+
+                $events[$eventKey] = $event;
+            }
+
+            $data[] = $item;
+        }
+
+        return collect(['data' => $data, 'events' => $events->map(function($event){
+            return [
+                'name' => $event->name,
+                'color' => $event->color,
+            ];
+        })]);
     }
 }

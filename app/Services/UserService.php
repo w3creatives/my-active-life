@@ -174,4 +174,13 @@ final class UserService
     {
         return (float) $user->totalPoints()->where('event_id', $eventId)->sum('amount');
     }
+
+    public function yearlyTotal(int $eventId, User $user)
+    {
+        return $this->userRepository->yearlyTotal($eventId, $user);
+    }
+    public function yearlyMonthTotal(int $eventId, User $user)
+    {
+        return $this->userRepository->yearlyMonthTotal($eventId, $user);
+    }
 }

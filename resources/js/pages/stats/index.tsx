@@ -2,7 +2,8 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 
-import EventBannerImage from '@/components/atoms/EventBannerImage';
+import PageContent from '@/components/atoms/page-content';
+import PageTitle from '@/components/atoms/PageTitle';
 import { Button } from '@/components/ui/button';
 import AmerithonMap from '@/pages/stats/components/AmerithonMap';
 import AreYouOnTarget from '@/pages/stats/components/AreYouOnTarget';
@@ -12,11 +13,11 @@ import MileageByActivityType from '@/pages/stats/components/MileageByActivityTyp
 import MonthlyPoints from '@/pages/stats/components/monthlyPoints';
 import NextMilestone from '@/pages/stats/components/NextMilestone';
 import PersonalBests from '@/pages/stats/components/PersonalBests';
+import YearlyTotalChart from '@/pages/stats/components/YearlyTotalChart';
+import YearlyTotalMonthChart from '@/pages/stats/components/YearlyTotalMonthChart';
 import { User, Users } from 'lucide-react';
 import { useState } from 'react';
 import MemberStat from './components/MemberStat';
-import PageContent from '@/components/atoms/page-content';
-import PageTitle from '@/components/atoms/PageTitle';
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -93,7 +94,7 @@ export default function Stats() {
 
           <Last30days dataFor={dataFor} />
         </div>
-        
+
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
           <PersonalBests dataFor={dataFor} />
           <MonthlyPoints dataFor={dataFor} />
@@ -106,6 +107,10 @@ export default function Stats() {
             <MileageByActivityType dataFor={dataFor} />
           )}
         </div>
+          {dataFor == 'you' && <div className="grid grid-cols-1 gap-6 lg:grid-cols-1">
+          <YearlyTotalChart dataFor={dataFor} />
+          <YearlyTotalMonthChart dataFor={dataFor} />
+        </div>}
       </PageContent>
     </AppLayout>
   );

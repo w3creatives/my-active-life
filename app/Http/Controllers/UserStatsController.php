@@ -39,6 +39,10 @@ final readonly class UserStatsController
             return $this->userYearlyPoints($request);
         }
 
+        if ($type === 'yearly-month') {
+            return $this->userYearlyMonthPoints($request);
+        }
+
         if ($type === 'amerithon-map') {
             return $this->userAmerithonMapData($request);
         }
@@ -96,15 +100,42 @@ final readonly class UserStatsController
 
     }
 
-    public function userYearlyPoints(Request $request): Collection
+    public function userYearlyPoints(Request $request)
     {
         $eventId = (int) $request->query('event_id');
         $user = $request->user();
 
-        return $this->userService->yearly($eventId, $user);
+        $cacheName = "user_yearly_point_chart_{$user->id}_{$eventId}";
+
+        if(Cache::has($cacheName)){
+            $item = Cache::get($cacheName);
+            return $item;
+        }
+
+        $item = $this->userService->yearlyTotal($eventId, $user);
+
+        Cache::put($cacheName, $item);
+        return $item;
+    }
+    public function userYearlyMonthPoints(Request $request)
+    {
+        $eventId = (int) $request->query('event_id');
+        $user = $request->user();
+
+        $cacheName = "user_yearly_month_point_chart_{$user->id}_{$eventId}";
+
+         if(Cache::has($cacheName)){
+             $item = Cache::get($cacheName);
+             return $item;
+         }
+
+         $item = $this->userService->yearlyMonthTotal($eventId, $user);
+
+        Cache::put($cacheName, $item);
+        return $item;
     }
 
-    public function userTotalPoints(Request $request): int
+    public function userTotalPoints(Request $request): float
     {
         $eventId = (int) $request->query('event_id');
         $user = $request->user();
