@@ -295,32 +295,35 @@ final class UserRepository
     public function yearlyTotal($eventId, $user){
         $currentEvent = Event::find($eventId);
 
-        $events = Event::select(['id','event_group','name'])->where('id', $eventId)->orWhere('event_group', $currentEvent->event_group)->orderBy('id','ASC')->get();
-
         $data = [];
 
-        foreach ($events as $eventKey => $event) {
+        $participations = $user->participations()->whereHas('event', function ($query) use ($currentEvent) {
+            return $query->where('id', $currentEvent->id)->orWhere('event_group', $currentEvent->event_group);
+        })->get();
+
+        $events = [];
+
+        foreach ($participations as $participation) {
+            $event = $participation->event;
             $miles = PointTotal::where('event_id', $event->id)
                 ->where('user_id', $user->id)->sum('amount');
-                $event->color = '#' . str_pad(dechex(mt_rand(0x000000, 0xFFFFFF)), 6, '0', STR_PAD_LEFT);
 
             $data[] = ['event' => $event->name, 'miles' => (float)$miles];
 
-            $events[$eventKey] = $event;
+            $events[] = ['color' => '#' . str_pad(dechex(mt_rand(0x000000, 0xFFFFFF)), 6, '0', STR_PAD_LEFT), 'name' => $event->name];
         }
 
-        return collect(['data' => $data, 'events' => $events->map(function($event){
-            return [
-                'name' => $event->name,
-                'color' => $event->color,
-            ];
-        })]);
+        return collect(['data' => $data, 'events' => $events]);
     }
     public function yearlyMonthTotal($eventId, $user){
 
         $currentEvent = Event::find($eventId);
 
-        $events = Event::select(['id','event_group','name'])->where('id', $eventId)->orWhere('event_group', $currentEvent->event_group)->orderBy('id','ASC')->get();
+        $events = [];
+
+        $participations = $user->participations()->whereHas('event', function ($query) use ($currentEvent) {
+            return $query->where('id', $currentEvent->id)->orWhere('event_group', $currentEvent->event_group);
+        })->get();
 
         $months = range(1, 12);
 
@@ -334,24 +337,19 @@ final class UserRepository
 
             $item = ['month' => $monthDate->format('M')];
 
-            foreach ($events as $eventKey => $event) {
+            foreach ($participations as $participation) {
+                $event = $participation->event;
                 $item[$event->name] = (float)PointMonthly::select(['amount', 'date'])
                     ->where('event_id', $event->id)
                     ->where('user_id', $user->id)
                     ->whereMonth('date', $monthDigit)->sum('amount');
-                $event->color = '#' . str_pad(dechex(mt_rand(0x000000, 0xFFFFFF)), 6, '0', STR_PAD_LEFT);
 
-                $events[$eventKey] = $event;
+                $events[] = ['name' => $event->name, 'color' => '#' . str_pad(dechex(mt_rand(0x000000, 0xFFFFFF)), 6, '0', STR_PAD_LEFT)];
             }
 
             $data[] = $item;
         }
 
-        return collect(['data' => $data, 'events' => $events->map(function($event){
-            return [
-                'name' => $event->name,
-                'color' => $event->color,
-            ];
-        })]);
+        return collect(['data' => $data, 'events' => $events]);
     }
 }

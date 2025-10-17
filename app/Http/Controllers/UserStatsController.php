@@ -109,7 +109,7 @@ final readonly class UserStatsController
 
         if(Cache::has($cacheName)){
             $item = Cache::get($cacheName);
-            return $item;
+            //return $item;
         }
 
         $item = $this->userService->yearlyTotal($eventId, $user);
@@ -126,7 +126,7 @@ final readonly class UserStatsController
 
          if(Cache::has($cacheName)){
              $item = Cache::get($cacheName);
-             return $item;
+             //return $item;
          }
 
          $item = $this->userService->yearlyMonthTotal($eventId, $user);
