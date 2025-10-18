@@ -3,10 +3,10 @@ import { ChartConfig, ChartContainer } from '@/components/ui/chart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SharedData } from '@/types';
 import { usePage } from '@inertiajs/react';
+import axios from 'axios';
 import { Calendar } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import axios from 'axios';
 
 interface YearlyTotalChartProps {
   dataFor?: string;
@@ -18,28 +18,6 @@ const chartConfig = {
     color: 'var(--color-primary)',
   },
 } satisfies ChartConfig;
-const data = [
-  {
-    event: 'RTY 2022',
-    miles: 2000,
-  },
-  {
-    event: 'RTY 2023',
-    miles: 2500,
-  },
-  {
-    event: 'RTY 2024',
-    miles: 1200,
-  },
-  {
-    event: 'RTY 2025',
-    miles: 600,
-  },
-  {
-    event: 'RTY 2026',
-    miles: 0,
-  },
-];
 const PreloadChart = () => {
   return (
     <Card className="grid grid-cols-1">
@@ -66,26 +44,26 @@ export default function YearlyTotalChart({ dataFor = 'you' }: YearlyTotalChartPr
   const [loading, setLoading] = useState(false);
   const [chartData, setChartData] = useState([]);
 
-    const fetchData = async () => {
-        setLoading(true);
-        try {
-            const response = await axios.get(route('userstats', ['yearly']), {
-                params: {
-                    event_id: auth.preferred_event.id,
-                    user_id: auth.user.id,
-                },
-            });
-            setChartData(response.data);
-            setLoading(false);
-        } catch (err) {
-            console.error('Error fetching data:', err);
-            setLoading(false);
-        }
-    };
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(route('userstats', ['yearly']), {
+        params: {
+          event_id: auth.preferred_event.id,
+          user_id: auth.user.id,
+        },
+      });
+      setChartData(response.data);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setLoading(false);
+    }
+  };
 
-    useEffect(() => {
-        fetchData();
-    }, [dataFor]);
+  useEffect(() => {
+    fetchData();
+  }, [dataFor]);
 
   if (loading) {
     return <PreloadChart />;
@@ -104,68 +82,31 @@ export default function YearlyTotalChart({ dataFor = 'you' }: YearlyTotalChartPr
         <div className="h-64 w-full overflow-hidden">
           <ChartContainer config={chartConfig} className="h-full w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" strokeOpacity={0.3} />
-              <BarChart layout="horizontal" data={chartData.data} margin={{ top: 10, right: 10, left: 10, bottom: 5 }} barSize={45}>
-                <XAxis
-                  dataKey="event"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  fontSize={12}
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  fontSize={11}
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  domain={[0, 'dataMax']}
-                  allowDecimals={false}
-                />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="miles"  allowDecimals={false} fill="var(--color-primary)" radius={[6, 6, 0, 0]} maxBarSize={50} />
-
-                {/*<CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" strokeOpacity={0.3} />*/}
-                {/*<XAxis*/}
-                {/*  dataKey="label"*/}
-                {/*  tickLine={false}*/}
-                {/*  axisLine={false}*/}
-                {/*  tickMargin={8}*/}
-                {/*  fontSize={12}*/}
-                {/*  tick={{ fill: 'hsl(var(--muted-foreground))' }}*/}
-                {/*/>*/}
-                {/*<YAxis*/}
-                {/*  tickLine={false}*/}
-                {/*  axisLine={false}*/}
-                {/*  tickMargin={8}*/}
-                {/*  fontSize={11}*/}
-                {/*  tick={{ fill: 'hsl(var(--muted-foreground))' }}*/}
-                {/*  domain={[0, 'dataMax']}*/}
-                {/*  allowDecimals={false}*/}
-                {/*/>*/}
-                {/*<ChartTooltip*/}
-                {/*  content={({ active, payload, label }) => {*/}
-                {/*    if (active && payload && payload.length) {*/}
-                {/*      const data = payload[0];*/}
-                {/*      return (*/}
-                {/*        <div className="bg-background rounded-lg border p-3 shadow-lg">*/}
-                {/*          <div className="mb-2 font-medium">*/}
-                {/*            {label} {new Date().getFullYear()}*/}
-                {/*          </div>*/}
-                {/*          <div className="text-sm">*/}
-                {/*            <span className="text-muted-foreground">Miles: </span>*/}
-                {/*            <span className="font-medium"></span>*/}
-                {/*          </div>*/}
-                {/*        </div>*/}
-                {/*      );*/}
-                {/*    }*/}
-                {/*    return null;*/}
-                {/*  }}*/}
-                {/*/>*/}
-                {/*<Bar dataKey="amount" fill="var(--color-primary)" radius={[6, 6, 0, 0]} maxBarSize={50} />*/}
-              </BarChart>
+              <>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" strokeOpacity={0.3} />
+                <BarChart layout="horizontal" data={chartData.data} margin={{ top: 10, right: 10, left: 10, bottom: 5 }} barSize={45}>
+                  <XAxis
+                    dataKey="event"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    fontSize={12}
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    fontSize={11}
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    domain={[0, 'dataMax']}
+                    allowDecimals={false}
+                  />
+                  <Tooltip formatter={(value) => (typeof value === 'number' ? value.toFixed(2) : String(value))} />
+                  <Legend />
+                  <Bar dataKey="miles" fill="var(--color-primary)" radius={[6, 6, 0, 0]} maxBarSize={50} />
+                </BarChart>
+              </>
             </ResponsiveContainer>
           </ChartContainer>
         </div>

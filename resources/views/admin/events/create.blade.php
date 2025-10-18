@@ -135,6 +135,13 @@
                                     @endforeach
                                 </select>
                             </div>
+                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                                <label for="event-color" class="form-label">Event Color</label>
+                                <input type="color" id="event-color" name="event_color" class="form-control p-0 border-0"
+                                       value="{{ $event->event_color??old('event_color','#02E2B6') }}" pattern="#[a-f0-9]{6}" placeholder="" attr-input-colorspace required>
+
+                            </div>
+
                             <div class="mb-4 col-xl-8 col-sm-12 col-md-6">
                                 <label for="description" class="form-label">Description</label>
                                 <textarea class="form-control @error('description') parsley-error @enderror"

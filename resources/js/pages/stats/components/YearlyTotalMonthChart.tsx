@@ -47,11 +47,6 @@ export default function YearlyTotalMonthChart({ dataFor = 'you' }: YearlyTotalMo
 
     const { auth } = usePage<SharedData>().props;
 
-    const getDynamicColor = (index) => {
-        let n = (Math.random() * 0xfffff * 1000000+index).toString(16);
-        return '#' + n.slice(0, 6);
-    };
-
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -102,9 +97,9 @@ export default function YearlyTotalMonthChart({ dataFor = 'you' }: YearlyTotalMo
                                         axisLine={false}
                                         tickMargin={8}
                                         fontSize={11}/>
-                                <Tooltip formatter={(value) => (typeof value === 'number' ? value : String(value))} />
+                                <Tooltip formatter={(value) => (typeof value === 'number' ? value.toFixed(2) : String(value))} />
                                 <Legend />
-                                {chartData && chartData.events && chartData.events.map((s, idx) => (
+                                {chartData && chartData.events && chartData.events.map((s:any) => (
                                     <Bar
                                         key={s.name}
                                         dataKey={s.name}

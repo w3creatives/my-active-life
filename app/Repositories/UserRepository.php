@@ -310,7 +310,7 @@ final class UserRepository
 
             $data[] = ['event' => $event->name, 'miles' => (float)$miles];
 
-            $events[] = ['color' => '#' . str_pad(dechex(mt_rand(0x000000, 0xFFFFFF)), 6, '0', STR_PAD_LEFT), 'name' => $event->name];
+            $events[] = ['color' => $event->event_color];
         }
 
         return collect(['data' => $data, 'events' => $events]);
@@ -344,7 +344,7 @@ final class UserRepository
                     ->where('user_id', $user->id)
                     ->whereMonth('date', $monthDigit)->sum('amount');
 
-                $events[$event->name] = ['name' => $event->name, 'color' => '#' . str_pad(dechex(mt_rand(0x000000, 0xFFFFFF)), 6, '0', STR_PAD_LEFT)];
+                $events[$event->name] = ['name' => $event->name, 'color' => $event->event_color];
             }
 
             $data[] = $item;

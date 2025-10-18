@@ -78,10 +78,12 @@ final class EventsController extends Controller
             'goals' => 'required',
             'social_hashtags' => 'required',
             'total_points' => 'required',
+            'event_color' => 'required',
         ]);
 
-        $data = $request->only('name', 'start_date', 'end_date', 'event_type', 'goals', 'social_hashtags', 'description', 'total_points', 'registration_url', 'bibs_name', 'event_group', 'future_start_message');
+        $data = $request->only('name', 'start_date', 'end_date', 'event_type', 'goals', 'social_hashtags', 'description', 'total_points', 'registration_url', 'bibs_name', 'event_group', 'future_start_message', 'event_color');
         $data['event_type'] = mb_strtolower($data['event_type']);
+        $data['event_color'] = mb_strtoupper($data['event_color']);
         $data['registration_url'] = $data['registration_url'] ?? '#';
         $data['goals'] = json_encode(array_map('trim', explode(',', $data['goals'])));
         $data['start_date'] = Carbon::parse($data['start_date'])->format('Y-m-d');
