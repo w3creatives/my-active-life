@@ -23,12 +23,12 @@ final class EventsController extends Controller
 
         if ($request->ajax()) {
 
-            $query = Event::allowedTypes()->select(['id', 'name', 'event_type', 'start_date', 'open', 'bibs_name', 'event_group', 'logo', 'end_date', 'logo', 'email_template_id']);
+            $query = Event::allowedTypes()->select(['id', 'name', 'event_type', 'start_date', 'open', 'bibs_name', 'event_group', 'logo', 'end_date', 'logo', 'email_template_id','event_color']);
 
             [$eventCount, $events] = $dataTable->setSearchableColumns(['name', 'event_type'])->query($request, $query)->response();
 
             $events = $events->map(function ($event) use ($eventService) {
-                // $event->name = view('admin.events.actions.title', compact('event'))->render();
+                $event->name = view('admin.events.actions.title', compact('event'))->render();
                 $event->event_type_text = $eventService->findEventType($event->event_type);
                 $event->open = $event->open ? 'Open' : 'Closed';
                 $event->bibs_name = $event->bibs_name ?? '--';
