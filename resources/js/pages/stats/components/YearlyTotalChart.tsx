@@ -89,7 +89,7 @@ export default function YearlyTotalChart({ dataFor = 'you' }: YearlyTotalChartPr
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
-                  fontSize={12}
+                  fontSize={12} domain={[0, 'dataMax']}
                   tick={{ fill: 'hsl(var(--muted-foreground))' }}
                 />
                 <YAxis
@@ -98,7 +98,7 @@ export default function YearlyTotalChart({ dataFor = 'you' }: YearlyTotalChartPr
                   tickMargin={8}
                   fontSize={11}
                   tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  domain={[0, 'dataMax']}
+
                   allowDecimals={false}
                 />
                 <Tooltip formatter={(value) => (typeof value === 'number' ? value.toFixed(2) : String(value))}/>
