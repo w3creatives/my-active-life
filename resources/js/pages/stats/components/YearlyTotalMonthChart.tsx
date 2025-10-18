@@ -86,7 +86,7 @@ export default function YearlyTotalMonthChart({ dataFor = 'you' }: YearlyTotalMo
                 <div className="h-64 w-full overflow-hidden">
                     <ChartContainer config={chartConfig} className="h-full w-full">
 
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer>
                             <BarChart data={chartData.data} margin={{ top: 16, right: 24, left: 8, bottom: 8 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="month"  tickLine={false}
