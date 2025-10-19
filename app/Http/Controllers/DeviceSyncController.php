@@ -7,9 +7,6 @@ namespace App\Http\Controllers;
 use App\Interfaces\DataSourceInterface;
 use App\Models\DataSource;
 use App\Models\DataSourceProfile;
-use App\Services\DataSourceService\FitbitUnsubscriber;
-use App\Services\DataSourceService\GarminUnsubscriber;
-use App\Services\DataSourceService\StravaUnsubscriber;
 use App\Services\DeviceService;
 use App\Services\EventService;
 use Carbon\Carbon;
@@ -64,7 +61,7 @@ final class DeviceSyncController extends Controller
             session()->forget('sync_start_date');
         }
 
-        if (! in_array($sourceSlug, ['garmin', 'strava', 'fitbit'])) {
+        if (! in_array($sourceSlug, ['garmin', 'strava', 'fitbit', 'ouraring'])) {
             throw new Exception('Invalid request');
         }
 
@@ -82,10 +79,10 @@ final class DeviceSyncController extends Controller
 
         $user = $request->user();
 
-        //Log::info('DeviceSyncController:trackerCallback: Response: '.json_encode($response));
+        // Log::info('DeviceSyncController:trackerCallback: Response: '.json_encode($response));
 
-        // For Strava, we need to store the user_id as access_token_secret for webhook identification
-        if (in_array($sourceSlug, ['strava', 'fitbit']) && isset($response['user_id'])) {
+        // For Strava, Fitbit, and Oura Ring, we need to store the user_id as access_token_secret for webhook identification
+        if (in_array($sourceSlug, ['strava', 'fitbit', 'ouraring']) && isset($response['user_id'])) {
             $subscribe = $this->tracker->get($sourceSlug)
                 ->setAccessToken($response['access_token'])
                 ->setAccessTokenSecret($response['user_id'])
@@ -101,8 +98,8 @@ final class DeviceSyncController extends Controller
 
         $response['data_source_id'] = $dataSource->id;
 
-        // For Strava, store the user_id as access_token_secret for webhook identification
-        if ($sourceSlug === 'strava' && isset($response['user_id'])) {
+        // For Strava and Oura Ring, store the user_id as access_token_secret for webhook identification
+        if (in_array($sourceSlug, ['strava', 'ouraring']) && isset($response['user_id'])) {
             $response['access_token_secret'] = $response['user_id'];
         }
 

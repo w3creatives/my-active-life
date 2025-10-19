@@ -57,6 +57,12 @@ return [
         'consumer_secret' => env('GARMIN_CONSUMER_SECRET'),
         'callback_url' => env('GARMIN_CALLBACK_URL'),
     ],
+    'ouraring' => [
+        'client_id' => env('OURARING_CLIENT_ID'),
+        'client_secret' => env('OURARING_CLIENT_SECRET'),
+        'redirect_url' => env('OURARING_REDIRECT_URI'),
+        'webhook_verification_code' => env('OURARING_WEBHOOK_VERIFICATION_CODE'),
+    ],
     'tracker' => [
         'workflow_url' => env('TRACKER_USER_POINT_WORKFLOW'),
     ],

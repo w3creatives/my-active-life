@@ -122,6 +122,15 @@ export default function DeviceSync({ connectedSources }: DeviceSyncProps) {
               connectRoute={route('profile.device-sync.connect', 'strava')}
               disconnectRoute={route('profile.device-sync.disconnect', 'strava')}
             />
+
+            <DeviceSyncCard
+              name="Oura Ring"
+              imageSrc="/storage/dashboard/datasource/ouraring.png"
+              description="Sync your activities with your Oura Ring and earn points in Run The Edge."
+              isConnected={connectedSources.includes('ouraring')}
+              connectRoute={route('profile.device-sync.connect', 'ouraring')}
+              disconnectRoute={route('profile.device-sync.disconnect', 'ouraring')}
+            />
           </div>
         </div>
       </SettingsLayout>

@@ -12,6 +12,7 @@ use App\Models\MailboxerReceipt;
 use App\Models\User;
 use App\Services\FitbitService;
 use App\Services\GarminService;
+use App\Services\OuraRingService;
 use App\Services\StravaService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Pagination\Paginator;
@@ -34,6 +35,7 @@ final class AppServiceProvider extends ServiceProvider
                     'fitbit' => app(FitbitService::class),
                     'strava' => app(StravaService::class),
                     'garmin' => app(GarminService::class),
+                    'ouraring' => app(OuraRingService::class),
                 ]);
             }
         );
