@@ -21,13 +21,13 @@ export default function TeamInvitations() {
   const { auth } = usePage<SharedData>().props;
   const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processingInvitation, setProcessingInvitation] = useState<number | null>(null);
+  const [processingInvitation, setProcessingInvitation] = useState<{ id: number; action: 'accept' | 'decline' } | null>(null);
 
   // Fetch user's pending team invitations
   const fetchInvitations = async () => {
     try {
       setLoading(true);
-      const response = await fetch(route('api.user.team.invitations'));
+      const response = await fetch(route('user.team.invitations'));
       const data = await response.json();
       if (data.success) {
         setInvitations(data.data || []);
@@ -45,59 +45,57 @@ export default function TeamInvitations() {
   }, []);
 
   const handleAcceptInvitation = async (invitation: TeamInvitation) => {
-    setProcessingInvitation(invitation.id);
+    setProcessingInvitation({ id: invitation.id, action: 'accept' });
 
-    router
-      .post(
-        route('api.user.team.invitation.accept'),
-        {
-          team_id: invitation.team_id,
-          event_id: invitation.event_id,
+    router.post(
+      route('user.team.invitation.accept'),
+      {
+        team_id: invitation.team_id,
+        event_id: invitation.event_id,
+      },
+      {
+        onSuccess: () => {
+          toast.success(`You have successfully joined ${invitation.team_name}!`);
+          // Remove the invitation from the list
+          setInvitations((prev) => prev.filter((inv) => inv.id !== invitation.id));
+          setProcessingInvitation(null);
+          // Refresh the page after a brief delay to show the toast
+          setTimeout(() => {
+            router.visit(route('teams'), { preserveState: false });
+          }, 500);
         },
-        {
-          preserveScroll: true,
-          onSuccess: () => {
-            toast.success(`You have successfully joined ${invitation.team_name}!`);
-            // Remove the invitation from the list
-            setInvitations((prev) => prev.filter((inv) => inv.id !== invitation.id));
-            // Refresh the page to show the user is now part of a team
-            router.reload();
-          },
-          onError: (errors: any) => {
-            toast.error(errors.error || 'Failed to accept invitation');
-          },
+        onError: (errors: any) => {
+          toast.error(errors.error || 'Failed to accept invitation');
+          setProcessingInvitation(null);
         },
-      )
-      .finally(() => {
-        setProcessingInvitation(null);
-      });
+      },
+    );
   };
 
   const handleDeclineInvitation = async (invitation: TeamInvitation) => {
-    setProcessingInvitation(invitation.id);
+    setProcessingInvitation({ id: invitation.id, action: 'decline' });
 
-    router
-      .post(
-        route('api.user.team.invitation.decline'),
-        {
-          team_id: invitation.team_id,
-          event_id: invitation.event_id,
+    router.post(
+      route('user.team.invitation.decline'),
+      {
+        team_id: invitation.team_id,
+        event_id: invitation.event_id,
+      },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          toast.success(`You have declined the invitation to join ${invitation.team_name}`);
+          // Remove the invitation from the list
+          setInvitations((prev) => prev.filter((inv) => inv.id !== invitation.id));
         },
-        {
-          preserveScroll: true,
-          onSuccess: () => {
-            toast.success(`You have declined the invitation to join ${invitation.team_name}`);
-            // Remove the invitation from the list
-            setInvitations((prev) => prev.filter((inv) => inv.id !== invitation.id));
-          },
-          onError: (errors: any) => {
-            toast.error(errors.error || 'Failed to decline invitation');
-          },
+        onError: (errors: any) => {
+          toast.error(errors.error || 'Failed to decline invitation');
         },
-      )
-      .finally(() => {
-        setProcessingInvitation(null);
-      });
+        onFinish: () => {
+          setProcessingInvitation(null);
+        },
+      },
+    );
   };
 
   // Don't render if no invitations
@@ -121,19 +119,19 @@ export default function TeamInvitations() {
   return (
     <div className="mb-6 space-y-4">
       {invitations.map((invitation) => (
-        <Card key={invitation.id} className="border-blue-200 bg-blue-50">
+        <Card key={invitation.id} className="border-primary bg-primary/5">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-800">
+            <CardTitle className="flex items-center gap-2 ">
               <Mail className="h-5 w-5" />
               Team Invitations
             </CardTitle>
-            <CardDescription className="text-blue-700">
+            <CardDescription>
               What do you know? You were invited by another team to join! It's nice to be wanted! Click below to accept or decline.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="border-t border-blue-200 pt-4">
-              <p className="text-center font-medium text-blue-800">
+            <div className="border-t border-primary pt-4">
+              <p className="text-center font-medium ">
                 {invitation.team_name} sent you an invitation to join them! You can accept the invitation or decline it below.
               </p>
             </div>
@@ -141,20 +139,22 @@ export default function TeamInvitations() {
             <div className="flex justify-center gap-3">
               <Button
                 onClick={() => handleAcceptInvitation(invitation)}
-                disabled={processingInvitation === invitation.id}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                disabled={processingInvitation?.id === invitation.id}
               >
                 <Users className="h-4 w-4" />
-                {processingInvitation === invitation.id ? 'Accepting...' : 'Accept Invitation'}
+                {processingInvitation?.id === invitation.id && processingInvitation.action === 'accept'
+                  ? 'Accepting...'
+                  : 'Accept Invitation'}
               </Button>
 
               <Button
-                variant="outline"
+                variant="outline-primary"
                 onClick={() => handleDeclineInvitation(invitation)}
-                disabled={processingInvitation === invitation.id}
-                className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-100"
+                disabled={processingInvitation?.id === invitation.id}
               >
-                {processingInvitation === invitation.id ? 'Declining...' : 'Decline Invitation'}
+                {processingInvitation?.id === invitation.id && processingInvitation.action === 'decline'
+                  ? 'Declining...'
+                  : 'Decline Invitation'}
               </Button>
             </div>
           </CardContent>
