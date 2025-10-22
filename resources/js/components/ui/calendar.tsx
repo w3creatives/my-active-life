@@ -130,13 +130,14 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
   // Get points for a specific day
   const getPointsForDay = (day: Date) => {
     const formattedDate = formatDate(day);
-    if (activeModality === "all") {
+      return userPoints.filter(point => point.date === formattedDate);
+    /*if (activeModality === "all") {
       return userPoints.filter(point => point.date === formattedDate);
     }
     return userPoints.filter(point =>
       point.date === formattedDate &&
       point.modality === activeModality
-    );
+    );*/
   };
 
   // Format date to display month and year
