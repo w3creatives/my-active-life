@@ -183,7 +183,7 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
         } finally {
             setLoading(false);
         }
-    }, [currentYear, currentMonth,setActiveModality]);
+    }, [currentYear, currentMonth, activeModality]);
 
     const refreshCalendar = async () => {
         await fetchUserPoints();
@@ -192,7 +192,7 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
   // Fetch user points data
   useEffect(() => {
     fetchUserPoints();
-  }, [fetchUserPoints,activeModality]);
+  }, [fetchUserPoints]);
 
   return (
     <div className="w-full rounded-lg border bg-card text-card-foreground shadow-sm">
