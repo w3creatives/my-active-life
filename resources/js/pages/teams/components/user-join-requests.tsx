@@ -15,7 +15,11 @@ interface JoinRequest {
   days_ago: number;
 }
 
-export default function UserJoinRequests() {
+interface UserJoinRequestsProps {
+  refreshTrigger?: number;
+}
+
+export default function UserJoinRequests({ refreshTrigger }: UserJoinRequestsProps) {
   const { auth } = usePage<SharedData>().props;
   const [requests, setRequests] = useState<JoinRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,10 +41,10 @@ export default function UserJoinRequests() {
     }
   };
 
-  // Load requests on component mount
+  // Load requests on component mount and when refreshTrigger changes
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [refreshTrigger]);
 
   const handleCancelRequest = async (request: JoinRequest) => {
     setCancellingRequest(request.id);
@@ -90,13 +94,11 @@ export default function UserJoinRequests() {
     <Card className="mb-6 border-orange-200 bg-orange-50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-orange-800">
-          <Clock className="h-5 w-5" />
+          <Clock className="size-5" />
           Pending Join Requests
         </CardTitle>
         <CardDescription className="text-orange-700">
-          {requests.length === 1
-            ? 'You have requested to join 1 team'
-            : `You have requested to join ${requests.length} teams`}
+          You have requested to join team
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -107,12 +109,9 @@ export default function UserJoinRequests() {
           >
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-orange-500" />
+                <Clock className="size-5 text-orange-500" />
                 <div>
                   <p className="font-medium text-gray-900">{request.team_name}</p>
-                  <p className="text-sm text-gray-600">
-                    Requested {request.days_ago === 0 ? 'today' : `${request.days_ago} days ago`}
-                  </p>
                   <p className="text-xs text-gray-500">Waiting for team approval</p>
                 </div>
               </div>

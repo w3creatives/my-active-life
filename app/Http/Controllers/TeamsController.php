@@ -858,13 +858,6 @@ final class TeamsController extends Controller
             return redirect()->back()->with('alert', ['type' => 'error', 'message' => 'You already have an invite to join this team']);
         }
 
-        // If team has public profile, join immediately
-        if ($team->public_profile === true) {
-            $team->memberships()->create(['event_id' => $request->event_id, 'user_id' => $user->id]);
-
-            return redirect()->back()->with('alert', ['type' => 'success', 'message' => 'You have joined the team']);
-        }
-
         // Check if user already has a pending request to join this team
         $hasRequest = $user->requests()->where(['team_id' => $request->team_id, 'event_id' => $request->event_id])->count();
 
@@ -872,31 +865,33 @@ final class TeamsController extends Controller
             return redirect()->back()->with('alert', ['type' => 'error', 'message' => 'Your request to join this team already exists']);
         }
 
-        // Create a new join request
+        // Check if user already has ANY pending join request for this event
+        $hasAnyPendingRequest = $user->requests()
+            ->where('event_id', $request->event_id)
+            ->where('status', 'request_to_join_issued')
+            ->exists();
+
+        if ($hasAnyPendingRequest) {
+            return redirect()->back()->with('alert', ['type' => 'error', 'message' => 'You already have a pending join request. Please wait for it to be processed or cancel it before sending another.']);
+        }
+
+        // Always create a join request (admin approval required for all teams)
         $user->requests()->create(['team_id' => $request->team_id, 'event_id' => $request->event_id, 'status' => 'request_to_join_issued']);
 
-        return redirect()->back()->with('alert', ['type' => 'success', 'message' => 'You have requested to join the team']);
+        return redirect()->back()->with('alert', ['type' => 'success', 'message' => 'Your request to join the team has been sent and is awaiting approval']);
     }
 
     /**
-     * Get user's team invitations (for web view)
+     * Get user's team invitations
      */
-    public function getUserTeamInvitations(Request $request): Response
+    public function getUserTeamInvitations(Request $request): JsonResponse
     {
         $user = $request->user();
         $eventId = $user->preferred_event_id;
 
-        // Check if user is already in a team (either as owner or member)
-        $hasTeam = Team::where(function ($query) use ($user) {
-            return $query->where('owner_id', $user->id)
-                ->orWhereHas('memberships', function ($query) use ($user) {
-                    return $query->where('user_id', $user->id);
-                });
-        })->where('event_id', $eventId)->exists();
-
         // Get user's pending invitations
         $invitations = $user->invites()
-            ->with(['team:id,name,event_id', 'event:id,name'])
+            ->with(['team:id,name,event_id'])
             ->where('event_id', $eventId)
             ->where('status', 'invite_to_join_issued')
             ->get()
@@ -906,20 +901,15 @@ final class TeamsController extends Controller
                     'team_id' => $invite->team_id,
                     'team_name' => $invite->team->name,
                     'event_id' => $invite->event_id,
-                    'event_name' => $invite->event->name ?? 'Current Challenge',
                     'created_at' => $invite->created_at->format('M j, Y g:i A'),
                     'days_ago' => $invite->created_at->diffInDays(now()),
                     'status' => $invite->status,
                 ];
             });
 
-        $membershipRequests = Team::whereHas('invites', function ($query) use ($user, $eventId) {
-            return $query->where('prospective_member_id', $user->id)->where('event_id', $eventId);
-        })->get();
-
-        return Inertia::render('teams/user-invitations', [
-            'invitations' => $invitations,
-            'hasTeam' => $hasTeam,
+        return response()->json([
+            'success' => true,
+            'data' => $invitations,
         ]);
     }
 
@@ -974,8 +964,8 @@ final class TeamsController extends Controller
             'event_id' => $request->event_id,
         ]);
 
-        // Update invitation status
-        $invitation->update(['status' => 'accepted']);
+        // Delete the invitation
+        $invitation->delete();
 
         return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => "Welcome to {$team->name}! You have successfully joined the team."]);
     }
@@ -1007,10 +997,10 @@ final class TeamsController extends Controller
             return redirect()->back()->with('alert', ['type' => 'error', 'message' => 'Team invitation not found or already processed.']);
         }
 
-        // Update invitation status to declined
-        $invitation->update(['status' => 'invite_declined']);
+        // Delete the invitation
+        $invitation->delete();
 
-        return redirect()->route('user.team-invitations')->with('alert', ['type' => 'success', 'message' => 'Invitation declined successfully.']);
+        return redirect()->route('teams')->with('alert', ['type' => 'success', 'message' => 'Invitation declined successfully.']);
     }
 
     /**

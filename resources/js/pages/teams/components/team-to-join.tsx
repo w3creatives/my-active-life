@@ -28,7 +28,12 @@ interface Pagination<T> {
   next_page_url: string | null;
   prev_page_url: string | null;
 }
-export default function TeamToJoin() {
+
+interface TeamToJoinProps {
+  onRequestChange?: () => void;
+}
+
+export default function TeamToJoin({ onRequestChange }: TeamToJoinProps) {
   const { auth } = usePage<SharedData>().props;
 
   const [teams, setTeams] = useState<Pagination<User> | null>(null);
@@ -38,6 +43,10 @@ export default function TeamToJoin() {
   const [perPage, setperPage] = useState('5');
   const [currentPage, setCurrentPage] = useState(1);
   const [teamJoinActionProcessing, setTeamJoinActionProcessing] = useState(false);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
+  const [pendingRequestId, setPendingRequestId] = useState<number | null>(null);
+  const [pendingRequestTeamId, setPendingRequestTeamId] = useState<number | null>(null);
+  const [hoveredTeamId, setHoveredTeamId] = useState<number | null>(null);
 
   const fetchTeams = async (page: number = currentPage) => {
     try {
@@ -58,8 +67,29 @@ export default function TeamToJoin() {
     }
   };
 
+  const checkPendingRequests = async () => {
+    try {
+      const response = await axios.get(route('teams.user-join-requests'));
+      const hasPending = response.data.data && response.data.data.length > 0;
+      setHasPendingRequest(hasPending);
+
+      // Store the pending request details
+      if (hasPending && response.data.data.length > 0) {
+        const pendingRequest = response.data.data[0];
+        setPendingRequestId(pendingRequest.id);
+        setPendingRequestTeamId(pendingRequest.team_id);
+      } else {
+        setPendingRequestId(null);
+        setPendingRequestTeamId(null);
+      }
+    } catch (err) {
+      console.error('Error checking pending requests:', err);
+    }
+  };
+
   useEffect(() => {
     fetchTeams(1); // Reset to page 1 on initial load
+    checkPendingRequests(); // Check if user has any pending requests
   }, []);
 
   // Debounced search trigger - reset to page 1 when search changes
@@ -76,6 +106,13 @@ export default function TeamToJoin() {
   };
 
   const handleTeamJoinAction = (team: object) => {
+    // If this is the team with pending request, cancel it
+    if (pendingRequestTeamId === team.id && pendingRequestId) {
+      handleCancelRequest(team);
+      return;
+    }
+
+    // Otherwise, send a new join request
     setTeamJoinActionProcessing(true);
     router.post(route('teams.team-to-join-request'), {
       event_id: auth.preferred_event.id,
@@ -83,8 +120,11 @@ export default function TeamToJoin() {
     }, {
       onSuccess: () => {
         setTeamJoinActionProcessing(false);
-        // Refresh the teams list after successful join
+        // Refresh the teams list and check pending requests
         fetchTeams(currentPage);
+        checkPendingRequests();
+        // Notify parent to refresh other components
+        onRequestChange?.();
       },
       onError: (errors) => {
         setTeamJoinActionProcessing(false);
@@ -96,6 +136,35 @@ export default function TeamToJoin() {
         setTeamJoinActionProcessing(false);
       }
     });
+  };
+
+  const handleCancelRequest = (team: object) => {
+    if (!pendingRequestId) return;
+
+    setTeamJoinActionProcessing(true);
+    router.post(
+      route('teams.cancel-user-join-request'),
+      {
+        request_id: pendingRequestId,
+      },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          toast.success(`Your request to join ${team.name} has been cancelled`);
+          // Refresh the teams list and check pending requests
+          fetchTeams(currentPage);
+          checkPendingRequests();
+          // Notify parent to refresh other components
+          onRequestChange?.();
+        },
+        onError: (errors: any) => {
+          toast.error(errors.error || 'Failed to cancel request');
+        },
+        onFinish: () => {
+          setTeamJoinActionProcessing(false);
+        },
+      },
+    );
   };
 
   // Skeleton component for individual user rows
@@ -195,8 +264,18 @@ export default function TeamToJoin() {
                 <div className="w-1/4 lg:w-1/4">{member.members}</div>
                 <div className="w-1/4 lg:w-1/4">{member.mileage}</div>
                 <div className="mt-2 w-full lg:mt-0 lg:w-1/4 lg:text-right">
-                  <Button onClick={() => handleTeamJoinAction(member)} disabled={teamJoinActionProcessing}>
-                    {member.membership.text}
+                  <Button
+                    onClick={() => handleTeamJoinAction(member)}
+                    disabled={teamJoinActionProcessing || (hasPendingRequest && pendingRequestTeamId !== member.id)}
+                    onMouseEnter={() => setHoveredTeamId(member.id)}
+                    onMouseLeave={() => setHoveredTeamId(null)}
+                    variant={pendingRequestTeamId === member.id && hoveredTeamId === member.id ? 'destructive' : 'default'}
+                  >
+                    {pendingRequestTeamId === member.id
+                      ? hoveredTeamId === member.id
+                        ? 'Cancel Request'
+                        : 'Requested Join'
+                      : member.membership.text}
                   </Button>
                 </div>
               </div>

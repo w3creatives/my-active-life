@@ -6,6 +6,7 @@ import TeamToJoin from '@/pages/teams/components/team-to-join';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ChartPie, Mail } from 'lucide-react';
+import { useState } from 'react';
 import AdminControls from './components/admin-controls';
 import InviteMembers from './components/invite-members';
 import TeamMembers from './components/team-members';
@@ -17,6 +18,13 @@ export default function FollowPage() {
   const { team, auth } = usePage<SharedData>().props;
   const teamData: any = team;
   const isTeamOwner = teamData && teamData.owner_id === auth.user.id;
+
+  // Shared state to trigger refresh across components
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const triggerRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   return (
     <AppLayout>
@@ -44,8 +52,8 @@ export default function FollowPage() {
 
         <CreateTeam />
         {!teamData && <TeamInvitations />}
-        {!teamData && <UserJoinRequests />}
-        {!teamData && <TeamToJoin />}
+        {!teamData && <UserJoinRequests refreshTrigger={refreshTrigger} />}
+        {!teamData && <TeamToJoin onRequestChange={triggerRefresh} />}
         {teamData && <TeamMembershipRequests />}
         {teamData && <TeamMembers />}
         {teamData && <InviteMembers />}

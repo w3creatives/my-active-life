@@ -63,8 +63,7 @@ final class DashboardController extends Controller
                 });
         })->where('event_id', $user->preferred_event_id)->first();
 
-
-        return Inertia::render('stats/index',['team' => $team]);
+        return Inertia::render('stats/index', ['team' => $team]);
     }
 
     public function tutorials(): Response
@@ -159,12 +158,24 @@ final class DashboardController extends Controller
     public function preferredEvent(): Response
     {
         $user = Auth::user();
+        $now = now();
 
+        // Get all user participations
         $participations = $this->userParticipations($user);
-        $events = $participations->map(function ($participation) use ($user) {
+
+        // Categorize participated events
+        $currentChallenges = [];
+        $pastChallenges = [];
+
+        foreach ($participations as $participation) {
             $event = $participation->event;
 
-            return [
+            // Parse subscription_end_date if it exists
+            $subscriptionEndDate = $participation->subscription_end_date
+                ? Carbon::parse($participation->subscription_end_date)
+                : null;
+
+            $eventData = [
                 'id' => $event->id,
                 'name' => $event->name,
                 'description' => $event->description,
@@ -172,14 +183,49 @@ final class DashboardController extends Controller
                 'start_date' => $event->start_date,
                 'end_date' => $event->end_date,
                 'event_type' => $event->event_type,
-                'is_past' => $event->isPastEvent(),
                 'is_preferred' => $user->preferred_event_id === $event->id,
                 'participation_id' => $participation->id,
+                'is_happening_now' => $event->start_date <= $now && $event->end_date >= $now,
+                'is_future' => $event->start_date > $now,
+                'is_past' => $event->end_date < $now,
+                'subscription_end_date' => $subscriptionEndDate?->format('Y-m-d'),
+                'is_closing_soon' => $subscriptionEndDate && $subscriptionEndDate->diffInDays($now) <= 7,
             ];
-        });
+
+            if ($event->end_date < $now) {
+                $pastChallenges[] = $eventData;
+            } else {
+                $currentChallenges[] = $eventData;
+            }
+        }
+
+        // Get other challenges (events user hasn't participated in)
+        $participatedEventIds = $participations->pluck('event_id')->toArray();
+        $otherChallenges = Event::whereNotIn('id', $participatedEventIds)
+            ->where('event_type', '!=', 'promotional')
+            ->where('end_date', '>=', $now)
+            ->orderBy('start_date')
+            ->get()
+            ->map(function ($event) use ($now) {
+                return [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'description' => $event->description,
+                    'logo_url' => $event->logo_url,
+                    'start_date' => $event->start_date,
+                    'end_date' => $event->end_date,
+                    'event_type' => $event->event_type,
+                    'registration_url' => $event->registration_url,
+                    'is_happening_now' => $event->start_date <= $now && $event->end_date >= $now,
+                    'is_future' => $event->start_date > $now,
+                ];
+            })
+            ->toArray();
 
         return Inertia::render('preferred-event/index', [
-            'events' => $events,
+            'currentChallenges' => $currentChallenges,
+            'otherChallenges' => $otherChallenges,
+            'pastChallenges' => $pastChallenges,
         ]);
     }
 
