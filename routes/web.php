@@ -153,6 +153,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/unfollow/{type}', [DashboardController::class, 'unfollow'])->name('unfollow');
     Route::post('/follow/{type}', [DashboardController::class, 'follow_request'])->name('follow.request');
 
+    Route::get('/user-event-modalities', [DashboardController::class, 'userEventModalities'])->name('user.event.modalities');
     // User points routes
     Route::get('/user-points', [DashboardController::class, 'getUserPoints'])->name('user.points');
     Route::get('/user-daily-points', [DashboardController::class, 'getUserDailyPoints'])->name('user.daily.points');

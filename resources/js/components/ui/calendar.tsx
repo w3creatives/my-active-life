@@ -33,9 +33,10 @@ interface CalendarProps {
   setDate: (date: Date) => void;
   disableFuture?: boolean;
   showTeamView?: boolean;
+  modalities?:any;
 }
 
-export function Calendar({ date, setDate, disableFuture = true, showTeamView = false }: CalendarProps) {
+export function Calendar({ date, setDate, disableFuture = true, showTeamView = false, modalities = []}: CalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [userPoints, setUserPoints] = useState<UserPoint[]>([]);
   const [eventInfo, setEventInfo] = useState<{ id: number; name: string } | null>(null);
@@ -172,7 +173,7 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
         setLoading(true);
         try {
             const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-            const response = await axios.get(route('user.points', { date: formattedDate }));
+            const response = await axios.get(route('user.points', { date: formattedDate, modality: activeModality }));
             setUserPoints(response.data.points);
             setEventInfo(response.data.event);
             return response;
@@ -182,7 +183,7 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
         } finally {
             setLoading(false);
         }
-    }, [currentYear, currentMonth]);
+    }, [currentYear, currentMonth,setActiveModality]);
 
     const refreshCalendar = async () => {
         await fetchUserPoints();
@@ -191,9 +192,7 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
   // Fetch user points data
   useEffect(() => {
     fetchUserPoints();
-  }, [fetchUserPoints]);
-
-  const modalities = ["all", "run", "walk", "other"];
+  }, [fetchUserPoints,activeModality]);
 
   return (
     <div className="w-full rounded-lg border bg-card text-card-foreground shadow-sm">
@@ -214,7 +213,9 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
           </p>
         </div>
         {/* Modality Filter Buttons */}
-        <div className="flex flex-wrap gap-2 px-4 pb-2">
+          { modalities.length == 0 ? <div className="flex flex-wrap gap-2 px-4 pb-2">
+              <Skeleton></Skeleton>
+          </div>: <div className="flex flex-wrap gap-2 px-4 pb-2">
           {modalities.map((modality) => (
             <Button
               key={modality}
@@ -223,10 +224,10 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
               onClick={() => handleModalityChange(modality)}
               className="capitalize"
             >
-              {modality.replace('-', ' ')}
+              {modality.replace('_', ' ')}
             </Button>
           ))}
-        </div>
+        </div>}
       </div>
 
       <div className="p-4">

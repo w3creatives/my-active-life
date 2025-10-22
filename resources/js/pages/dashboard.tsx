@@ -26,11 +26,17 @@ export default function Dashboard() {
   const [showTeamView, setShowTeamView] = useState(false);
   const [nextMilestoneData, setNextMilestoneData] = useState<any>(null);
   const [loadingMilestone, setLoadingMilestone] = useState(true);
+  const [modalities, setModalities] = useState([]);
 
   if (!auth.preferred_event) {
     router.visit(route('preferred.event'));
     return null;
   }
+
+    const fetchUserEventModality = async () => {
+        const response = await axios.get(route('user.event.modalities'));
+        setModalities(response.data);
+    }
 
   // Get the event goal from user settings
   useEffect(
@@ -47,6 +53,7 @@ export default function Dashboard() {
 
   // Fetch next milestone data
   useEffect(() => {
+      fetchUserEventModality();
     const fetchNextMilestone = async () => {
       try {
         const response = await axios.get(route('next.milestone'));
@@ -149,7 +156,7 @@ export default function Dashboard() {
             </>
           )}
         </div>
-        <Calendar date={date} setDate={setDate} showTeamView={showTeamView} />
+        <Calendar date={date} setDate={setDate} showTeamView={showTeamView} modalities={modalities}/>
       </PageContent>
     </AppLayout>
   );

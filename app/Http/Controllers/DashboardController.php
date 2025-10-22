@@ -400,6 +400,12 @@ final class DashboardController extends Controller
         $date = $request->input('date', now()->format('Y-m'));
         [$year, $month] = explode('-', $date);
 
+        $modality = $request->input('modality','all');
+
+        if($modality == 'all') {
+            $modality = null;
+        }
+
         $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
         $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
 
@@ -424,11 +430,11 @@ final class DashboardController extends Controller
 
         $eventName = $event->name;
 
-        $pointsCacheKey = "user_dashboard_points_{$user->id}_{$startDate}_to_{$endDate}_for_{$eventId}";
+        $pointsCacheKey = "user_dashboard_points_{$user->id}_{$startDate}_to_{$endDate}_for_{$eventId}_{$modality}";
         Cache::forget($pointsCacheKey);
 
-        $pointsWithMilestones = Cache::remember($pointsCacheKey, now()->addMinutes(15), function () use ($user, $startDate, $endDate, $eventId, $event) {
-            $data = $this->fetchUserPointsInDateRange($user, $startDate, $endDate, $eventId);
+        $pointsWithMilestones = Cache::remember($pointsCacheKey, now()->addMinutes(15), function () use ($user, $startDate, $endDate, $eventId, $event, $modality) {
+            $data = $this->fetchUserPointsInDateRange($user, $startDate, $endDate, $eventId, $modality);
             $points = $data['points'];
 
             // Calculate cumulative miles and check for milestones
@@ -938,5 +944,19 @@ final class DashboardController extends Controller
         $participation->fill(['public_profile' => (bool) $request->public_profile])->save();
 
         return back()->with('message', 'Privacy updated successfully!');
+    }
+
+    public function userEventModalities(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $participation = $user->participations()->where('event_id', $user->preferred_event_id)->first();
+
+        $modalityOverrides = ['all'];
+
+        $modalityOverrides = array_merge($modalityOverrides, $participation->modality_overrides);
+
+        return response()->json($modalityOverrides);
+
     }
 }
