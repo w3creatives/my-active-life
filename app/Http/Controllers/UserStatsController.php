@@ -684,7 +684,7 @@ final readonly class UserStatsController
         $totalDistance = (float) $totalDistance;
         $coveredDistance = (float) $coveredTotalDistance;
 
-        $percentage = (float) (($coveredDistance / $totalDistance) * 100);
+        $percentage = (float) ($coveredDistance?(($coveredDistance / $totalDistance) * 100):0);
         $remainingDistance = ($totalDistance - $coveredDistance);
         $remainingDistance = (max($remainingDistance, 0));
         $isCompleted = $coveredDistance >= $totalDistance;
