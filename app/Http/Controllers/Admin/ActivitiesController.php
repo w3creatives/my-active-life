@@ -99,12 +99,12 @@ final class ActivitiesController extends Controller
         if ($activity) {
             $activity->fill($data)->save();
 
-            return redirect()->route('admin.events.activities', $eventId)->with('alert', ['type' => 'success', 'message' => 'Activity updated.']);
+            return redirect()->route('admin.events.activities', $eventId)->with('alert', ['type' => 'success', 'message' => 'Quest updated.']);
         }
 
         $event->fitActivities()->create($data);
 
-        return redirect()->route('admin.events.activities', $eventId)->with('alert', ['type' => 'success', 'message' => 'Activity created.']);
+        return redirect()->route('admin.events.activities', $eventId)->with('alert', ['type' => 'success', 'message' => 'Quest created.']);
     }
 
     public function destroy(Request $request, $eventId, $activityId)
@@ -115,11 +115,11 @@ final class ActivitiesController extends Controller
         $activity = $event->fitActivities()->find($activityId);
 
         if (! $activity) {
-            return redirect()->route('admin.events.activities', $eventId)->with('alert', ['type' => 'danger', 'message' => 'Invalid activity.']);
+            return redirect()->route('admin.events.activities', $eventId)->with('alert', ['type' => 'danger', 'message' => 'Invalid Quest.']);
         }
 
         $activity->delete();
 
-        return redirect()->route('admin.events.activities', $eventId)->with('alert', ['type' => 'success', 'message' => 'Activity deleted.']);
+        return redirect()->route('admin.events.activities', $eventId)->with('alert', ['type' => 'success', 'message' => 'Quest deleted.']);
     }
 }

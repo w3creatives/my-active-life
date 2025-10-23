@@ -168,7 +168,7 @@
                                         @break
                                     @case('fit_life')
                                         <a href="{{ route('admin.events.activities', $event->id) }}"
-                                           class="btn btn-dark">Activities</a>
+                                           class="btn btn-dark">Quests</a>
                                         @break
                                     @case('promotional')
                                         <a href="{{ route('admin.events.streaks', $event->id) }}" class="btn btn-dark">Streaks</a>

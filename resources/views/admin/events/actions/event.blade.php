@@ -9,8 +9,8 @@
                     class="icon-base ti tabler-target mb-2"></i></a>
             @break
         @case('fit_life')
-            <a href="{{ route('admin.events.activities', $event->id) }}" class="btn btn-icon btn-text-secondary waves-effect" data-bs-toggle="tooltip" title="Activities"><i
-                    class="icon-base ti tabler-target mb-2"></i></a>
+            <a href="{{ route('admin.events.activities', $event->id) }}" class="btn btn-icon btn-text-secondary waves-effect" data-bs-toggle="tooltip" title="Quests"><i
+                    class="icon-base ti tabler-list-details mb-2"></i></a>
             @break
         @case('promotional')
             <a href="{{ route('admin.events.streaks', $event->id) }}" class="btn btn-icon btn-text-secondary waves-effect" data-bs-toggle="tooltip" title="Streaks"><i

@@ -67,7 +67,7 @@
                                 <input type="file" id="calendar_logo" data-preview=".calendar-logo-preview"
                                        name="calendar_logo" class="form-control choose-file" {{ isset($eventMilestone->calendar_logo) && $eventMilestone->calendar_logo?'':'required' }}>
                                 <div class="calendar-logo-preview {{ isset($eventMilestone->calendar_logo) && $eventMilestone->calendar_logo?'':'d-none' }} mt-3">
-                                    img src="{{ $eventMilestone->calendar_logo??'' }}" class="img-fluid img" style="height: 100px;" onerror="this.src='{{ url('/images/default-placeholder.png') }}'"/>
+                                    <img src="{{ $eventMilestone->calendar_logo??'' }}" class="img-fluid img" style="height: 100px;" onerror="this.src='{{ url('/images/default-placeholder.png') }}'"/>
                                 </div>
                             </div>
                             @if($isRegularEvent)
@@ -76,7 +76,7 @@
                                     <input type="file" id="team_logo" data-preview=".team-logo-preview"
                                            name="team_logo" class="form-control choose-file" {{ isset($eventMilestone->team_logo) && $eventMilestone->team_logo?'':'required' }}>
                                     <div class="team-logo-preview {{ isset($eventMilestone->team_logo) && $eventMilestone->team_logo?'':'d-none' }} mt-3">
-                                        img src="{{ $eventMilestone->team_logo??'' }}" class="img-fluid img" style="height: 100px;" onerror="this.src='{{ url('/images/default-placeholder.png') }}'"/>
+                                        <img src="{{ $eventMilestone->team_logo??'' }}" class="img-fluid img" style="height: 100px;" onerror="this.src='{{ url('/images/default-placeholder.png') }}'"/>
                                     </div>
                                 </div>
                                 <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
@@ -101,7 +101,7 @@
                                     <input type="file" id="bw_calendar_logo" data-preview=".calendar_bw-logo-preview"
                                            name="bw_calendar_logo" class="form-control choose-file" {{ isset($eventMilestone->bw_calendar_logo) && $eventMilestone->bw_calendar_logo?'':'required' }}>
                                     <div class="calendar_bw-logo-preview {{ isset($eventMilestone->bw_calendar_logo) && $eventMilestone->bw_calendar_logo?'':'d-none' }} mt-3">
-                                        img src="{{ $eventMilestone->bw_calendar_logo??'' }}" class="img-fluid img" style="height: 100px;" onerror="this.src='{{ url('/images/default-placeholder.png') }}'"/>
+                                        <img src="{{ $eventMilestone->bw_calendar_logo??'' }}" class="img-fluid img" style="height: 100px;" onerror="this.src='{{ url('/images/default-placeholder.png') }}'"/>
                                     </div>
                                 </div>
                             @endif

@@ -4,7 +4,7 @@
         <div class="col-md-12">
             <div class="card card-action">
                 <div class="card-header">
-                    <h5 class="card-action-title mb-0">{{ $activity?'Update':'Add'}} Activity</h5>
+                    <h5 class="card-action-title mb-0">{{ $activity?'Update':'Add'}} Quest</h5>
                     <div class="card-action-element">
                         <ul class="list-inline mb-0">
                             <li class="list-inline-item">
@@ -130,7 +130,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between mt-3">
-                            <button type="submit" class="btn btn-primary">{{ $activity?'Update':'Add'}} Activity
+                            <button type="submit" class="btn btn-primary">{{ $activity?'Update':'Add'}} Quest
                             </button>
                             @if($activity)
                                 <a href="{{ route('admin.events.activity.milestones', [$activity->event_id, $activity->id]) }}"

@@ -3,8 +3,13 @@
         <div class="row card-header flex-column flex-md-row border-bottom mx-0 px-3">
             <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto mt-0">
                 <div class="card-title d-flex justify-content-between">
-                    <h5 class="pb-0 text-md-start text-center p-0 m-0">#{{ $event->id }}: {{ $event->name }}
-                        Milestones</h5>
+                    <h5 class="pb-0 text-md-start text-center p-0 m-0">
+                        @if($activity)
+                            #{{ $activity->id }}: Quest - {{ $activity->name }} Milestones
+                            @else
+                        #{{ $event->id }}: {{ $event->name }} Milestones
+                        @endif
+                    </h5>
                 </div>
             </div>
            <x-event.list-action :event="$event" :activity="$activity"></x-event.list-action>

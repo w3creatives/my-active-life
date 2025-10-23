@@ -4,7 +4,7 @@
             <div class="d-md-flex justify-content-between align-items-center dt-layout-start col-md-auto me-auto mt-0">
                 <div class="card-title d-flex justify-content-between">
                     <h5 class="pb-0 text-md-start text-center p-0 m-0">#{{ $event->id }}: {{ $event->name }}
-                        Activities</h5>
+                        Quests</h5>
                 </div>
             </div>
             <div class="d-md-flex justify-content-between align-items-center dt-layout-end col-md-auto ms-auto mt-0">
@@ -13,13 +13,13 @@
 
                     <a
                        class="btn create-new btn-primary" tabindex="0" data-bs-toggle1="offcanvas"
-                       data-bs-target1="#action-activity-modal" data-action-title="Add New Activity" href="{{ route('admin.events.activities.create',[$event->id,null]) }}"
+                       data-bs-target1="#action-activity-modal" data-action-title="Add New Quest" href="{{ route('admin.events.activities.create',[$event->id,null]) }}"
                        aria-controls="activitylist-table"
                        type="button">
                         <span>
                             <span class="d-flex align-items-center gap-2">
                                 <i class="icon-base ti tabler-plus icon-sm"></i>
-                                <span class="d-none d-sm-inline-block">Add New Activity</span>
+                                <span class="d-none d-sm-inline-block">Add New Quest</span>
                             </span>
                         </span>
                     </a>
