@@ -66,7 +66,7 @@ export default function Stats() {
       <PageContent>
         <div className="flex justify-between gap-5">
           <div className="page-title">
-            <PageTitle title={`${auth.user.display_name}'s ${auth.preferred_event.name} Journey ${teamData?.name}`} />
+            <PageTitle title={`${auth.user.display_name}'s ${auth.preferred_event.name} Journey ${teamData?teamData.name:''}`} />
           </div>
           {teamData && (
             <div className="flex gap-2">

@@ -23,9 +23,10 @@ export function EventSwitcher() {
       route('user.set-preferred-event'),
       { event_id: eventId },
       {
+          preserveScroll: true,
         onSuccess: () => {
           toast.success('Preferred event updated successfully');
-          router.visit(route('dashboard'));
+          //router.visit(route('dashboard'));
         },
         onError: (errors) => {
           toast.error(errors.error || 'Failed to update preferred event');
