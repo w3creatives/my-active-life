@@ -74,19 +74,37 @@ final class Sidebar extends Component
             ],
             [
                 'icon' => 'tabler-list-details',
-                'label' => 'Quests',
-                'route_group' => 'quests',
+                'label' => 'Quests Groups',
+                'route_group' => 'quest-groups',
                 'has_children' => true,
                 'children' => [
                     [
                         'route' => 'admin.quests.groups',
-                        'label' => 'Quest Groups',
-                        'route_group' => 'quests',
+                        'label' => 'Quest Groups List',
+                        'route_group' => 'quest-groups',
                     ],
                     [
+                        'route' => 'admin.quests.groups.create',
+                        'label' => 'Create Quest Group',
+                        'route_group' => 'quest-groups',
+                    ],
+                ],
+            ],
+            [
+                'icon' => 'tabler-list-details',
+                'label' => 'Quests Categories',
+                'route_group' => 'quest-categories',
+                'has_children' => true,
+                'children' => [
+                    [
                         'route' => 'admin.quests.categories',
-                        'label' => 'Quest Categories',
-                        'route_group' => 'quests',
+                        'label' => 'Quest Categories List',
+                        'route_group' => 'quest-categories',
+                    ],
+                    [
+                        'route' => 'admin.quests.categories.create',
+                        'label' => 'Create Quest Category',
+                        'route_group' => 'quest-categories',
                     ],
                 ],
             ],

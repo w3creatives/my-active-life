@@ -112,19 +112,19 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     /**
      * Quests Groups routes
      */
-    Route::get('quests/groups', [QuestGroupsController::class, 'index'])->name('admin.quests.groups');
-    Route::get('quests/groups/create', [QuestGroupsController::class, 'create'])->name('admin.quests.groups.create');
-    Route::post('quests/groups/create', [QuestGroupsController::class, 'store']);
+    Route::get('quest-groups', [QuestGroupsController::class, 'index'])->name('admin.quests.groups');
+    Route::get('quest-groups/create', [QuestGroupsController::class, 'create'])->name('admin.quests.groups.create');
+    Route::post('quest-groups/create', [QuestGroupsController::class, 'store']);
 
-    Route::get('quests/groups/{id}/edit', [QuestGroupsController::class, 'create'])->name('admin.quests.groups.edit');
-    Route::post('quests/groups/{id}/edit', [QuestGroupsController::class, 'store']);
+    Route::get('quest-groups/{id}/edit', [QuestGroupsController::class, 'create'])->name('admin.quests.groups.edit');
+    Route::post('quest-groups/{id}/edit', [QuestGroupsController::class, 'store']);
 
     /**
      * Quests Categories routes
      */
-    Route::get('quests/categories', [QuestCategoriesController::class, 'index'])->name('admin.quests.categories');
-    Route::get('quests/categories/create', [QuestCategoriesController::class, 'create'])->name('admin.quests.categories.create');
-    Route::post('quests/categories/create', [QuestCategoriesController::class, 'store']);
-    Route::get('quests/categories/{id}/edit', [QuestCategoriesController::class, 'create'])->name('admin.quests.categories.edit');
-    Route::post('quests/categories/{id}/edit', [QuestCategoriesController::class, 'store']);
+    Route::get('quest-categories', [QuestCategoriesController::class, 'index'])->name('admin.quests.categories');
+    Route::get('quest-categories/create', [QuestCategoriesController::class, 'create'])->name('admin.quests.categories.create');
+    Route::post('quest-categories/create', [QuestCategoriesController::class, 'store']);
+    Route::get('quest-categories/{id}/edit', [QuestCategoriesController::class, 'create'])->name('admin.quests.categories.edit');
+    Route::post('quest-categories/{id}/edit', [QuestCategoriesController::class, 'store']);
 });
