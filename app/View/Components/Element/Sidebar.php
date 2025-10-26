@@ -73,7 +73,7 @@ final class Sidebar extends Component
                 'has_children' => false,
             ],
             [
-                'icon' => 'tabler-list-details',
+                'icon' => 'tabler-sitemap',
                 'label' => 'Quests Groups',
                 'route_group' => 'quest-groups',
                 'has_children' => true,
@@ -91,7 +91,7 @@ final class Sidebar extends Component
                 ],
             ],
             [
-                'icon' => 'tabler-list-details',
+                'icon' => 'tabler-category-2',
                 'label' => 'Quests Categories',
                 'route_group' => 'quest-categories',
                 'has_children' => true,
