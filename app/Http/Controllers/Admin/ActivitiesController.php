@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\FitLifeActivity;
+use App\Models\FitLifeActivityCategory;
+use App\Models\FitLifeActivityGroup;
 use App\Utilities\DataTable;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -57,7 +59,10 @@ final class ActivitiesController extends Controller
             $sports = explode(',', str_replace(['{', '}'], '', $activity->sports));
         }
 
-        return view('admin.activities.create', compact('eventId', 'activityId', 'activity', 'sports'));
+        $groups = FitLifeActivityGroup::query()->orderBy('name','asc')->get();
+        $categories = FitLifeActivityCategory::query()->orderBy('name','asc')->get();
+
+        return view('admin.activities.create', compact('eventId', 'activityId', 'activity', 'sports','groups','categories'));
 
     }
 

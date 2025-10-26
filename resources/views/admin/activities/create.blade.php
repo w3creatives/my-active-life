@@ -27,13 +27,24 @@
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="category" class="form-label">Category</label>
-                                <input type="text" id="category" name="category" class="form-control"
-                                       value="{{ $activity->category ?? old('category') }}" required>
+                                <select class="form-select select2 @error('category') parsley-error @enderror" id="category" name="category"  aria-label="Default select example" data-parsley-trigger="change"
+                                        aria-label="Default select example" required>
+                                    <option value="">Select Category</option>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->name }}" {{ ($activity->category ?? old('category')) == $category->name?'selected':'' }}>{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="group" class="form-label">Group</label>
-                                <input type="text" id="group" name="group" class="form-control"
-                                       value="{{ $activity->group ?? old('group') }}" required>
+                                <select class="form-select select2 @error('group') parsley-error @enderror" id="group" name="group"  aria-label="Default select example" data-parsley-trigger="change"
+                                        aria-label="Default select example" required>
+                                    <option value="">Select Group</option>
+                                    @foreach($groups as $group)
+                                        <option value="{{ $group->name }}" {{ ($activity->group ?? old('group')) == $group->name?'selected':'' }}>{{ $group->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="name" class="form-label">Name</label>
