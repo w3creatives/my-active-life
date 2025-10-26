@@ -73,6 +73,24 @@ final class Sidebar extends Component
                 'has_children' => false,
             ],
             [
+                'icon' => 'tabler-list-details',
+                'label' => 'Quests',
+                'route_group' => 'quests',
+                'has_children' => true,
+                'children' => [
+                    [
+                        'route' => 'admin.quests.groups',
+                        'label' => 'Quest Groups',
+                        'route_group' => 'quests',
+                    ],
+                    [
+                        'route' => 'admin.quests.categories',
+                        'label' => 'Quest Categories',
+                        'route_group' => 'quests',
+                    ],
+                ],
+            ],
+            [
                 'route' => 'admin.email.builders',
                 'icon' => 'tabler-app-window',
                 'label' => 'Email Templates',

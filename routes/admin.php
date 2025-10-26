@@ -9,9 +9,11 @@ use App\Http\Controllers\Admin\EventsController;
 use App\Http\Controllers\Admin\EventTutorialsController;
 use App\Http\Controllers\Admin\ImpersonateController;
 use App\Http\Controllers\Admin\MilestonesController;
+use App\Http\Controllers\Admin\QuestCategoriesController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\StreaksController;
 use App\Http\Controllers\Admin\UsersController;
+use App\Http\Controllers\Admin\QuestGroupsController;
 use Illuminate\Support\Facades\Route;
 
 Route::impersonate();
@@ -106,4 +108,23 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::get('reports/source/point-tracker', [ReportsController::class, 'pointTracker'])->name('admin.reports.point-tracker');
 
     Route::get('reports/users/event/{eventId}/download', [ReportsController::class, 'exportEventUserParticipations'])->name('admin.reports.users.event.download');
+
+    /**
+     * Quests Groups routes
+     */
+    Route::get('quests/groups', [QuestGroupsController::class, 'index'])->name('admin.quests.groups');
+    Route::get('quests/groups/create', [QuestGroupsController::class, 'create'])->name('admin.quests.groups.create');
+    Route::post('quests/groups/create', [QuestGroupsController::class, 'store']);
+
+    Route::get('quests/groups/{id}/edit', [QuestGroupsController::class, 'create'])->name('admin.quests.groups.edit');
+    Route::post('quests/groups/{id}/edit', [QuestGroupsController::class, 'store']);
+
+    /**
+     * Quests Categories routes
+     */
+    Route::get('quests/categories', [QuestCategoriesController::class, 'index'])->name('admin.quests.categories');
+    Route::get('quests/categories/create', [QuestCategoriesController::class, 'create'])->name('admin.quests.categories.create');
+    Route::post('quests/categories/create', [QuestCategoriesController::class, 'store']);
+    Route::get('quests/categories/{id}/edit', [QuestCategoriesController::class, 'create'])->name('admin.quests.categories.edit');
+    Route::post('quests/categories/{id}/edit', [QuestCategoriesController::class, 'store']);
 });
