@@ -1034,7 +1034,7 @@ final class DashboardController extends Controller
             $milestone->is_completed = true;
             $isCompleted = true;
         } else {
-            $milestone = $activity->milestones()->where('total_points', $activity->total_points)->orderBy('total_points', 'desc')->first();
+            $milestone = $activity->milestones()->where('total_points', 0)->orderBy('total_points', 'desc')->first();
             $milestone->is_completed = false;
         }
 
