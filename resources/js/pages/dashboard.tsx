@@ -104,8 +104,8 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <ProgressCard totalPoints={totalPoints} goal={userGoal} title="Your Progress" />
-          {!auth.preferred_event.name.toLowerCase().includes('amerithon') && (
+            { auth.preferred_event.event_type != 'fit_life' && <ProgressCard totalPoints={totalPoints} goal={userGoal} title="Your Progress" />}
+          {!auth.preferred_event.name.toLowerCase().includes('amerithon') && auth.preferred_event.event_type != 'fit_life' && (
             <>
               {loadingMilestone ? (
                 <Card>
@@ -118,8 +118,7 @@ export default function Dashboard() {
                     </div>
                   </CardContent>
                 </Card>
-              ) : (
-                <NextMilestoneCard
+              ) : (<NextMilestoneCard
                   nextMilestone={nextMilestoneData?.next_milestone}
                   currentDistance={nextMilestoneData?.current_distance || 0}
                   previousMilestone={nextMilestoneData?.previous_milestone}
@@ -127,7 +126,7 @@ export default function Dashboard() {
                   showTeamView={showTeamView}
                 />
               )}
-              <MilesToNextBib />
+              { auth.preferred_event.event_type != 'fit_life' && <MilesToNextBib />}
             </>
           )}
           {auth.preferred_event.name.toLowerCase().includes('amerithon') && (

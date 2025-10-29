@@ -10,6 +10,7 @@ use App\Actions\Follow\UndoFollowing;
 use App\Models\DataSource;
 use App\Models\Event;
 use App\Models\EventMilestone;
+use App\Models\FitLifeActivityRegistration;
 use App\Models\Team;
 use App\Repositories\UserPointRepository;
 use App\Repositories\UserRepository;
@@ -21,6 +22,7 @@ use App\Traits\RTEHelpers;
 use App\Traits\UserEventParticipationTrait;
 use App\Traits\UserPointFetcher;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -400,9 +402,9 @@ final class DashboardController extends Controller
         $date = $request->input('date', now()->format('Y-m'));
         [$year, $month] = explode('-', $date);
 
-        $modality = $request->input('modality','all');
+        $modality = $request->input('modality', 'all');
 
-        if($modality == 'all') {
+        if ($modality === 'all') {
             $modality = null;
         }
 
@@ -444,27 +446,58 @@ final class DashboardController extends Controller
             // Get all milestones for this event
             $milestones = $event->milestones()->orderBy('distance')->get();
 
+            $pointDates = [];
+
             foreach ($points as $point) {
                 $pointDate = $point->date;
                 $dailyMiles = $point->amount;
 
+                $pointDates[] = $pointDate;
                 // Get cumulative miles up to this date
+
+                // Find milestone earned on this specific date
+                $milestoneEarned = null;
+
                 $cumulativeMiles = $user->points()
                     ->where('event_id', $eventId)
                     ->where('date', '>=', $event->start_date)
                     ->where('date', '<=', $pointDate)
                     ->sum('amount');
-
                 // Get previous day's cumulative miles to check if milestone was crossed on this date
-                $previousDate = Carbon::parse($pointDate)->subDay()->format('Y-m-d');
                 $previousCumulativeMiles = $user->points()
                     ->where('event_id', $eventId)
                     ->where('date', '>=', $event->start_date)
                     ->where('date', '<', $pointDate)
                     ->sum('amount');
 
-                // Find milestone earned on this specific date
-                $milestoneEarned = null;
+                if (in_array($event->event_type, ['month', 'regular'])) {
+
+                    $milestone = $event->milestones()->selectRaw('name,description,distance,data')
+                        ->where('distance', '<=', $cumulativeMiles)
+                        ->where('distance', '>', $previousCumulativeMiles)
+                        ->orderBy('distance', 'DESC')
+                        ->first();
+                } elseif ($event->event_type === 'fit_life') {
+
+                    $milestoneEarned = $this->fitLife($user, $event, $point->amount, $point->date);
+
+                    $milestone = null;
+                }
+
+                if ($milestone) {
+                    $milestoneEarned = [
+                        'id' => $milestone->id,
+                        'name' => $milestone->name,
+                        'distance' => $milestone->distance,
+                        'description' => $milestone->description,
+                        'calendar_logo_url' => $milestone->calendar_logo,
+                        'calendar_team_logo_url' => $milestone->calendar_team_logo,
+                        'bib_image_url' => $milestone->bib_image,
+                        'team_bib_image_url' => $milestone->team_bib_image,
+                    ];
+                }
+
+                /*
                 foreach ($milestones as $milestone) {
                     if ($cumulativeMiles >= $milestone->distance && $previousCumulativeMiles < $milestone->distance) {
                         $milestoneEarned = [
@@ -479,7 +512,7 @@ final class DashboardController extends Controller
                         ];
                         break; // Only show the first milestone earned on this date
                     }
-                }
+                }*/
 
                 $pointsArray[] = [
                     'id' => $point->id,
@@ -490,6 +523,26 @@ final class DashboardController extends Controller
                 ];
             }
 
+            $monthStartDate = CarbonImmutable::parse($startDate);
+
+            if ($event->event_type === 'fit_life') {
+                for ($day = 0; $day < $monthStartDate->daysInMonth; $day++) {
+                    $monthDate = $monthStartDate->addDay($day)->format('Y-m-d');
+
+                    $hasPoint = in_array($monthDate, $pointDates);
+
+                    if (! $hasPoint) {
+                        $milestone = $this->fitLife($user, $event, 0, $monthDate);
+                        $pointsArray[] = [
+                            'date' => $monthDate,
+                            'amount' => 0,
+                            'cumulative_miles' => 0,
+                            'milestone' => $milestone,
+                        ];
+                    }
+                }
+            }
+
             return $pointsArray;
         });
 
@@ -497,13 +550,13 @@ final class DashboardController extends Controller
         Cache::forget($totalPointsCacheKey);
 
         // Get total points for the event
-        $totalPoints = Cache::remember($totalPointsCacheKey, now()->addMinutes(15), function () use ($user, $eventId) {
+        /*$totalPoints = Cache::remember($totalPointsCacheKey, now()->addMinutes(15), function () use ($user, $eventId) {
             return $this->fetchUserEventTotalPoints($user, $eventId);
-        });
+        });*/
 
         return response()->json([
             'points' => $pointsWithMilestones,
-            'total' => $totalPoints,
+            // 'total' => $totalPoints,
             'event' => [
                 'id' => $eventId,
                 'name' => $eventName,
@@ -958,5 +1011,43 @@ final class DashboardController extends Controller
 
         return response()->json($modalityOverrides);
 
+    }
+
+    private function fitLife($user, $event, $points, $date)
+    {
+
+        $fitLife = FitLifeActivityRegistration::where('date', $date)->where('user_id', $user->id)->whereHas('activity', function ($query) use ($event) {
+            return $query->where('event_id', $event->id);
+        })->first();
+
+        if (is_null($fitLife) || ! $fitLife->activity) {
+            return null;
+        }
+
+        $activity = $fitLife->activity;
+
+        $milestone = $activity->milestones()->where('total_points', '<=', $points)->orderBy('total_points', 'desc')->first();
+
+        $isCompleted = false;
+
+        if ($milestone && $points && $points >= $milestone->total_points) {
+            $milestone->is_completed = true;
+            $isCompleted = true;
+        } else {
+            $milestone = $activity->milestones()->where('total_points', $activity->total_points)->orderBy('total_points', 'desc')->first();
+            $milestone->is_completed = false;
+        }
+
+        return [
+            'id' => $milestone->id,
+            'name' => $milestone->name,
+            'distance' => $milestone->total_points,
+            'description' => $activity->prize_description,
+            'calendar_logo_url' => $isCompleted ? $milestone->calendar_logo : $milestone->bw_calendar_logo,
+            'calendar_team_logo_url' => null,
+            'bib_image_url' => $isCompleted ? $milestone->logo : $milestone->bw_logo,
+            'team_bib_image_url' => null,
+            'is_completed' => $milestone->is_completed,
+        ];
     }
 }
