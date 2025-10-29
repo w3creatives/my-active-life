@@ -26,7 +26,7 @@
                                 <input type="number" name="distance" id="distance"
                                        class="form-control @error('distance') parsley-error @enderror"
                                        value="{{ $eventMilestone->distance ?? old('distance') }}" required
-                                       data-parsley-trigger="change" min="1">
+                                       data-parsley-trigger="change" min="0">
                             </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="video_url" class="form-label">Video URL</label>
