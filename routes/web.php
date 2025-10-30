@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Http\Controllers\API\ProfilesController;
-use App\Http\Controllers\API\UserPointsController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FitLifeActivityRegistrationsController;
+use App\Http\Controllers\FitLifeEventWebApis;
 use App\Http\Controllers\SharedMilestoneController;
 use App\Http\Controllers\TeamsController;
 use App\Http\Controllers\UserStatsController;
@@ -234,6 +234,26 @@ Route::middleware(['auth'])->group(function () {
     // User's outgoing join requests routes
     Route::get('/teams/user-join-requests', [TeamsController::class, 'getUserJoinRequests'])->name('teams.user-join-requests');
     Route::post('/teams/user-join-requests/cancel', [TeamsController::class, 'cancelUserJoinRequest'])->name('teams.cancel-user-join-request');
+
+    /**
+     * FitLife Activities
+     */
+    Route::get('/fit-life/activities', [FitLifeActivityRegistrationsController::class, 'index'])->name('fit-life-activities.manage');
+    Route::get('/fit-life/activities/create', [FitLifeActivityRegistrationsController::class, 'create'])->name('fit-life-activities.create');
+    Route::get('/fit-life/activities/history', [FitLifeActivityRegistrationsController::class, 'history'])->name('fit-life-activities.history');
+    Route::get('/fit-life/armory', [FitLifeActivityRegistrationsController::class, 'armoryTrophyCase'])->name('fit-life-activities.armory');
+    Route::get('/fit-life/journal', [FitLifeActivityRegistrationsController::class, 'fitLifeJournal'])->name('fit-life-activities.journal');
+    Route::get('/fit-life/stats', [FitLifeActivityRegistrationsController::class, 'stats'])->name('fit-life-activities.stats');
+
+    Route::post('/fit-life-activities', [FitLifeActivityRegistrationsController::class, 'store'])->name('fit-life-activities.store');
+    Route::get('/fit-life-activities/{id}/edit', [FitLifeActivityRegistrationsController::class, 'edit'])->name('fit-life-activities.edit');
+    Route::put('/fit-life-activities/{id}', [FitLifeActivityRegistrationsController::class, 'update'])->name('fit-life-activities.update');
+    Route::put('/fit-life-activities/{id}/archive', [FitLifeActivityRegistrationsController::class, 'archive'])->name('fit-life-activities.archive');
+    Route::delete('/fit-life-activities/{id}', [FitLifeActivityRegistrationsController::class, 'destroy'])->name('fit-life-activities.destroy');
+
+    // FitLife Event Web API routes
+    Route::get('/web/quests', [FitLifeEventWebApis::class, 'getQuests'])->name('webapi.quests');
+    // Route::get('/web/quests/{type}', [FitLifeEventWebApis::class, 'getQuests'])->name('webapi.quests.type');
 
     // settings
     Route::post('/settings/update/privacy', [DashboardController::class, 'updateEventParticipantPrivacy'])->name('settings.update.privacy');
