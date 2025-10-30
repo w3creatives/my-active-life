@@ -2,8 +2,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
-import { ExternalLink, Share2, Trophy } from 'lucide-react';
+import { ExternalLink, NotebookPen, Share2, Trophy } from 'lucide-react';
 import { type Milestone } from '@/components/ui/calendar';
+import { Link } from '@inertiajs/react';
 
 interface BibModalProps {
   milestone: Milestone | null;
@@ -102,24 +103,35 @@ export default function BibModal({
 
           <Separator />
 
-          {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => shareAchievement(milestone)}
-            >
-              <Share2 className="mr-2 h-4 w-4" />
-              Share
-            </Button>
+          {/* Action Buttons  */}
+            { milestone.activity && <div className="grid grid-cols-2 gap-2">
+                <Link href={route('fit-life-activities.edit', milestone.activity.id)} className="flex items-center"><NotebookPen className="mr-2 h-4 w-4" /> Add Note</Link>
 
-            <Button variant="outline" size="sm" asChild>
-              <a href="#" target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Bib
-              </a>
-            </Button>
-          </div>
+
+            {/*<Button variant="outline" size="sm" asChild>*/}
+            {/*  <a href="#" target="_blank" rel="noopener noreferrer ">*/}
+            {/*    <ExternalLink className="mr-2 h-4 w-4" />*/}
+            {/*    Bib*/}
+            {/*  </a>*/}
+            {/*</Button>*/}
+          </div>}
+            { !milestone.activity && <div className="grid grid-cols-2 gap-2">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => shareAchievement(milestone)}
+                >
+                    <Share2 className="mr-2 h-4 w-4" />
+                    Share
+                </Button>
+
+                <Button variant="outline" size="sm" asChild>
+                    <a href="#" target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Bib
+                    </a>
+                </Button>
+            </div>}
 
             {milestone.is_completed &&  <div className="pt-2 text-center">
             <p className="text-xs font-medium text-green-600 dark:text-green-400">🎉 Congratulations on earning this milestone!</p>
