@@ -194,7 +194,7 @@ final class User extends Authenticatable
 
     public function fitLifeRegistrations(): HasMany
     {
-        return $this->hasMany(FitLifeActivityRegistration::class);
+        return $this->hasMany(FitLifeActivityRegistration::class, 'user_id', 'id');
     }
 
     /**

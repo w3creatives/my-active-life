@@ -636,7 +636,7 @@ final class EventService
             $activity = $registration->activity;
 
             $milestone = $activity->milestones()
-                ->where('total_points', '<=', $totalPoint->amount)
+                ->where('total_points', '<=', $totalPoint)
                 ->where('total_points', '>', 0)
                 ->orderBy('total_points', 'DESC')->first();
 
