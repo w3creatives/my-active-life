@@ -475,7 +475,7 @@ final class DashboardController extends Controller
 
                 if (in_array($event->event_type, ['month', 'regular'])) {
 
-                    $milestone = $event->milestones()->selectRaw('name,description,distance,data')
+                    $milestone = $event->milestones()
                         ->where('distance', '<=', $cumulativeMiles)
                         ->where('distance', '>', $previousCumulativeMiles)
                         ->orderBy('distance', 'DESC')
