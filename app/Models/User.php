@@ -192,6 +192,11 @@ final class User extends Authenticatable
         return $this->hasOne(Event::class, 'id', 'preferred_event_id');
     }
 
+    public function fitLifeRegistrations(): HasMany
+    {
+        return $this->hasMany(FitLifeActivityRegistration::class);
+    }
+
     /**
      * Check if the user is a super admin
      */
