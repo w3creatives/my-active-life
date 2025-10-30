@@ -306,7 +306,7 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
                                         setIsModalOpen(true);
                                       }}
                                     >
-                                        {showDayPoint()}±
+                                        {showDayPoint(point)}±
                                     </div>
                                     {point.milestone && (
                                       <div className="flex justify-center">
