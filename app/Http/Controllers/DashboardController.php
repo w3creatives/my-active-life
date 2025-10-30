@@ -538,7 +538,14 @@ final class DashboardController extends Controller
                     $hasPoint = in_array($monthDate, $pointDates);
 
                     if (! $hasPoint) {
-                        $milestone = $this->fitLife($user, $event, 0, $monthDate);
+
+                        if (! $points && ! $modality) {
+                            $points = $user->points()
+                                ->where('event_id', $event->id)
+                                ->where('date', $monthDate)
+                                ->sum('amount');
+                        }
+                        $milestone = $this->fitLife($user, $event, $points, $monthDate);
                         $pointsArray[] = [
                             'date' => $monthDate,
                             'amount' => 0,
