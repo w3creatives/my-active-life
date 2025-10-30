@@ -86,10 +86,10 @@ export default function BibModal({
                 )}
               </div>
 
-              <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 transform bg-green-500 hover:bg-green-600">
+                {milestone.is_completed && <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 transform bg-green-500 hover:bg-green-600">
                 <Trophy className="mr-1 h-3 w-3" />
                 Earned
-              </Badge>
+              </Badge>}
             </div>
           </div>
 
@@ -121,9 +121,9 @@ export default function BibModal({
             </Button>
           </div>
 
-          <div className="pt-2 text-center">
+            {milestone.is_completed &&  <div className="pt-2 text-center">
             <p className="text-xs font-medium text-green-600 dark:text-green-400">🎉 Congratulations on earning this milestone!</p>
-          </div>
+          </div>}
         </div>
       </DialogContent>
     </Dialog>

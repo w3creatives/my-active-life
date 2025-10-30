@@ -458,6 +458,11 @@ final class DashboardController extends Controller
                 // Find milestone earned on this specific date
                 $milestoneEarned = null;
 
+                $totalMiles = $user->points()
+                    ->where('event_id', $eventId)
+                    ->where('date', $pointDate)
+                    ->sum('amount');
+
                 $cumulativeMiles = $user->points()
                     ->where('event_id', $eventId)
                     ->where('date', '>=', $event->start_date)
@@ -479,7 +484,7 @@ final class DashboardController extends Controller
                         ->first();
                 } elseif ($event->event_type === 'fit_life') {
 
-                    $milestoneEarned = $this->fitLife($user, $event, $point->amount, $point->date);
+                    $milestoneEarned = $this->fitLife($user, $event, $totalMiles, $point->date);
 
                     $milestone = null;
                 }
@@ -494,6 +499,7 @@ final class DashboardController extends Controller
                         'calendar_team_logo_url' => $milestone->calendar_team_logo,
                         'bib_image_url' => $milestone->bib_image,
                         'team_bib_image_url' => $milestone->team_bib_image,
+                        'is_completed' => true,
                     ];
                 }
 
