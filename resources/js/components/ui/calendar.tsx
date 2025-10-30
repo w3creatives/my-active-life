@@ -165,6 +165,11 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
     return date > today;
   };
 
+  const showDayPoint = (point)=> {
+      return point.amount?Number(point.amount).toFixed(2):'';
+
+    }
+
   // Handle modality change
   const handleModalityChange = (modality: string) => {
     setActiveModality(modality);
@@ -301,7 +306,7 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
                                         setIsModalOpen(true);
                                       }}
                                     >
-                                      {point.amount && Number(point.amount).toFixed(2)}±
+                                        {showDayPoint()}±
                                     </div>
                                     {point.milestone && (
                                       <div className="flex justify-center">

@@ -40,7 +40,8 @@ final class EventMilestone extends Model
     public function getCalendarLogoAttribute(): ?string
     {
 
-        if (! $this->attributes['calendar_logo']) {
+        $data = $this->attributes['calendar_logo']??null;
+        if(!$data){
             return null;
         }
 

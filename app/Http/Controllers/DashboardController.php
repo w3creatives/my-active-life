@@ -443,8 +443,6 @@ final class DashboardController extends Controller
             $pointsArray = [];
             $cumulativeMiles = 0;
 
-            // Get all milestones for this event
-            $milestones = $event->milestones()->orderBy('distance')->get();
 
             $pointDates = [];
 
@@ -482,25 +480,26 @@ final class DashboardController extends Controller
                         ->where('distance', '>', $previousCumulativeMiles)
                         ->orderBy('distance', 'DESC')
                         ->first();
+
+                    if($milestone){
+                        $milestoneEarned = [
+                            'id' => $milestone->id,
+                            'name' => $milestone->name,
+                            'distance' => $milestone->distance,
+                            'description' => $milestone->description,
+                            'calendar_logo_url' => $milestone->calendar_logo,
+                            'calendar_team_logo_url' => $milestone->calendar_team_logo,
+                            'bib_image_url' => $milestone->bib_image,
+                            'team_bib_image_url' => $milestone->team_bib_image,
+                            'is_completed' => true,
+                        ];
+                    }
+
                 } elseif ($event->event_type === 'fit_life') {
 
                     $milestoneEarned = $this->fitLife($user, $event, $totalMiles, $point->date);
 
                     $milestone = null;
-                }
-
-                if ($milestone) {
-                    $milestoneEarned = [
-                        'id' => $milestone->id,
-                        'name' => $milestone->name,
-                        'distance' => $milestone->distance,
-                        'description' => $milestone->description,
-                        'calendar_logo_url' => $milestone->calendar_logo,
-                        'calendar_team_logo_url' => $milestone->calendar_team_logo,
-                        'bib_image_url' => $milestone->bib_image,
-                        'team_bib_image_url' => $milestone->team_bib_image,
-                        'is_completed' => true,
-                    ];
                 }
 
                 /*
