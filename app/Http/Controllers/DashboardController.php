@@ -412,7 +412,7 @@ final class DashboardController extends Controller
         $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
 
         // Get user's preferred event or first participating event
-        $eventId = $user->preferred_event_id ?? $user->participations()->first()?->event_id;
+        $eventId = $request->get('event_id', $user->preferred_event_id ?? $user->participations()->first()?->event_id);
         if (! $eventId) {
             return response()->json([
                 'points' => [],
@@ -442,7 +442,6 @@ final class DashboardController extends Controller
             // Calculate cumulative miles and check for milestones
             $pointsArray = [];
             $cumulativeMiles = 0;
-
 
             $pointDates = [];
 
@@ -481,7 +480,7 @@ final class DashboardController extends Controller
                         ->orderBy('distance', 'DESC')
                         ->first();
 
-                    if($milestone){
+                    if ($milestone) {
                         $milestoneEarned = [
                             'id' => $milestone->id,
                             'name' => $milestone->name,
@@ -500,6 +499,26 @@ final class DashboardController extends Controller
                     $milestoneEarned = $this->fitLife($user, $event, $totalMiles, $point->date);
 
                     $milestone = null;
+                } elseif ($event->event_type === 'promotional') {
+                    $userStreak = $user->userStreaks()->where('event_id', $event->id)->where('date', $pointDate)->first();
+                    if ($pointDate === '2025-10-04') {
+
+                        if (! is_null($userStreak) && $userStreak->streak) {
+                            $milestone = $userStreak->streak;
+
+                            $milestoneEarned = [
+                                'id' => $milestone->id,
+                                'name' => null,
+                                'distance' => $milestone->min_distance,
+                                'description' => $milestone->description,
+                                'calendar_logo_url' => $milestone->calendar_logo,
+                                'calendar_team_logo_url' => null,
+                                'bib_image_url' => $milestone->logo,
+                                'team_bib_image_url' => null,
+                                'is_completed' => true,
+                            ];
+                        }
+                    }
                 }
 
                 /*

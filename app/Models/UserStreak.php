@@ -23,6 +23,6 @@ final class UserStreak extends Model
 
     public function streak(): BelongsTo
     {
-        return $this->belongsTo(EventStreak::class);
+        return $this->belongsTo(EventStreak::class, 'event_streak_id', 'id');
     }
 }

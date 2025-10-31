@@ -103,7 +103,7 @@ export default function Dashboard() {
             </h1>
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          { auth.preferred_event.event_type != 'fit_life' && auth.preferred_event.event_type != 'promotional' && <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             { auth.preferred_event.event_type != 'fit_life' && <ProgressCard totalPoints={totalPoints} goal={userGoal} title="Your Progress" />}
           {!auth.preferred_event.name.toLowerCase().includes('amerithon') && auth.preferred_event.event_type != 'fit_life' && (
             <>
@@ -126,7 +126,7 @@ export default function Dashboard() {
                   showTeamView={showTeamView}
                 />
               )}
-              { auth.preferred_event.event_type != 'fit_life' && <MilesToNextBib />}
+              { auth.preferred_event.event_type != 'fit_life' && auth.preferred_event.event_type != 'promotional' && <MilesToNextBib />}
             </>
           )}
           {auth.preferred_event.name.toLowerCase().includes('amerithon') && (
@@ -154,7 +154,7 @@ export default function Dashboard() {
               <MilesToNextBib />
             </>
           )}
-        </div>
+        </div>}
         <Calendar date={date} setDate={setDate} showTeamView={showTeamView} modalities={modalities}/>
       </PageContent>
     </AppLayout>
