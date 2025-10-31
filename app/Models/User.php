@@ -179,7 +179,7 @@ final class User extends Authenticatable
 
     public function userStreaks(): HasMany
     {
-        return $this->hasMany(UserStreak::class);
+        return $this->hasMany(UserStreak::class, 'user_id', 'id');
     }
 
     public function displayedStreaks(): HasMany

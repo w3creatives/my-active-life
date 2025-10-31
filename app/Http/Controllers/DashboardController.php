@@ -521,23 +521,6 @@ final class DashboardController extends Controller
                     }
                 }
 
-                /*
-                foreach ($milestones as $milestone) {
-                    if ($cumulativeMiles >= $milestone->distance && $previousCumulativeMiles < $milestone->distance) {
-                        $milestoneEarned = [
-                            'id' => $milestone->id,
-                            'name' => $milestone->name,
-                            'distance' => $milestone->distance,
-                            'description' => $milestone->description,
-                            'calendar_logo_url' => $milestone->calendar_logo,
-                            'calendar_team_logo_url' => $milestone->calendar_team_logo,
-                            'bib_image_url' => $milestone->bib_image,
-                            'team_bib_image_url' => $milestone->team_bib_image,
-                        ];
-                        break; // Only show the first milestone earned on this date
-                    }
-                }*/
-
                 $pointsArray[] = [
                     'id' => $point->id,
                     'date' => $point->date,
@@ -577,8 +560,8 @@ final class DashboardController extends Controller
             return $pointsArray;
         });
 
-        $totalPointsCacheKey = "user_event_total_points_{$user->id}_{$startDate}_to_{$endDate}_for_{$eventId}";
-        Cache::forget($totalPointsCacheKey);
+//        $totalPointsCacheKey = "user_event_total_points_{$user->id}_{$startDate}_to_{$endDate}_for_{$eventId}";
+//        Cache::forget($totalPointsCacheKey);
 
         // Get total points for the event
         /*$totalPoints = Cache::remember($totalPointsCacheKey, now()->addMinutes(15), function () use ($user, $eventId) {

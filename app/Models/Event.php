@@ -113,7 +113,7 @@ final class Event extends Model
 
     public function streaks(): HasMany
     {
-        return $this->hasMany(EventStreak::class);
+        return $this->hasMany(EventStreak::class, 'event_id', 'id');
     }
 
     public function fitLifeRegistrations(): HasManyThrough
