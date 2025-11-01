@@ -1063,6 +1063,9 @@ final class DashboardController extends Controller
             'team_bib_image_url' => null,
             'is_completed' => $milestone->is_completed,
             'activity' => $activity,
+            'registration' => [
+                'id' => $fitLife->id,
+            ],
         ];
     }
 }

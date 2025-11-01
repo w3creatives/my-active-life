@@ -12,8 +12,6 @@ final class EventMilestones
 {
     private const BASE_IMAGE_PATH = 'images';
 
-    // Existing methods...
-
     /**
      * Get all milestones for an event with images and completion status
      *
