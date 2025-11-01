@@ -224,7 +224,7 @@ export default function Schedule({
                     className="w-full sm:w-auto"
                   >
                     <ArrowLeft className="size-4" />
-                    Back To Quests
+                    Back
                   </Button>
                 </div>
               </form>

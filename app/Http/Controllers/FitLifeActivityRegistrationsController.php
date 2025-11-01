@@ -369,8 +369,9 @@ final class FitLifeActivityRegistrationsController extends Controller
             // Delete the registration
             $deleted = $registration->delete();
 
-            if (!$deleted) {
+            if (! $deleted) {
                 Log::error('FitLifeActivityRegistrationsController@destroy: Failed to delete registration ID: '.$id);
+
                 return back()->with('error', 'Unable to delete your quest. Please try again.');
             }
 
@@ -420,6 +421,21 @@ final class FitLifeActivityRegistrationsController extends Controller
             'registrations' => $registrations,
             'currentEvent' => $currentEvent,
         ]);
+    }
+
+    public function armoryTrophyCase()
+    {
+        return Inertia::render('FitLife/Armory/Index');
+    }
+
+    public function fitLifeJournal()
+    {
+        return Inertia::render('FitLife/Journal/Index');
+    }
+
+    public function stats()
+    {
+        return Inertia::render('FitLife/Stats/Index');
     }
 
     private function htmlToPlainText($str): string
@@ -520,20 +536,5 @@ final class FitLifeActivityRegistrationsController extends Controller
             ->pluck('date')
             ->map(fn ($date) => Carbon::parse($date)->format('Y-m-d'))
             ->toArray();
-    }
-
-    public function armoryTrophyCase()
-    {
-        return Inertia::render('FitLife/Armory/Index');
-    }
-
-    public function fitLifeJournal()
-    {
-        return Inertia::render('FitLife/Journal/Index');
-    }
-
-    public function stats()
-    {
-        return Inertia::render('FitLife/Stats/Index');
     }
 }
