@@ -501,23 +501,20 @@ final class DashboardController extends Controller
                     $milestone = null;
                 } elseif ($event->event_type === 'promotional') {
                     $userStreak = $user->userStreaks()->where('event_id', $event->id)->where('date', $pointDate)->first();
-                    if ($pointDate === '2025-10-04') {
+                    if (! is_null($userStreak) && $userStreak->streak) {
+                        $milestone = $userStreak->streak;
 
-                        if (! is_null($userStreak) && $userStreak->streak) {
-                            $milestone = $userStreak->streak;
-
-                            $milestoneEarned = [
-                                'id' => $milestone->id,
-                                'name' => null,
-                                'distance' => $milestone->min_distance,
-                                'description' => $milestone->description,
-                                'calendar_logo_url' => $milestone->calendar_logo,
-                                'calendar_team_logo_url' => null,
-                                'bib_image_url' => $milestone->logo,
-                                'team_bib_image_url' => null,
-                                'is_completed' => true,
-                            ];
-                        }
+                        $milestoneEarned = [
+                            'id' => $milestone->id,
+                            'name' => $milestone->name,
+                            'distance' => $milestone->days_count,
+                            'description' => $milestone->description,
+                            'calendar_logo_url' => $milestone->calendar_logo,
+                            'calendar_team_logo_url' => null,
+                            'bib_image_url' => $milestone->logo,
+                            'team_bib_image_url' => null,
+                            'is_completed' => true,
+                        ];
                     }
                 }
 
@@ -560,8 +557,8 @@ final class DashboardController extends Controller
             return $pointsArray;
         });
 
-//        $totalPointsCacheKey = "user_event_total_points_{$user->id}_{$startDate}_to_{$endDate}_for_{$eventId}";
-//        Cache::forget($totalPointsCacheKey);
+        //        $totalPointsCacheKey = "user_event_total_points_{$user->id}_{$startDate}_to_{$endDate}_for_{$eventId}";
+        //        Cache::forget($totalPointsCacheKey);
 
         // Get total points for the event
         /*$totalPoints = Cache::remember($totalPointsCacheKey, now()->addMinutes(15), function () use ($user, $eventId) {
@@ -574,6 +571,7 @@ final class DashboardController extends Controller
             'event' => [
                 'id' => $eventId,
                 'name' => $eventName,
+                'event_type' => $event->event_type,
             ],
         ]);
     }

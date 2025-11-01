@@ -381,6 +381,7 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
         isOpen={isBibModalOpen}
         onOpenChange={setIsBibModalOpen}
         showTeamView={showTeamView}
+        event={eventInfo}
       />
     </div>
   );

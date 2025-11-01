@@ -8,6 +8,7 @@ import { Link } from '@inertiajs/react';
 
 interface BibModalProps {
   milestone: Milestone | null;
+  event: any;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   showTeamView?: boolean;
@@ -19,6 +20,7 @@ export default function BibModal({
   isOpen,
   onOpenChange,
   showTeamView = false,
+    event,
   onShare
 }: BibModalProps) {
   if (!milestone) return null;
@@ -66,7 +68,12 @@ export default function BibModal({
             <Trophy className="h-5 w-5 text-amber-500" />
             {milestone.name}
           </DialogTitle>
-          <DialogDescription>{formatDistance(milestone.distance)} mile milestone</DialogDescription>
+
+            {event.event_type == 'promotional'?<DialogDescription>
+               You have completed a {milestone.distance} day{milestone.distance > 1 && 's'} streak!
+          </DialogDescription>:<DialogDescription>
+                {formatDistance(milestone.distance)} mile milestone
+            </DialogDescription>}
         </DialogHeader>
 
         <div className="space-y-4">
@@ -115,7 +122,7 @@ export default function BibModal({
             {/*  </a>*/}
             {/*</Button>*/}
           </div>}
-            { !milestone.activity && <div className="grid grid-cols-2 gap-2">
+            { !milestone.activity && event.event_type != 'promotional' && <div className="grid grid-cols-2 gap-2">
                 <Button
                     variant="outline"
                     size="sm"
@@ -134,7 +141,7 @@ export default function BibModal({
             </div>}
 
             {milestone.is_completed &&  <div className="pt-2 text-center">
-            <p className="text-xs font-medium text-green-600 dark:text-green-400">🎉 Congratulations on earning this milestone!</p>
+            <p className="text-xs font-medium text-green-600 dark:text-green-400">🎉 Congratulations on earning {event.event_type == 'promotional'?'this streak!':'this milestone!'}</p>
           </div>}
         </div>
       </DialogContent>
