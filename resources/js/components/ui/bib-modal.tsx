@@ -111,8 +111,13 @@ export default function BibModal({
           <Separator />
 
           {/* Action Buttons  */}
-            { milestone.activity && <div className="grid grid-cols-2 gap-2">
-                <Link href={route('fit-life-activities.edit', milestone.activity.id)} className="flex items-center"><NotebookPen className="mr-2 h-4 w-4" /> Add Note</Link>
+            { milestone.registration && event.event_type != 'promotional' && <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={route('fit-life-activities.edit', milestone.registration.id)}>
+                    <NotebookPen className="mr-2 h-4 w-4" />
+                    Add Note
+                  </Link>
+                </Button>
 
 
             {/*<Button variant="outline" size="sm" asChild>*/}
@@ -122,7 +127,7 @@ export default function BibModal({
             {/*  </a>*/}
             {/*</Button>*/}
           </div>}
-            { !milestone.activity && event.event_type != 'promotional' && <div className="grid grid-cols-2 gap-2">
+            { !milestone.registration && event.event_type != 'promotional' && <div className="grid grid-cols-2 gap-2">
                 <Button
                     variant="outline"
                     size="sm"

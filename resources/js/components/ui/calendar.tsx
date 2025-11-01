@@ -16,6 +16,14 @@ export interface Milestone {
   calendar_team_logo_url?: string;
   bib_image_url?: string;
   team_bib_image_url?: string;
+  is_completed?: boolean;
+  activity?: {
+    id: number;
+    name: string;
+  };
+  registration?: {
+    id: number;
+  };
 }
 
 export interface UserPoint {
