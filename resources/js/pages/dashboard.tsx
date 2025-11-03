@@ -66,7 +66,7 @@ export default function Dashboard() {
     };
 
     fetchNextMilestone();
-  }, []);
+  }, [auth.preferred_event.name]);
 
   // Listen for global points updates to refresh milestones
   useEffect(() => {
@@ -90,7 +90,7 @@ export default function Dashboard() {
 
     window.addEventListener('points-updated', handler as EventListener);
     return () => window.removeEventListener('points-updated', handler as EventListener);
-  }, []);
+  }, [auth.preferred_event.name]);
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>

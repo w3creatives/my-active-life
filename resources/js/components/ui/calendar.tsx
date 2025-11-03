@@ -6,6 +6,8 @@ import axios from 'axios';
 import { PointsDetailModal } from '@/components/points-detail-modal';
 import { Skeleton } from '@/components/ui/skeleton';
 import BibModal from '@/components/ui/bib-modal';
+import { usePage } from '@inertiajs/react';
+import type { SharedData } from '@/types';
 
 export interface Milestone {
   id: number;
@@ -45,6 +47,7 @@ interface CalendarProps {
 }
 
 export function Calendar({ date, setDate, disableFuture = true, showTeamView = false, modalities = []}: CalendarProps) {
+    const { auth } = usePage<SharedData>().props;
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [userPoints, setUserPoints] = useState<UserPoint[]>([]);
   const [eventInfo, setEventInfo] = useState<{ id: number; name: string } | null>(null);
@@ -206,7 +209,7 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
   // Fetch user points data
   useEffect(() => {
     fetchUserPoints();
-  }, [fetchUserPoints]);
+  }, [fetchUserPoints, auth.preferred_event.name]);
 
   return (
     <div className="w-full rounded-lg border bg-card text-card-foreground shadow-sm">
