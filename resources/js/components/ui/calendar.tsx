@@ -311,10 +311,10 @@ export function Calendar({ date, setDate, disableFuture = true, showTeamView = f
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setSelectedDate(day);
-                                        setIsModalOpen(true);
+                                        setIsModalOpen(!isFutureDate(day));
                                       }}
                                     >
-                                        {showDayPoint(point)}±
+                                        {showDayPoint(point)}{!isFutureDate(day) && '±' }
                                     </div>
                                     {point.milestone && (
                                       <div className="flex justify-center">
