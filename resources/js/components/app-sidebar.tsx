@@ -30,11 +30,6 @@ const mainNavItems: NavItem[] = [
     icon: CalendarDays,
   },
   {
-    title: 'Your Challenges',
-    href: '/preferred-event',
-    icon: Goal,
-  },
-  {
     title: 'Stats',
     href: '/stats',
     icon: ChartSpline,
@@ -58,6 +53,11 @@ const mainNavItems: NavItem[] = [
     title: 'Tutorials',
     href: '/tutorials',
     icon: Handshake,
+  },
+  {
+    title: 'Your Challenges',
+    href: '/preferred-event',
+    icon: Goal,
   },
 ];
 
@@ -132,14 +132,19 @@ const fitLifeNavItems: NavItem[] = [
     href: '/tutorials',
     icon: Handshake,
   },
+  {
+    title: 'Your Challenges',
+    href: '/preferred-event',
+    icon: Goal,
+  },
 ];
 
 // Promotional event nav items
 const promotionalNavItems: NavItem[] = [
   {
-    title: 'Stats',
-    href: '/stats',
-    icon: ChartSpline,
+    title: 'Home',
+    href: '/dashboard',
+    icon: Home,
   },
   {
     title: 'Trophy Case',
@@ -147,19 +152,14 @@ const promotionalNavItems: NavItem[] = [
     icon: Trophy,
   },
   {
-    title: 'Teams',
-    href: '/teams',
-    icon: Users,
-  },
-  {
-    title: 'Follow',
-    href: '/follow',
-    icon: UserPlus,
-  },
-  {
     title: 'Tutorials',
     href: '/tutorials',
     icon: Handshake,
+  },
+  {
+    title: 'Your Challenges',
+    href: '/preferred-event',
+    icon: Goal,
   },
 ];
 

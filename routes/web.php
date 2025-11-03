@@ -253,6 +253,10 @@ Route::middleware(['auth'])->group(function () {
 
     // FitLife Event Web API routes
     Route::get('/web/quests', [FitLifeEventWebApis::class, 'getQuests'])->name('webapi.quests');
+    Route::get('/web/mileage-by-activity-type', [FitLifeEventWebApis::class, 'getMileageByActivityType'])->name('webapi.mileage-by-activity-type');
+    Route::get('/web/heroism-data', [FitLifeEventWebApis::class, 'getHeroismData'])->name('webapi.heroism-data');
+    Route::get('/web/favorite-quests', [FitLifeEventWebApis::class, 'getFavoriteQuests'])->name('webapi.favorite-quests');
+    Route::get('/web/quests-calendar', [FitLifeEventWebApis::class, 'getQuestsCalendar'])->name('webapi.quests-calendar');
     // Route::get('/web/quests/{type}', [FitLifeEventWebApis::class, 'getQuests'])->name('webapi.quests.type');
 
     // settings

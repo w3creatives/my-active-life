@@ -81,95 +81,83 @@ export default function MileageByActivityType({ data = [], totalMiles = 0, class
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Pie Chart */}
-            <div className="h-64">
-              <ChartContainer config={chartConfig}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      dataKey="miles"
-                      stroke="hsl(var(--background))"
-                      strokeWidth={2}
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <ChartTooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length > 0) {
-                          const data = payload[0].payload;
-                          return (
-                            <div className="bg-background rounded-lg border p-3 shadow-lg">
-                              <div className="mb-2 flex items-center gap-2">
-                                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: data.color }} />
-                                <span className="font-medium">{data.name}</span>
-                              </div>
-                              <div className="space-y-1 text-sm">
-                                <div className="flex justify-between gap-4">
-                                  <span>Miles:</span>
-                                  <span className="font-medium">{formatDistance(data.miles)}</span>
+            <div className="flex items-center justify-center">
+              <div className="w-full h-[350px]">
+                <ChartContainer config={chartConfig}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={90}
+                        outerRadius={140}
+                        dataKey="miles"
+                        stroke="hsl(var(--background))"
+                        strokeWidth={2}
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length > 0) {
+                            const data = payload[0].payload;
+                            return (
+                              <div className="bg-background rounded-lg border p-3 shadow-lg">
+                                <div className="mb-2 flex items-center gap-2">
+                                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: data.color }} />
+                                  <span className="font-medium">{data.name}</span>
                                 </div>
-                                <div className="flex justify-between gap-4">
-                                  <span>Percentage:</span>
-                                  <span className="font-medium">{data.percentage.toFixed(1)}%</span>
+                                <div className="space-y-1 text-sm">
+                                  <div className="flex justify-between gap-4">
+                                    <span>Miles:</span>
+                                    <span className="font-medium">{formatDistance(data.miles)}</span>
+                                  </div>
+                                  <div className="flex justify-between gap-4">
+                                    <span>Percentage:</span>
+                                    <span className="font-medium">{data.percentage.toFixed(1)}%</span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
             </div>
 
-            {/* Activity List */}
-            <div className="space-y-3">
-              <h4 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">Activity Breakdown</h4>
-              {chartData.map((item, index) => {
-                const Icon = activityIcons[item.name] || Activity;
-                return (
-                  <div key={index} className="bg-muted/30 flex items-center justify-between rounded-lg border p-3">
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-full p-2 text-white shadow-sm" style={{ backgroundColor: item.color }}>
-                        <Icon className="h-4 w-4" />
+            {/* Activity Breakdown */}
+            <div className="flex flex-col justify-center">
+              <h4 className="text-muted-foreground mb-4 text-sm font-medium tracking-wide uppercase">Activity Breakdown</h4>
+              <div className="space-y-3">
+                {chartData.map((item, index) => {
+                  const Icon = activityIcons[item.name] || Activity;
+                  return (
+                    <div key={index} className="flex items-center justify-between gap-4 rounded-lg border bg-muted/30 p-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex-shrink-0 rounded-full p-2 text-white shadow-sm" style={{ backgroundColor: item.color }}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm">{item.name}</div>
+                          <div className="text-muted-foreground text-xs">{item.percentage.toFixed(1)}% of total</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-medium">{item.name}</div>
-                        <div className="text-muted-foreground text-sm">{item.percentage.toFixed(1)}% of total</div>
+                      <div className="flex-shrink-0 text-right">
+                        <div className="text-foreground text-lg font-bold">{formatDistance(item.miles)}</div>
+                        <div className="text-muted-foreground text-xs">miles</div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-foreground text-lg font-bold">{formatDistance(item.miles)}</div>
-                      <Badge variant="outline" className="text-xs">
-                        miles
-                      </Badge>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Summary */}
-            <div className="bg-primary/5 rounded-lg border p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-muted-foreground text-sm font-medium">Total Distance</div>
-                  <div className="text-primary text-2xl font-bold">{formatDistance(totalMiles)}</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-muted-foreground text-sm font-medium">Activity Types</div>
-                  <div className="text-primary text-2xl font-bold">{chartData.length}</div>
-                </div>
+                  );
+                })}
               </div>
             </div>
           </div>
