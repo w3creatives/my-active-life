@@ -29,14 +29,24 @@ trait UserPointFetcher
      * @param string|null $modality Optional modality filter
      * @return array Array containing points, participation's and milestones
      */
-    public function fetchUserPointsInDateRange(User $user, string $startDate, string $endDate, int $eventId, ?string $modality = null, bool $toArray = false): array
+    public function fetchUserPointsInDateRange(User $user, string $startDate, string $endDate, int $eventId, ?string $modality = null, bool $toArray = false)
     {
         $event = Event::find($eventId);
 
         $points = $this->fetchUserPoints($user, $startDate, $endDate, $eventId, $modality);
-        $participations = $this->fetchUserParticipations($user);
-        $milestones = $event->milestones()->get();
 
+        return $points;
+
+        /**
+         * Deprecated
+         * Remove $milestones as it is getting all data and does not work with all event types
+         * Remove $participations - not required in dashboard
+         */
+
+        //$participations = $this->fetchUserParticipations($user);
+        //$milestones = $event->milestones()->get();
+
+        /*
         if ($toArray) {
             return [
                 'points' => $points->toArray(),
@@ -46,6 +56,7 @@ trait UserPointFetcher
         }
 
         return compact('points', 'participations', 'milestones');
+        */
     }
 
     public function fetchUserEventTotalPoints(User $user, int $eventId): float

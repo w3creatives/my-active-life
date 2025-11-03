@@ -436,8 +436,7 @@ final class DashboardController extends Controller
         Cache::forget($pointsCacheKey);
 
         $pointsWithMilestones = Cache::remember($pointsCacheKey, now()->addMinutes(15), function () use ($user, $startDate, $endDate, $eventId, $event, $modality) {
-            $data = $this->fetchUserPointsInDateRange($user, $startDate, $endDate, $eventId, $modality);
-            $points = $data['points'];
+            $points = $this->fetchUserPointsInDateRange($user, $startDate, $endDate, $eventId, $modality);
 
             // Calculate cumulative miles and check for milestones
             $pointsArray = [];
@@ -600,19 +599,14 @@ final class DashboardController extends Controller
     {
         $user = $request->user();
 
-        // Get user's preferred event or first participating event
-        $eventId = $user->preferred_event_id ?? $user->participations()->first()?->event_id;
-        if (! $eventId) {
-            return response()->json([
-                'next_milestone' => null,
-                'previous_milestone' => null,
-                'current_distance' => 0,
-                'event_name' => null,
-            ]);
+        $event = $user->preferredEvent;
+
+        if (! $event) {
+            $userParticipation = $user->participations()->first();
+            $event = $userParticipation->event ?? null;
         }
 
-        $event = Event::find($eventId);
-        if (! $event) {
+        if (! $event || in_array($event->event_type, ['fit_life', 'promotional'])) {
             return response()->json([
                 'next_milestone' => null,
                 'previous_milestone' => null,
@@ -623,17 +617,17 @@ final class DashboardController extends Controller
 
         // Get user's total distance for this event
         $currentDistance = $user->points()
-            ->where('event_id', $eventId)
+            ->where('event_id', $event->id)
             ->sum('amount');
 
         // Get next milestone
-        $nextMilestone = EventMilestone::where('event_id', $eventId)
+        $nextMilestone = EventMilestone::where('event_id', $event->id)
             ->where('distance', '>', $currentDistance)
             ->orderBy('distance')
             ->first();
 
         // Get previous milestone
-        $previousMilestone = EventMilestone::where('event_id', $eventId)
+        $previousMilestone = EventMilestone::where('event_id', $event->id)
             ->where('distance', '<=', $currentDistance)
             ->orderBy('distance', 'desc')
             ->first();
