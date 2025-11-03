@@ -537,7 +537,7 @@ final class DashboardController extends Controller
 
                     if (! $hasPoint) {
                         $totalMileTillDate = 0;
-                        if (! $modality) {
+                        if ($modality) {
                             $totalMileTillDate = $user->points()
                                 ->where('event_id', $event->id)
                                 ->where('date', $monthDate)
