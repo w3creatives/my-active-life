@@ -16,7 +16,7 @@ export default function DatasourcePoint({ items, title, type, handlePointChange 
           {items.map((item) => (
             <div key={`${type}-${item.modality}`} className="space-y-1">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">{item.modality.charAt(0).toUpperCase() + item.modality.slice(1)}</Label>
+                <Label className="text-sm font-medium capitalize">{item.modality.replace('_', ' ')}</Label>
               </div>
 
               <div className="grid gap-2">
