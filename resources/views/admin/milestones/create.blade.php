@@ -88,6 +88,7 @@
                                     </div>
                                 </div>
                             @else
+                                @php /*
                                 <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                     <label for="logo_bw" class="form-label">BW Bib</label>
                                     <input type="file" id="logo_bw" name="bw_logo" data-preview=".logo_bw-preview"
@@ -104,6 +105,8 @@
                                         <img src="{{ $eventMilestone->bw_calendar_logo??'' }}" class="img-fluid img" style="height: 100px;" onerror="this.src='{{ url('/images/default-placeholder.png') }}'"/>
                                     </div>
                                 </div>
+                             */
+                             @endphp
                             @endif
                               @php
                             /*

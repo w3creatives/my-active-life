@@ -10,9 +10,7 @@
                     @include('admin.milestones.logo-item',['title' => 'Team Bib', 'item' => $item, 'image_url' => $item->team_logo])
 
                     @include('admin.milestones.logo-item',['title' => 'Calendar Team Bib', 'item' => $item, 'image_url' => $item->calendar_team_logo])
-                @else
-                    @include('admin.milestones.logo-item',['title' => 'BW Bib', 'item' => $item, 'image_url' => $item->bw_logo])
-                    @include('admin.milestones.logo-item',['title' => 'BW Calendar Bib', 'item' => $item, 'image_url' => $item->bw_calendar_logo])
+
                 @endif
                 @if(in_array($event->event_type, ['regular1', 'month1']))
                 @include('admin.milestones.logo-item',['title' => 'Bibs Image', 'item' => $item, 'image_url' => $item->bib_image])
