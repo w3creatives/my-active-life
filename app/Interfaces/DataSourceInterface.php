@@ -16,7 +16,7 @@ interface DataSourceInterface
 
     public function activities($responseType = 'data'): Collection;
 
-    public function verifyWebhook(string $code): bool|int;
+    public function verifyWebhook(array|string $code): array|bool|int;
 
     public function setAccessToken(string $accessToken): self;
 

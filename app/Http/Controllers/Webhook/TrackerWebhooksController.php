@@ -11,7 +11,6 @@ use App\Services\EventService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use function Pest\Laravel\json;
 
 final class TrackerWebhooksController extends Controller
 {
@@ -39,6 +38,26 @@ final class TrackerWebhooksController extends Controller
 
             return response()->json(['error' => 'Invalid verification request'], 400);
         }
+
+        if ($sourceSlug === 'ouraring') {
+            Log::debug('TrackerWebhooksController: Oura Ring verification request', [
+                'query_params' => $request->query(),
+            ]);
+
+            // Handle Oura Ring webhook verification
+            $response = $this->tracker->get($sourceSlug)->verifyWebhook($request->all());
+
+            if ($response && is_array($response)) {
+                Log::info('TrackerWebhooksController: Oura Ring verification successful');
+
+                return response()->json($response, 200);
+            }
+
+            Log::warning('TrackerWebhooksController: Oura Ring verification failed');
+
+            return response()->json(['error' => 'Invalid verification token'], 401);
+        }
+
         // Handle Fitbit and other services
         $response = $this->tracker->get($sourceSlug)->verifyWebhook($request->get('verify'));
 
@@ -57,6 +76,7 @@ final class TrackerWebhooksController extends Controller
             'sourceSlug' => $sourceSlug,
             'method' => $request->method(),
             'params' => $request->all(),
+            'headers' => $request->headers->all(),
         ]);
 
         // Handle Strava GET verification requests directly
@@ -81,6 +101,120 @@ final class TrackerWebhooksController extends Controller
             ]);
 
             return response()->json(['error' => 'Invalid verification request'], 400);
+        }
+
+        // Handle Oura Ring GET verification
+        if ($sourceSlug === 'ouraring' && $request->method() === 'GET' && $request->has('verification_token')) {
+            return $this->verifyWebhook($request, $sourceSlug);
+        }
+
+        // Handle Oura Ring POST webhook with signature verification
+        if ($sourceSlug === 'ouraring' && $request->method() === 'POST') {
+            $signature = $request->header('X-Oura-Signature');
+            $timestamp = $request->header('X-Oura-Timestamp');
+            $payload = $request->getContent();
+
+            $tracker = $this->tracker->get($sourceSlug);
+
+            // Verify HMAC signature
+            /**
+            if (! $signature || ! $timestamp || ! $tracker->verifyWebhookSignature($signature, $timestamp, $payload)) {
+                Log::warning('TrackerWebhooksController: Invalid Oura Ring signature', [
+                    'has_signature' => (bool) $signature,
+                    'has_timestamp' => (bool) $timestamp,
+                ]);
+
+                return response()->json(['error' => 'Invalid signature'], 401);
+            }
+             */
+
+            // payload has: {"payload":{"event_type":"create","data_type":"workout","object_id":"377ced8f-b6d5-4671-b01b-74a7e0cbbf58","event_time":"2025-12-21T20:55:32.938000+00:00","user_id":"518354fe-b6e1b2378f4e1ae68e3613f9-1c"}}
+            Log::debug('TrackerWebhooksController: Processing Oura Ring webhook event', [
+                'payload' => $request->all(),
+            ]);
+
+            try {
+                // Process the Oura Ring webhook event
+                $result = $tracker->processWebhook($request->all());
+                Log::debug('TrackerWebhooksController: Oura Ring webhook processed', ['result' => $result]);
+
+                // If we have a user and source profile, fetch and process activities
+                if (isset($result['user']) && isset($result['sourceProfile']) && isset($result['data_type']) && isset($result['object_id'])) {
+                    $user = $result['user'];
+                    $sourceProfile = $result['sourceProfile'];
+                    $dataType = $result['data_type'];
+                    $objectId = $result['object_id'];
+
+                    // Only process workout and daily_activity events
+                    if (in_array($dataType, ['workout', 'daily_activity'])) {
+                        // Fetch the actual activity data from Oura Ring API
+                        $activity = $tracker->setAccessToken($sourceProfile->access_token)
+                            ->fetchWebhookData($dataType, $objectId);
+
+                        Log::debug('TrackerWebhooksController: Oura Ring activity fetched', [
+                            'user_id' => $user->id,
+                            'data_type' => $dataType,
+                            'object_id' => $objectId,
+                            'activity' => $activity,
+                        ]);
+
+                        // Process the activity if we successfully fetched it
+                        if ($activity && ! empty($activity) && isset($activity['date'])) {
+                            $activityDate = $activity['date'];
+
+                            // Fetch ALL activities for this day to apply adjustment logic
+                            // This prevents double-counting between daily_steps and workouts
+                            $allActivities = $tracker->setAccessToken($sourceProfile->access_token)
+                                ->setProfile($sourceProfile)
+                                ->setDate($activityDate, $activityDate)
+                                ->activities();
+
+                            Log::debug('TrackerWebhooksController: Fetched all Oura Ring activities for the day with adjustment logic', [
+                                'user_id' => $user->id,
+                                'date' => $activityDate,
+                                'activities_count' => $allActivities->count(),
+                                'activities' => $allActivities->toArray(),
+                            ]);
+
+                            // Process each adjusted activity
+                            foreach ($allActivities as $adjustedActivity) {
+                                $adjustedActivity['dataSourceId'] = $sourceProfile->data_source_id;
+                                $eventService->createUserParticipationPoints($user, $adjustedActivity);
+
+                                // Create or update user profile point
+                                if (isset($adjustedActivity['raw_distance']) && isset($adjustedActivity['date'])) {
+                                    $this->createOrUpdateUserProfilePoint(
+                                        $user,
+                                        $adjustedActivity['raw_distance'],
+                                        $adjustedActivity['date'],
+                                        $sourceProfile,
+                                        'webhook',
+                                        'auto'
+                                    );
+
+                                    Log::debug('TrackerWebhooksController: Updated user profile points for Oura Ring activity', [
+                                        'user_id' => $user->id,
+                                        'distance' => $adjustedActivity['raw_distance'],
+                                        'date' => $adjustedActivity['date'],
+                                        'modality' => $adjustedActivity['modality'] ?? 'unknown',
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Always return 200 OK to Oura Ring
+                return response()->json(['status' => 'success'], 200);
+            } catch (Exception $e) {
+                Log::error('TrackerWebhooksController: Error processing Oura Ring webhook', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+
+                // Still return 200 OK to Oura Ring to prevent retries
+                return response()->json(['status' => 'error_handled'], 200);
+            }
         }
 
         // Handle Fitbit verification

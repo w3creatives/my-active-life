@@ -75,6 +75,8 @@ Route::group(['prefix' => 'webhook'], function () {
     Route::get('tracker/fitbit', [TrackerWebhooksController::class, 'verifyWebhook']);
     Route::post('tracker/garmin', [TrackerWebhooksController::class, 'webhookAction']);
     Route::post('tracker/strava', [TrackerWebhooksController::class, 'webhookAction']);
+    Route::get('tracker/ouraring', [TrackerWebhooksController::class, 'verifyWebhook']);
+    Route::post('tracker/ouraring', [TrackerWebhooksController::class, 'webhookAction']);
 
 });
 

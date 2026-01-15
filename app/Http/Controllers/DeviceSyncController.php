@@ -143,6 +143,7 @@ final class DeviceSyncController extends Controller
 
             $activities = $this->tracker->get($sourceSlug)
                 ->setSecrets([$userSourceProfile->access_token, $userSourceProfile->access_token_secret])
+                ->setProfile($userSourceProfile)
                 ->setDate($syncStartDate, Carbon::now()->format('Y-m-d'))
                 ->activities();
 
@@ -152,6 +153,26 @@ final class DeviceSyncController extends Controller
                 foreach ($activities as $activity) {
                     $activity['dataSourceId'] = $userSourceProfile->data_source_id;
                     $eventService->createUserParticipationPoints($user, $activity);
+
+                    // Create or update user profile point
+                    if (isset($activity['raw_distance']) && isset($activity['date'])) {
+                        $this->createOrUpdateUserProfilePoint(
+                            $user,
+                            $activity['raw_distance'],
+                            $activity['date'],
+                            $userSourceProfile,
+                            'manual',
+                            'manual'
+                        );
+
+                        Log::debug('DeviceSyncController: Updated user profile points for manual sync', [
+                            'user_id' => $user->id,
+                            'source' => $sourceSlug,
+                            'distance' => $activity['raw_distance'],
+                            'date' => $activity['date'],
+                            'modality' => $activity['modality'] ?? 'unknown',
+                        ]);
+                    }
                 }
             }
         }
@@ -206,6 +227,38 @@ final class DeviceSyncController extends Controller
             ]);
 
             return redirect()->back()->with('error', 'Failed to disconnect: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Create or update user profile point for a given date and data source
+     *
+     * @param  mixed  $user  The user model
+     * @param  float  $distance  The distance in kilometers or steps
+     * @param  string  $date  The activity date
+     * @param  mixed  $sourceProfile  The data source profile
+     * @param  string  $type  The type of sync (webhook, manual, etc.)
+     * @param  string  $actionType  The action type (auto, manual)
+     */
+    private function createOrUpdateUserProfilePoint($user, $distance, $date, $sourceProfile, $type = 'webhook', $actionType = 'auto'): void
+    {
+        $profilePoint = $user->profilePoints()
+            ->where('date', $date)
+            ->where('data_source_id', $sourceProfile->data_source_id)
+            ->first();
+
+        $data = [
+            "{$type}_distance_km" => $distance,
+            "{$type}_distance_mile" => ($distance * 0.621371),
+            'date' => $date,
+            'data_source_id' => $sourceProfile->data_source_id,
+            'action_type' => $actionType,
+        ];
+
+        if ($profilePoint) {
+            $profilePoint->fill($data)->save();
+        } else {
+            $user->profilePoints()->create($data);
         }
     }
 }
