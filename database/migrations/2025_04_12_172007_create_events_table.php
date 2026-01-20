@@ -33,6 +33,8 @@ return new class extends Migration
             $table->string('event_color',50)->default('#02E2B6');
             $table->string('event_group', 100)->nullable();
             $table->integer('calendar_days')->nullable();
+            $table->jsonb('goals');
+            $table->text('future_start_message')->nullable();
             $table->string('event_type')->nullable()->default('regular');
             $table->timestamp('created_at');
             $table->timestamp('updated_at');
