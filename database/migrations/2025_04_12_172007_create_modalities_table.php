@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('modalities', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name', 40);
+            $table->decimal('value', 6, 2)->nullable();
         });
     }
 
