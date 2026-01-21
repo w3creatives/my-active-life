@@ -25,7 +25,7 @@ final class Event extends Model
 
     public function getLogoUrlAttribute(): string|UrlGenerator|null
     {
-        if (! isset($this->attributes['logo']) || !$this->attributes['logo']) {
+        if (! isset($this->attributes['logo']) || ! $this->attributes['logo']) {
             return null;
         }
         if (file_exists(public_path('static/'.$this->attributes['logo']))) {
@@ -131,6 +131,11 @@ final class Event extends Model
         return $this->hasMany(EventParticipation::class, 'event_id', 'id');
     }
 
+    public function clientParticipations(): HasMany
+    {
+        return $this->hasMany(ClientEvent::class, 'event_id', 'id');
+    }
+
     public function tutorials(): HasMany
     {
         return $this->hasMany(EventTutorial::class, 'event_id', 'id');
@@ -156,6 +161,18 @@ final class Event extends Model
         }
 
         return $participation->$field;
+    }
+
+    public function hasClientParticipation($client): bool
+    {
+
+        if (! $client) {
+            return false;
+        }
+
+        $participation = $this->clientParticipations()->where('client_id', $client->id);
+
+        return (bool) $participation->count();
     }
 
     public function getIsFitLifeEventAttribute(): bool

@@ -44,6 +44,24 @@ final class Sidebar extends Component
         return [
             [
                 'icon' => 'tabler-users',
+                'label' => 'Clients',
+                'route_group' => 'clients',
+                'has_children' => true,
+                'children' => [
+                    [
+                        'route' => 'admin.clients',
+                        'label' => 'Clients List',
+                        'route_group' => 'clients',
+                    ],
+                    [
+                        'route' => 'admin.clients.create',
+                        'label' => 'Create New Client',
+                        'route_group' => 'clients',
+                    ],
+                ],
+            ],
+            [
+                'icon' => 'tabler-users',
                 'label' => 'Users',
                 'route_group' => 'users',
                 'has_children' => true,

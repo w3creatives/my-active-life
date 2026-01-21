@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\ActivitiesController;
+use App\Http\Controllers\Admin\ClientsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmailBuildersController;
 use App\Http\Controllers\Admin\EventsController;
@@ -127,4 +128,13 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::post('quest-categories/create', [QuestCategoriesController::class, 'store']);
     Route::get('quest-categories/{id}/edit', [QuestCategoriesController::class, 'create'])->name('admin.quests.categories.edit');
     Route::post('quest-categories/{id}/edit', [QuestCategoriesController::class, 'store']);
+
+    /**
+     * Users Routes
+     */
+    Route::get('/clients', [ClientsController::class, 'index'])->name('admin.clients');
+    Route::get('/clients/create', [ClientsController::class, 'create'])->name('admin.clients.create');
+    Route::post('/clients/create', [ClientsController::class, 'store']);
+    Route::get('/clients/{id}/edit', [ClientsController::class, 'create'])->name('admin.clients.edit');
+    Route::post('/clients/{id}/edit', [ClientsController::class, 'store']);
 });
