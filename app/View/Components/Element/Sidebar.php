@@ -43,7 +43,7 @@ final class Sidebar extends Component
     {
         return [
             [
-                'icon' => 'tabler-users',
+                'icon' => 'tabler-users-group',
                 'label' => 'Clients',
                 'route_group' => 'clients',
                 'has_children' => true,
