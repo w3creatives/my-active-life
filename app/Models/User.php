@@ -197,6 +197,11 @@ final class User extends Authenticatable
         return $this->hasMany(FitLifeActivityRegistration::class, 'user_id', 'id');
     }
 
+    public function clients(): HasMany
+    {
+        return $this->hasMany(ClientUser::class, 'user_id', 'id');
+    }
+
     /**
      * Check if the user is a super admin
      */
@@ -264,5 +269,10 @@ final class User extends Authenticatable
                 'notification.conversation',
                 'notification.sender',
             ]);
+    }
+
+    public function hasClient($client): bool
+    {
+        return $this->clients()->where('client_id', $client->id)->exists();
     }
 }

@@ -12,19 +12,28 @@
                         <input type="password" style="display:none">
                         @csrf
                         <div class="row">
-                            <div class="mb-4 col-xl-6 col-sm-12">
+                            <div class="mb-4 col-xl-4 col-sm-12">
                                 <label for="first_name" class="form-label">First Name</label>
                                 <input type="text" id="first_name" name="first_name"
                                        value="{{ $user->first_name??old('first_name') }}"
                                        class="form-control @error('first_name') parsley-error @enderror"
                                        data-parsley-trigger="change" required>
                             </div>
-                            <div class="mb-4 col-xl-6 col-sm-12">
+                            <div class="mb-4 col-xl-4 col-sm-12">
                                 <label for="last_name" class="form-label">Last Name</label>
                                 <input type="text" id="last_name" name="last_name"
                                        value="{{ $user->last_name??old('last_name') }}"
                                        class="form-control @error('last_name') parsley-error @enderror"
                                        data-parsley-trigger="change" required>
+                            </div>
+                            <div class="mb-4 col-xl-4 col-sm-12">
+                                <label for="client" class="form-label">Assign Client</label>
+                                <select class="form-select select2-multiple" multiple="multiple" name="client[]" id="client"
+                                        aria-label="Select Client" data-parsley-trigger="change" data-placeholder="Select Client">
+                                    @foreach($clients as $client)
+                                        <option value="{{ $client->id }}" {{ $user && $user->hasClient($client)?'selected="selected"':''}}>{{ $client->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                         <div class="row">
@@ -157,6 +166,7 @@
             (function() {
                 'use strict';
                 $('.select2').select2();
+                $('.select2-multiple').select2({multiple: true});
 
                 new PerfectScrollbar('#table-scrollable', {
                     wheelPropagation: false

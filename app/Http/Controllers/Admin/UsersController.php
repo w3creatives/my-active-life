@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Client;
 use App\Models\Event;
 use App\Models\User;
 use App\Utilities\DataTable;
@@ -52,6 +53,8 @@ final class UsersController extends Controller
 
         $events = Event::active()->orderBy('end_date', 'DESC');
 
+        $clients = Client::query()->get();
+
         if ($user) {
             $events->orWhereHas('participations', function ($query) use ($user) {
                 return $query->where('user_id', $user->id);
@@ -61,7 +64,7 @@ final class UsersController extends Controller
 
         // return $events;
 
-        return view('admin.users.create', compact('user', 'events'));
+        return view('admin.users.create', compact('user', 'events', 'clients'));
     }
 
     public function store(Request $request)
@@ -72,6 +75,12 @@ final class UsersController extends Controller
             'first_name' => 'required|max:255',
             'last_name' => 'required|max:255',
             'display_name' => 'required|max:255',
+            'client' => [
+                'required',
+                'array',
+                'min:1',
+                Rule::exists('clients', 'id'),
+            ],
             'email' => [
                 'required',
                 'email',
@@ -106,6 +115,12 @@ final class UsersController extends Controller
         } else {
             $user = User::create($data);
             $flashMessage = 'User details created successfully.!';
+        }
+
+        $user->clients()->delete();
+
+        foreach ($request->input('client') as $clientId) {
+            $user->clients()->create(['client_id' => $clientId]);
         }
 
         $events = Event::whereIn('id', $request->get('event', []))->get();
