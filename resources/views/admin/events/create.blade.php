@@ -28,7 +28,7 @@
                                     <option selected="" value="">Select Event Type</option>
                                     @foreach($eventTypes as $eventTypeKey => $eventType)
                                         <option
-                                            value="{{ $eventTypeKey }}" {{ (($event && $event->event_type == $eventTypeKey) || old('event_type') == $eventTypeKey)?'selected':''}}>{{ $eventType }}</option>
+                                            value="{{ $eventTypeKey }}" {{ (($event && $event->event_type == $eventTypeKey) || old('event_type','regular') == $eventTypeKey)?'selected':''}}>{{ $eventType }}</option>
                                     @endforeach
                                 </select>
                             </div>
