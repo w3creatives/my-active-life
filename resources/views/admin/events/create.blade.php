@@ -19,6 +19,15 @@
                     <form action="" class="needs-validation" method="POST" id="event-form" enctype="multipart/form-data" novalidate>
                         @csrf
                         <div class="row">
+                            <div class="mb-4 col-xl-4 col-sm-12">
+                                <label for="client" class="form-label">Assign Clients</label>
+                                <select class="form-select select2-multiple" multiple="multiple" name="client[]" id="client"
+                                        aria-label="Select Client" data-parsley-trigger="change" data-placeholder="Select Client">
+                                    @foreach($clients as $client)
+                                        <option value="{{ $client->id }}" {{ $event && $event->hasClient($client)?'selected="selected"':''}}>{{ $client->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
 
                                 <label for="event_type" class="form-label">Event Type</label>
@@ -88,11 +97,6 @@
                                        placeholder="500,1000,1500,2000">
                             </div>
 
-                            <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
-                                <label for="bibs_name" class="form-label">Bibs Name</label>
-                                <input type="text" id="bibs_name" name="bibs_name" class="form-control"
-                                       value="{{ $event->bibs_name??old('bibs_name') }}" placeholder="">
-                            </div>
                             <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
                                 <label for="open_status" class="form-label">Event Status</label>
                                 <select class="form-select select2" name="open_status" id="open_status"
@@ -241,6 +245,8 @@
                 });
 
                 $('.select2').select2();
+
+                $('.select2-multiple').select2({multiple: true});
 
                 $('#start_date').flatpickr({
                     monthSelectorType: 'static',

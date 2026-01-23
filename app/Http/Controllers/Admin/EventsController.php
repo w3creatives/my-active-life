@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Client;
 use App\Models\EmailTemplate;
 use App\Models\Event;
 use App\Models\Modality;
@@ -64,7 +65,9 @@ final class EventsController extends Controller
         $eventTypes = collect($eventService->eventTypes())->only('regular'); // ->except('race');
         $modalities = Modality::all();
 
-        return view('admin.events.create', compact('eventTypes', 'modalities', 'event', 'selectedModalities', 'emailTemplates'));
+        $clients = Client::all();
+
+        return view('admin.events.create', compact('eventTypes', 'modalities', 'event', 'selectedModalities', 'emailTemplates', 'clients'));
     }
 
     public function store(Request $request, $eventId = null)
@@ -81,7 +84,7 @@ final class EventsController extends Controller
             'event_color' => 'required',
         ]);
 
-        $data = $request->only('name', 'start_date', 'end_date', 'event_type', 'goals', 'social_hashtags', 'description', 'total_points', 'registration_url', 'bibs_name', 'event_group', 'future_start_message', 'event_color');
+        $data = $request->only('name', 'start_date', 'end_date', 'event_type', 'goals', 'social_hashtags', 'description', 'total_points', 'registration_url', 'event_group', 'future_start_message', 'event_color');
         $data['event_type'] = mb_strtolower($data['event_type']);
         $data['event_color'] = mb_strtoupper($data['event_color']);
         $data['registration_url'] = $data['registration_url'] ?? '#';
@@ -110,6 +113,19 @@ final class EventsController extends Controller
         }
 
         [$routeName, $hasCount] = $event->event_misc_route;
+
+        $clientIds = $request->get('client', []);
+
+        $event->clients()->whereNotIn('client_id', $clientIds)->delete();
+
+        if ($clientIds) {
+
+            foreach ($clientIds as $clientId) {
+                $event->clients()->create([
+                    'client_id' => $clientId,
+                ]);
+            }
+        }
 
         if (! $hasCount) {
             return redirect()->route($routeName, $event->id)->with('alert', ['type' => 'success', 'message' => $message]);

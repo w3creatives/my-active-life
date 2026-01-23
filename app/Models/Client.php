@@ -29,7 +29,7 @@ final class Client extends Model
     public function getLogoUrlAttribute(): string|UrlGenerator|null
     {
         if (! isset($this->attributes['logo']) || ! $this->attributes['logo']) {
-            return null;
+            return url('images/default-placeholder.png');
         }
 
         $fileurl = $this->uploadPath.trim($this->attributes['logo']);

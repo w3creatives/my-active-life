@@ -47,53 +47,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="mb-4">
-                            <h5 class="m-0 me-2">Assign Events</h5>
-                            @if($client)
-                                <div class="form-check mt-4">
-                                    <input class="form-check-input show-assigned" type="checkbox" value="1"
-                                           id="show-assigned" checked>
-                                    <label class="form-check-label" for="show-assigned"> Show Assigned Only </label>
-                                </div>
-                            @endif
-                            <div class="invalid-feedback w-100" id="checkbox-feedback">
-                                Please select at least one option.
-                            </div>
-                            <div class="table-responsive overflow-hidden" style="height: 300px" id="table-scrollable">
-                                <table class="table card-table">
-                                    <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Event Start Date</th>
-                                        <th>Event End Date</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody class="table-border-bottom-0">
-                                    @foreach($events as $event)
-                                        <tr class="{{ $event->hasClientParticipation($client)?'user-assigned':'user-unassigned' }}">
-                                            <td class="w-50 ps-0 pt-0">
-                                                <div class="d-flex justify-content-start align-items-center">
-                                                    <div class="form-check mt-4">
-                                                        <input class="form-check-input" type="checkbox" name="event[]"
-                                                               value="{{ $event->id }}" id="event-item-{{ $event->id }}"
-                                                               {{ $event->hasClientParticipation($client) || in_array($event->id, old('event',[]))?'checked':'' }} data-end-item="subscription-item-{{$event->id}}" {{ $event->isPastEvent()?'disabled':'' }}>
-                                                        <label class="form-check-label"
-                                                               for="event-item-{{ $event->id }}"> {{ $event->name }}</label>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="text-start pe-0 text-nowrap">
-                                                {{ \Carbon\Carbon::parse($event->start_date)->format('m/d/Y') }}
-                                            </td>
-                                            <td class="text-start pe-0 text-nowrap">
-                                                {{ \Carbon\Carbon::parse($event->end_date)->format('m/d/Y') }}
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+
                         <div class="d-flex justify-content-between mt-3">
                             <button type="submit" class="btn btn-primary">{{ $client?'Update':'Add'}} Client</button>
                             <a href="{{ route('admin.clients') }}" class="btn btn-label-primary">Back to List</a>
