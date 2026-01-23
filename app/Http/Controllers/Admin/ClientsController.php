@@ -23,7 +23,7 @@ final class ClientsController extends Controller
                 ->query($request, $query)->response();
 
             $clients = $clients->map(function ($client) {
-                $client->logo = sprintf('<img class="img-thumbnail img-rounded" src="%s"/>', $client->logo_url);
+                $client->logo = sprintf('<img class="img-thumbnail img-rounded " src="%s"/>', $client->logo_url);
                 $client->address = sprintf('<span class="text-break">%s</span>', $client->address);
                 $client->action = [
                     view('admin.clients.actions.client', compact('client'))->render(),

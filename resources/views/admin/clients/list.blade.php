@@ -26,9 +26,9 @@
                    data-ajax-url="{{ route('admin.clients') }}">
                 <thead>
                 <tr>
-                    <th>
+                    <th width="50">
                         ID</th>
-                    <th>
+                    <th width="100">
                         Logo</th>
                     <th>Name</th>
                     <th>Address</th>
