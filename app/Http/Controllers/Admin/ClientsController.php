@@ -23,7 +23,8 @@ final class ClientsController extends Controller
                 ->query($request, $query)->response();
 
             $clients = $clients->map(function ($client) {
-                $client->logo = sprintf('<img class="img-thumbnail img-rounded" src="%s" />', $client->logo_url);
+                $client->logo = sprintf('<img class="img-thumbnail img-rounded" src="%s"/>', $client->logo_url);
+                $client->address = sprintf('<span class="text-break">%s</span>', $client->address);
                 $client->action = [
                     view('admin.clients.actions.client', compact('client'))->render(),
                 ];
@@ -47,9 +48,7 @@ final class ClientsController extends Controller
     {
         $client = Client::find($request->route()->parameter('id'));
 
-        $events = Event::active()->orderBy('end_date', 'DESC')->get();
-
-        return view('admin.clients.create', compact('client', 'events'));
+        return view('admin.clients.create', compact('client'));
     }
 
     public function store(Request $request)
@@ -61,13 +60,11 @@ final class ClientsController extends Controller
             'name' => 'required',
             'address' => 'required',
             'logo' => [
-                Rule::requiredIf(! $client || ! $client->logo_url),
                 'image',
                 'mimes:jpeg,png,jpg,gif,svg',
                 'max:2048',
             ],
             'is_active' => 'required|boolean',
-            'event' => 'required|array',
         ]);
 
         $data = $request->only(['name', 'address', 'is_active']);
@@ -87,16 +84,6 @@ final class ClientsController extends Controller
             $client->fill($data)->save();
         } else {
             $client = Client::create($data);
-        }
-
-        $client->events()->delete();
-
-        $eventIds = $request->get('event', []);
-
-        foreach ($eventIds as $eventId) {
-            $client->events()->create([
-                'event_id' => $eventId,
-            ]);
         }
 
         return redirect()->route('admin.clients')->with('alert', ['type' => 'success', 'message' => $flashMessage]);
