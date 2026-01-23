@@ -141,6 +141,11 @@ final class Event extends Model
         return $this->hasMany(EventTutorial::class, 'event_id', 'id');
     }
 
+    public function clients(): HasMany
+    {
+        return $this->hasMany(ClientEvent::class, 'event_id', 'id');
+    }
+
     public function hasUserParticipation($user, $count = true, $field = null)
     {
 
@@ -178,5 +183,10 @@ final class Event extends Model
     public function getIsFitLifeEventAttribute(): bool
     {
         return $this->attributes['event_type'] === 'fit_life';
+    }
+
+    public function hasClient($client): bool
+    {
+        return $this->clients()->where('client_id', $client->id)->exists();
     }
 }
