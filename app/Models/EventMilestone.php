@@ -61,21 +61,21 @@ final class EventMilestone extends Model
     public function getBibImageAttribute(): ?string
     {
 
-        if (! $this->attributes['bib_image']) {
+        if (! $this->attributes['logo']) {
             return null;
         }
 
-        return asset(Storage::url($this->bibUploadPath.trim($this->attributes['bib_image'])));
+        return asset(Storage::url($this->bibUploadPath.trim($this->attributes['logo'])));
     }
 
     public function getTeamBibImageAttribute(): ?string
     {
 
-        if (! $this->attributes['team_bib_image']) {
+        if (! $this->attributes['team_logo']) {
             return null;
         }
 
-        return asset(Storage::url($this->bibUploadPath.trim($this->attributes['team_bib_image'])));
+        return asset(Storage::url($this->bibUploadPath.trim($this->attributes['team_logo'])));
     }
 
     public function getVideoUrlAttribute()

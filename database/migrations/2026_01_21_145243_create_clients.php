@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,10 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('modalities', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('name', 40);
-            $table->decimal('value', 6, 2)->nullable();
+        Schema::create('clients', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('logo')->nullable();
+            $table->string('address')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
         });
     }
 
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('modalities');
+        Schema::dropIfExists('clients');
     }
 };

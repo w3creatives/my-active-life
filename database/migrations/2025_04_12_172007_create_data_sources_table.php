@@ -20,8 +20,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->boolean('resynchronizable')->nullable()->default(false);
             $table->json('profile')->nullable()->default('{}');
-            $table->timestamp('created_at');
-            $table->timestamp('updated_at');
+            $table->timestamps();
         });
     }
 

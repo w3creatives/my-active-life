@@ -3,76 +3,53 @@
 
         <div class="col-md-12">
             <div class="card">
-                <h5 class="card-header">{{ $user?'Update':'Add'}} User Details</h5>
+                <h5 class="card-header">{{ $client?'Update':'Add'}} Client Details</h5>
                 <div class="card-body">
                     <x-alert.validation :errors=$errors></x-alert.validation>
-                    <form action="" class="needs-validation" method="POST" id="event-form" autocomplete="nope"
+                    <form action="" class="needs-validation" method="POST" id="event-form" autocomplete="nope" enctype="multipart/form-data"
                           novalidate>
-                        <input type="email" style="display:none">
-                        <input type="password" style="display:none">
                         @csrf
                         <div class="row">
-                            <div class="mb-4 col-xl-4 col-sm-12">
-                                <label for="first_name" class="form-label">First Name</label>
-                                <input type="text" id="first_name" name="first_name"
-                                       value="{{ $user->first_name??old('first_name') }}"
-                                       class="form-control @error('first_name') parsley-error @enderror"
+                            <div class="mb-4 col-xl-6 col-sm-12">
+                                <label for="name" class="form-label">Name</label>
+                                <input type="text" id="name" name="name"
+                                       value="{{ $client->name??old('name') }}"
+                                       class="form-control @error('name') parsley-error @enderror"
                                        data-parsley-trigger="change" required>
                             </div>
-                            <div class="mb-4 col-xl-4 col-sm-12">
-                                <label for="last_name" class="form-label">Last Name</label>
-                                <input type="text" id="last_name" name="last_name"
-                                       value="{{ $user->last_name??old('last_name') }}"
-                                       class="form-control @error('last_name') parsley-error @enderror"
-                                       data-parsley-trigger="change" required>
-                            </div>
-                            <div class="mb-4 col-xl-4 col-sm-12">
-                                <label for="client" class="form-label">Assign Client</label>
-                                <select class="form-select select2-multiple" multiple="multiple" name="client[]" id="client"
-                                        aria-label="Select Client" data-parsley-trigger="change" data-placeholder="Select Client">
-                                    @foreach($clients as $client)
-                                        <option value="{{ $client->id }}" {{ $user && $user->hasClient($client)?'selected="selected"':''}}>{{ $client->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row">
                             <div class="mb-4 col-xl-6 col-sm-12">
-                                <label for="display_name" class="form-label">Display Name</label>
-                                <input type="text" name="display_name" id="display_name"
-                                       value="{{ $user->display_name??old('display_name') }}" class="form-control"
-                                       required>
-                            </div>
-                            <div class="mb-4 col-xl-6 col-sm-12">
-                                <label for="email" class="form-label">Email Address</label>
-                                <input type="email" name="email" id="email"
-                                       value="{{ $user->email??old('email') }}" class="form-control" autocomplete="nope"
-                                       required>
+                                <label for="address" class="form-label">Address</label>
+                                <textarea id="address" name="address"
+                                       class="form-control @error('address') parsley-error @enderror"
+                                          data-parsley-trigger="change" required>{{ $client->address??old('address') }}</textarea>
                             </div>
                         </div>
-                        <div class="mb-4">
-                            <div class="form-check form-switch mb-2">
-                                <input class="form-check-input enable-password" type="checkbox"
-                                       data-password-group=".password-group" name="enabled_password" id="add-password"
-                                       value="1" {{ old('enabled_password')?'checked':'' }}>
-                                <label class="form-check-label" for="add-password">Setup Password</label>
+                        <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                            <label for="logo" class="form-label">Logo</label>
+                            <input type="file" id="logo" name="logo" data-preview=".logo-preview"
+                                   class="form-control choose-file">
+
+                        </div>
+                        <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                            <div
+                                class="logo-preview {{ (($client && !$client->logo_url) || !$client)?'d-none':'' }} mt-3">
+                                <img src="{{ $client->logo_url??'' }}" class="img-fluid img"
+                                     style="height: 100px;" onerror="this.src='{{ url('/images/default-placeholder.png') }}'"/>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="mb-4 password-group col-xl-6 col-sm-12">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" name="password" id="password"
-                                       value="{{ old('password') }}" class="form-control">
-                            </div>
-                            <div class="mb-4 password-group col-xl-6 col-sm-12">
-                                <label for="confirm_password" class="form-label">Confirm Password</label>
-                                <input type="password" name="confirm_password" id="confirm_password"
-                                       value="{{ old('confirm_password') }}" class="form-control">
-                            </div>
+                        <div class="mb-4 col-xl-4 col-sm-12 col-md-6">
+                            <label for="is_active" class="form-label">Status</label>
+                            <select class="form-select select2" name="is_active" id="is_active"
+                                    aria-label="Default select example" data-parsley-trigger="change">
+                                @foreach([1 => 'Active', 0 => 'Inactive'] as $statusKey => $status)
+                                    <option
+                                        value="{{ $statusKey }}" {{ (($client && $statusKey == $client->is_active) || old('status', 1) == $statusKey)?'selected':''}}>{{ $status }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="mb-4">
                             <h5 class="m-0 me-2">Assign Events</h5>
-                            @if($user)
+                            @if($client)
                                 <div class="form-check mt-4">
                                     <input class="form-check-input show-assigned" type="checkbox" value="1"
                                            id="show-assigned" checked>
@@ -87,50 +64,29 @@
                                     <thead>
                                     <tr>
                                         <th>Name</th>
-                                        <th>Start Date</th>
-                                        <th>End Date</th>
-                                        <th>Event Start/End Date</th>
+                                        <th>Event Start Date</th>
+                                        <th>Event End Date</th>
                                     </tr>
                                     </thead>
                                     <tbody class="table-border-bottom-0">
                                     @foreach($events as $event)
-                                        @php
-                                            $subscriptionStartDate = $event->hasUserParticipation($user,false, 'subscription_start_date');
-                                            $subscriptionEndDate = $event->hasUserParticipation($user,false, 'subscription_end_date');
-                                        @endphp
-                                        <tr class="{{ $event->hasUserParticipation($user)?'user-assigned':'user-unassigned' }}">
+                                        <tr class="{{ $event->hasClientParticipation($client)?'user-assigned':'user-unassigned' }}">
                                             <td class="w-50 ps-0 pt-0">
                                                 <div class="d-flex justify-content-start align-items-center">
                                                     <div class="form-check mt-4">
                                                         <input class="form-check-input" type="checkbox" name="event[]"
                                                                value="{{ $event->id }}" id="event-item-{{ $event->id }}"
-                                                               {{ $event->hasUserParticipation($user) || in_array($event->id, old('event',[]))?'checked':'' }} data-end-item="subscription-item-{{$event->id}}" {{ $event->isPastEvent()?'disabled':'' }}>
+                                                               {{ $event->hasClientParticipation($client) || in_array($event->id, old('event',[]))?'checked':'' }} data-end-item="subscription-item-{{$event->id}}" {{ $event->isPastEvent()?'disabled':'' }}>
                                                         <label class="form-check-label"
                                                                for="event-item-{{ $event->id }}"> {{ $event->name }}</label>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td class="text-end pe-0 text-nowrap">
-                                                <input type="date" name="start_date[{{$event->id}}]"
-                                                       class="form-control start-date @error('start_date') parsley-error @enderror"
-                                                       data-item="subscription-item-{{$event->id}}"
-                                                       value="{{ old('start_date.'.$event->id,$subscriptionStartDate?$subscriptionStartDate:$event->start_date) }}"
-                                                       {{ $event->isPastEvent()?'disabled':'' }} required
-                                                       data-parsley-trigger="change" placeholder="YYYY-MM-DD">
+                                            <td class="text-start pe-0 text-nowrap">
+                                                {{ \Carbon\Carbon::parse($event->start_date)->format('m/d/Y') }}
                                             </td>
-                                            <td class="text-end pe-0 text-nowrap">
-                                                <input type="date" name="end_date[{{$event->id}}]"
-                                                       data-item="subscription-{{$event->id}}"
-                                                       class="form-control end-date @error('end_date') parsley-error @enderror"
-                                                       {{ $event->isPastEvent()?'disabled':'' }} required
-                                                       data-parsley-trigger="change" placeholder="YYYY-MM-DD"
-                                                       value="{{ old('end_date.'.$event->id,$subscriptionEndDate?$subscriptionEndDate:$event->end_date) }}">
-
-                                            </td>
-
-                                            <td class="text-end pe-0 text-nowrap">
-                                                <h6 class="mb-0   text-{{ $event->isPastEvent()?'danger':'' }}">{{ \Carbon\Carbon::parse($event->start_date)->format('m/d/Y') }}
-                                                    - {{ \Carbon\Carbon::parse($event->end_date)->format('m/d/Y') }}</h6>
+                                            <td class="text-start pe-0 text-nowrap">
+                                                {{ \Carbon\Carbon::parse($event->end_date)->format('m/d/Y') }}
                                             </td>
                                         </tr>
                                     @endforeach
@@ -139,8 +95,8 @@
                             </div>
                         </div>
                         <div class="d-flex justify-content-between mt-3">
-                            <button type="submit" class="btn btn-primary">{{ $user?'Update':'Add'}} User</button>
-                            <a href="{{ route('admin.users') }}" class="btn btn-label-primary">Back to List</a>
+                            <button type="submit" class="btn btn-primary">{{ $client?'Update':'Add'}} Client</button>
+                            <a href="{{ route('admin.clients') }}" class="btn btn-label-primary">Back to List</a>
                         </div>
                     </form>
                 </div>
@@ -165,8 +121,24 @@
         <script type="text/javascript">
             (function() {
                 'use strict';
+
+                function readURL(input) {
+                    if (input.files && input.files[0]) {
+                        console.log(input);
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            const previewEl = $($(input).data('preview'));
+                            previewEl.removeClass('d-none');
+                            previewEl.find('img').attr('src', e.target.result);
+                        };
+                        reader.readAsDataURL(input.files[0]);
+                    }
+                }
+                $('.choose-file').change(function(e) {
+
+                    readURL(this);
+                });
                 $('.select2').select2();
-                $('.select2-multiple').select2({multiple: true});
 
                 new PerfectScrollbar('#table-scrollable', {
                     wheelPropagation: false
@@ -190,16 +162,6 @@
                         static: true
                     });
                 });
-
-                $('.enable-password').change(function() {
-
-                    let passwordFieldGroup = $($(this).data('password-group'));
-                    if ($(this).is(':checked')) {
-                        passwordFieldGroup.removeClass('d-none');
-                    } else {
-                        passwordFieldGroup.addClass('d-none');
-                    }
-                }).trigger('change');
 
                 if ($('.show-assigned').length) {
                     $('.show-assigned').change(function() {

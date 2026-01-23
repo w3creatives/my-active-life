@@ -23,7 +23,7 @@ final class EventsController extends Controller
 
         if ($request->ajax()) {
 
-            $query = Event::allowedTypes()->select(['id', 'name', 'event_type', 'start_date', 'open', 'bibs_name', 'event_group', 'logo', 'end_date', 'logo', 'email_template_id','event_color']);
+            $query = Event::allowedTypes()->select(['id', 'name', 'event_type', 'start_date', 'open', 'bibs_name', 'event_group', 'logo', 'end_date', 'logo', 'email_template_id', 'event_color']);
 
             [$eventCount, $events] = $dataTable->setSearchableColumns(['name', 'event_type'])->query($request, $query)->response();
 
@@ -61,7 +61,7 @@ final class EventsController extends Controller
 
         $selectedModalities = $this->decodeModalities($event->supported_modalities ?? 0);
 
-        $eventTypes = collect($eventService->eventTypes())->except('race');
+        $eventTypes = collect($eventService->eventTypes())->only('regular'); // ->except('race');
         $modalities = Modality::all();
 
         return view('admin.events.create', compact('eventTypes', 'modalities', 'event', 'selectedModalities', 'emailTemplates'));
@@ -74,7 +74,7 @@ final class EventsController extends Controller
             'name' => 'required',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
-            'event_type' => 'required',
+            'event_type' => 'required|in:regular',
             'goals' => 'required',
             'social_hashtags' => 'required',
             'total_points' => 'required',
