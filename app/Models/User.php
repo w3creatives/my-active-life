@@ -275,4 +275,9 @@ final class User extends Authenticatable
     {
         return $this->clients()->where('client_id', $client->id)->exists();
     }
+
+    public function hasPoint($eventId): bool
+    {
+        return $this->points()->where('event_id', $eventId)->exists();
+    }
 }

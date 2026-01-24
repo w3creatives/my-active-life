@@ -23,8 +23,8 @@ final class ClientsController extends Controller
                 ->query($request, $query)->response();
 
             $clients = $clients->map(function ($client) {
-                $client->logo = sprintf('<img class="img-thumbnail img-rounded " src="%s"/>', $client->logo_url);
-                $client->address = sprintf('<span class="text-break">%s</span>', $client->address);
+                $client->logo = sprintf('<div class="avatar avatar-lg me-2"><img class="img-thumbnail rounded-circle" src="%s"/></div>', $client->logo_url);
+                $client->address = sprintf('<span class="white-space-break">%s</span>', $client->address);
                 $client->action = [
                     view('admin.clients.actions.client', compact('client'))->render(),
                 ];
@@ -88,5 +88,12 @@ final class ClientsController extends Controller
 
         return redirect()->route('admin.clients')->with('alert', ['type' => 'success', 'message' => $flashMessage]);
 
+    }
+
+    public function show(Request $request)
+    {
+        $client = Client::findOrFail($request->route()->parameter('id'));
+
+        return view('admin.clients.show', compact('client'));
     }
 }

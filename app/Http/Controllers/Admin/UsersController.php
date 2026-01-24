@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
+use App\Models\ClientEvent;
 use App\Models\Event;
 use App\Models\User;
 use App\Utilities\DataTable;
@@ -95,12 +96,12 @@ final class UsersController extends Controller
                 'required_if_accepted:enabled_password',
                 'same:password',
             ],
-            'event' => [
-                'required',
-                'array',
-                'min:1',
-                Rule::excludeIf($user && $user->participations()->count() > 0),
-            ],
+//            'event' => [
+//                'required',
+//                'array',
+//                'min:1',
+//                Rule::excludeIf($user && $user->participations()->count() > 0),
+//            ],
         ]);
 
         $data = $request->only(['first_name', 'last_name', 'email', 'display_name']);
@@ -202,5 +203,17 @@ final class UsersController extends Controller
         }
 
         return view('admin.users.merge-account');
+    }
+
+    public function clientEvents(Request $request)
+    {
+
+        $user = User::find($request->route()->parameter('userId'));
+
+        $clientEvents = ClientEvent::query()->whereIn('client_id', $request->get('client', []))
+            //->groupBy('event_id')
+            ->get();
+
+        return view('admin.users.elements.client-events', compact('user', 'clientEvents'));
     }
 }

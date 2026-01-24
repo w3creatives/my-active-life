@@ -32,7 +32,7 @@
                         Logo</th>
                     <th>Name</th>
                     <th>Address</th>
-                    <th>Action</th>
+                    <th  width="100">Action</th>
                 </tr>
                 </thead>
             </table>
