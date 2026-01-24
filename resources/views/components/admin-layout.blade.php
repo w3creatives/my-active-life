@@ -48,7 +48,9 @@
 
     <!-- Page CSS -->
     @stack('stylesheets')
-
+    <style type="text/css">
+        .white-space-break{ white-space: break-spaces;}
+    </style>
 </head>
 
 <body>

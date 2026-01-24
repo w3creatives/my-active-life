@@ -38,6 +38,8 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::get('/users/merge-accounts', [UsersController::class, 'mergeAccounts'])->name('admin.users.merge-accounts');
     Route::post('/users/merge-accounts', [UsersController::class, 'mergeAccounts']);
 
+    Route::get('/users/clients/events/{userId?}', [UsersController::class, 'clientEvents'])->name('admin.users.clients.events');
+
     /**
      `  * Events Routes
      */
@@ -137,4 +139,5 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::post('/clients/create', [ClientsController::class, 'store']);
     Route::get('/clients/{id}/edit', [ClientsController::class, 'create'])->name('admin.clients.edit');
     Route::post('/clients/{id}/edit', [ClientsController::class, 'store']);
+    Route::get('/clients/{id}/view', [ClientsController::class, 'show'])->name('admin.clients.view');
 });
