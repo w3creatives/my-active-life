@@ -5,10 +5,12 @@
             <!-- User Card -->
             <div class="card mb-4">
                 <div class="card-body py-0">
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex">
                         <div class="user-avatar-section">
-                            <div class="d-flex align-items-center flex-column">
+                            <div class="d-flex flex-column">
+                                <div style="width: 8rem;">
                                 <img class="img-fluid rounded my-4" src="{{ $client->logo_url }}" alt="User avatar">
+                                </div>
                                 <div class="user-info text-center d-flex justify-content-between align-items-center">
                                     <h5 class="mb-2">{{ $client->name }} </h5>
                                     <a href="{{ route('admin.clients.edit',$client->id) }}" class="btn btn-link me-3">Edit</a>
