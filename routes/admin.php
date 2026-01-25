@@ -11,10 +11,11 @@ use App\Http\Controllers\Admin\EventTutorialsController;
 use App\Http\Controllers\Admin\ImpersonateController;
 use App\Http\Controllers\Admin\MilestonesController;
 use App\Http\Controllers\Admin\QuestCategoriesController;
+use App\Http\Controllers\Admin\QuestGroupsController;
 use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\StreaksController;
+use App\Http\Controllers\Admin\TeamsController;
 use App\Http\Controllers\Admin\UsersController;
-use App\Http\Controllers\Admin\QuestGroupsController;
 use Illuminate\Support\Facades\Route;
 
 Route::impersonate();
@@ -132,7 +133,7 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::post('quest-categories/{id}/edit', [QuestCategoriesController::class, 'store']);
 
     /**
-     * Users Routes
+     * Clients Routes
      */
     Route::get('/clients', [ClientsController::class, 'index'])->name('admin.clients');
     Route::get('/clients/create', [ClientsController::class, 'create'])->name('admin.clients.create');
@@ -143,4 +144,9 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
 
     Route::get('/clients/{id}/events', [ClientsController::class, 'events'])->name('admin.clients.events');
     Route::get('/clients/{id}/users', [ClientsController::class, 'users'])->name('admin.clients.users');
+
+    /**
+     * Teams Routes
+     */
+    Route::get('/teams', [TeamsController::class, 'index'])->name('admin.teams');
 });

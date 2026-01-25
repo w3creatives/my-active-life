@@ -6,6 +6,8 @@ class CustomDataTable {
         $.fn.dataTable.ext.errMode = 'none';
         let elementTable = $(elementId);
 
+        columns = columns || elementTable.data('columns');
+
         let config = {
             searchable: true,
             fixedHeight: true,
