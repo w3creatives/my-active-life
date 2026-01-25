@@ -140,4 +140,7 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'admi
     Route::get('/clients/{id}/edit', [ClientsController::class, 'create'])->name('admin.clients.edit');
     Route::post('/clients/{id}/edit', [ClientsController::class, 'store']);
     Route::get('/clients/{id}/view', [ClientsController::class, 'show'])->name('admin.clients.view');
+
+    Route::get('/clients/{id}/events', [ClientsController::class, 'events'])->name('admin.clients.events');
+    Route::get('/clients/{id}/users', [ClientsController::class, 'users'])->name('admin.clients.users');
 });

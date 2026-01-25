@@ -4,12 +4,13 @@
         <div class="col-xl-12 col-lg-12 col-md-12 order-1 order-md-0">
             <!-- User Card -->
             <div class="card mb-4">
-                <div class="card-body py-0">
+
+                <div class="card-body py-0 ">
                     <div class="d-flex">
                         <div class="user-avatar-section">
                             <div class="d-flex flex-column">
                                 <div style="width: 8rem;">
-                                <img class="img-fluid rounded my-4" src="{{ $client->logo_url }}" alt="User avatar">
+                                    <img class="img-fluid rounded my-4" src="{{ $client->logo_url }}" alt="User avatar">
                                 </div>
                                 <div class="user-info text-center d-flex justify-content-between align-items-center">
                                     <h5 class="mb-2">{{ $client->name }} </h5>
@@ -43,77 +44,61 @@
         </div>
         <!-- User Content -->
         <div class="col-xl-12 col-lg-12 col-md-12 order-0 order-md-1">
-
-            <ul class="nav nav-pills mb-3" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab"
-                            data-bs-target="#navs-pills-events" aria-controls="navs-pills-events" aria-selected="true">
-                        Events
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button type="button" class="nav-link" role="tab" data-bs-toggle="tab"
-                            data-bs-target="#navs-pills-users" aria-controls="navs-pills-users" aria-selected="false"
-                            tabindex="-1">Users
-                    </button>
-                </li>
-            </ul>
-            <div class="tab-content">
-                <div class="tab-pane fade active show" id="navs-pills-events" role="tabpanel">
-                    @if($client->events()->count())
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Start Date</th>
-                                    <th>End Date</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                @foreach($client->events()->get() as $event)
-                                    <tr>
-                                        <td>{{ $event->event->name }}</td>
-                                        <td>{{ $event->event->start_date }}</td>
-                                        <td>{{ $event->event->end_date }}</td>
-                                    </tr>
-                                @endforeach
-
-                                </tbody>
-                            </table>
-                        </div>
-                    @else
-                        <div class="alert alert-warning">No events found</div>
-                    @endif
+            <div class="card mb-4">
+                <div class="card-header  pb-0">
+                    <ul class="nav nav-tabs nav-justified mb-3" role="tablist">
+                        @foreach($tabs as $tab)
+                            <li class="nav-item mr-2" role="presentation">
+                                <button type="button" class="nav-link {{ $activeTab == $tab['name']?'active':'' }}"
+                                        role="tab" data-bs-toggle="tab"
+                                        data-bs-target="#navs-pills-{{$tab['name']}}"
+                                        aria-controls="navs-pills-{{$tab['name']}}"
+                                        aria-selected="true">
+                                    {{$tab['name']}}
+                                </button>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
-                <div class="tab-pane fade" id="navs-pills-users" role="tabpanel">
-                    @if($client->users()->count())
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email Address</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                @foreach($client->users()->get() as $member)
-                                    <tr>
-                                        <td>{{ $member->user->full_name }}</td>
-                                        <td>{{ $member->user->email }}</td>
-                                    </tr>
-                                @endforeach
-
-                                </tbody>
-                            </table>
-                        </div>
-                    @else
-                        <div class="alert alert-warning">No users found</div>
-                    @endif
+                <div class="card-body">
+                    <div class="tab-content">
+                        @foreach($tabs as $tab)
+                            <div class="tab-pane fade {{ $activeTab == $tab['name']?'active show':'' }}"
+                                 id="navs-pills-{{$tab['name']}}" role="tabpanel">
+                                <x-ui.ajax-table id="client-{{$tab['name']}}-list-table"
+                                                 :url="$tab['url']"
+                                                 :columns="$tab['columns']">
+                                </x-ui.ajax-table>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
-
             </div>
+
         </div>
         <!--/ User Content -->
     </div>
+    @push('stylesheets')
+        <link rel="stylesheet"
+              href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}" />
+        <link rel="stylesheet"
+              href="{{ asset('assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}" />
+        <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css') }}" />
+    @endpush
+    @push('scripts')
+        <script
+            src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
+        <script
+            src="{{ asset('js/common/custom.datatable.js?v=1.0.0') }}"></script>
+        <script type="text/javascript">
+            $(function() {
+
+                $('.ajax-table').each(function() {
+                    let tableId = $(this).attr('id');
+                    let columns = $(this).data('columns');
+                    customDatatable.initDatatable(`#${tableId}`, columns);
+                });
+            });
+        </script>
+    @endpush
 </x-admin-layout>
