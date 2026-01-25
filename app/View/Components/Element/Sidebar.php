@@ -88,44 +88,63 @@ final class Sidebar extends Component
                 'icon' => 'tabler-shield',
                 'label' => 'Events',
                 'route_group' => 'events',
+                'has_children' => true,
+                'children' => [
+                    [
+                        'route' => 'admin.events',
+                        'label' => 'Events List',
+                        'route_group' => 'events',
+                    ],
+                    [
+                        'route' => 'admin.events.add',
+                        'label' => 'Create New Event',
+                        'route_group' => 'events',
+                    ],
+                ]
+            ],
+            [
+                'route' => 'admin.teams',
+                'icon' => 'tabler-brand-teams',
+                'label' => 'Teams',
+                'route_group' => 'teams',
                 'has_children' => false,
             ],
-            [
-                'icon' => 'tabler-sitemap',
-                'label' => 'Quests Groups',
-                'route_group' => 'quest-groups',
-                'has_children' => true,
-                'children' => [
-                    [
-                        'route' => 'admin.quests.groups',
-                        'label' => 'Quest Groups List',
-                        'route_group' => 'quest-groups',
-                    ],
-                    [
-                        'route' => 'admin.quests.groups.create',
-                        'label' => 'Create Quest Group',
-                        'route_group' => 'quest-groups',
-                    ],
-                ],
-            ],
-            [
-                'icon' => 'tabler-category-2',
-                'label' => 'Quests Categories',
-                'route_group' => 'quest-categories',
-                'has_children' => true,
-                'children' => [
-                    [
-                        'route' => 'admin.quests.categories',
-                        'label' => 'Quest Categories List',
-                        'route_group' => 'quest-categories',
-                    ],
-                    [
-                        'route' => 'admin.quests.categories.create',
-                        'label' => 'Create Quest Category',
-                        'route_group' => 'quest-categories',
-                    ],
-                ],
-            ],
+//            [
+//                'icon' => 'tabler-sitemap',
+//                'label' => 'Quests Groups',
+//                'route_group' => 'quest-groups',
+//                'has_children' => true,
+//                'children' => [
+//                    [
+//                        'route' => 'admin.quests.groups',
+//                        'label' => 'Quest Groups List',
+//                        'route_group' => 'quest-groups',
+//                    ],
+//                    [
+//                        'route' => 'admin.quests.groups.create',
+//                        'label' => 'Create Quest Group',
+//                        'route_group' => 'quest-groups',
+//                    ],
+//                ],
+//            ],
+//            [
+//                'icon' => 'tabler-category-2',
+//                'label' => 'Quests Categories',
+//                'route_group' => 'quest-categories',
+//                'has_children' => true,
+//                'children' => [
+//                    [
+//                        'route' => 'admin.quests.categories',
+//                        'label' => 'Quest Categories List',
+//                        'route_group' => 'quest-categories',
+//                    ],
+//                    [
+//                        'route' => 'admin.quests.categories.create',
+//                        'label' => 'Create Quest Category',
+//                        'route_group' => 'quest-categories',
+//                    ],
+//                ],
+//            ],
             [
                 'route' => 'admin.email.builders',
                 'icon' => 'tabler-app-window',
