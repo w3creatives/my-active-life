@@ -1,17 +1,32 @@
 class CustomDataTable {
     customTable = null;
-
     initDatatable(elementId, columns, options) {
 
         $.fn.dataTable.ext.errMode = 'none';
         let elementTable = $(elementId);
 
-        columns = columns || elementTable.data('columns');
+        columns = columns || {};
+
+        if(Object.entries(columns).length === 0) {
+            columns = elementTable.data('columns');
+        }
 
         let config = {
             searchable: true,
             fixedHeight: true,
-            ajax: elementTable.attr('data-ajax-url'),
+            ajax: {
+                url:elementTable.attr('data-ajax-url'),
+                type: 'GET',
+                dataType: 'json',
+                async: true,
+                data: function ( d ) {
+                    if(options.params) {
+                        $.each(options.params, function (k, item) {
+                            d[item.name] = item.value;
+                        })
+                    }
+                }
+            },
             processing: true,
             serverSide: true,
             columns: columns,
@@ -63,6 +78,15 @@ class CustomDataTable {
         this.initDatatableStyle();
     }
 
+    formSearch(form){
+        let params = form.serialize().trim();
+        let url = form.attr('action');
+
+        if(params){
+            url = `${url}?${params}`;
+        }
+        this.customTable.ajax.url(url).load();
+    }
     initDatatableStyle() {
         setTimeout(() => {
 

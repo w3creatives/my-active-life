@@ -37,4 +37,19 @@ final class Client extends Model
         return Storage::url($fileurl);
     }
 
+    public static function dropdownSearch($search = null): array
+    {
+        $items = static::query()->select(['id', 'name as text'])
+            ->where(function ($query) use ($search) {
+                if ($search) {
+                    $query->where('name', 'like', "%{$search}%");
+                }
+
+                return $query;
+            })
+            ->paginate();
+
+        return ['results' => $items->items(), 'pagination' => ['more' => (bool) $items->nextPageUrl(), 'current_page' => $items->getPageName()]];
+
+    }
 }

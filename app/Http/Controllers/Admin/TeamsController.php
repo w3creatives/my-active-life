@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Client;
+use App\Models\Event;
 use App\Models\Team;
 use App\Utilities\DataTable;
 use Illuminate\Http\Request;
@@ -16,6 +18,16 @@ final class TeamsController extends Controller
     {
         if ($request->ajax()) {
 
+            $requestMode = $request->get('mode');
+
+            if ($requestMode === 'client') {
+                return Client::dropdownSearch($request->get('term'));
+            }
+
+            if ($requestMode === 'event') {
+                return Event::dropdownSearch($request->get('term'));
+            }
+
             $query = Team::query()
                 ->select([
                     'users.first_name',
@@ -25,7 +37,13 @@ final class TeamsController extends Controller
                     DB::raw('events.name as event_name'),
                 ])
                 ->join('events', 'teams.event_id', '=', 'events.id')
-                ->join('users', 'teams.owner_id', '=', 'users.id');
+                ->join('users', 'teams.owner_id', '=', 'users.id')
+                ->where(function ($query) use ($request) {
+                    if ($request->input('event')) {
+                        $query->whereIn('teams.event_id', $request->input('event'));
+                    }
+                    return $query;
+                });
 
             [$userCount, $items] = $dataTable->setSearchableColumns([
                 'teams.name',
