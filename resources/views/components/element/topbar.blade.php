@@ -64,18 +64,17 @@
                     class="nav-link dropdown-toggle hide-arrow p-0"
                     href="javascript:void(0);"
                     data-bs-toggle="dropdown">
-                    <div class="avatar avatar-online">
-                        <img src="{{ asset('assets/img/avatars/1.png') }}" alt class="rounded-circle" />
-                    </div>
+                        <x-auth.avatar :user="auth()->user()"></x-auth.avatar>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li>
                         <a class="dropdown-item" href="#">
                             <div class="d-flex">
                                 <div class="flex-shrink-0 me-3">
-                                    <div class="avatar avatar-online">
-                                        <img src="{{ asset('assets/img/avatars/1.png') }}" alt class="w-px-40 h-auto rounded-circle" />
-                                    </div>
+
+                                    <x-auth.avatar :user="auth()->user()"
+                                                   classNames="w-px-40 h-auto"></x-auth.avatar>
+
                                 </div>
                                 <div class="flex-grow-1">
                                     <h6 class="mb-0">{{ auth()->user()->display_name }}</h6>
@@ -103,9 +102,9 @@
                     <li>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                        <button type="submit" class="dropdown-item">
-                            <i class="icon-base ti tabler-power icon-md me-3"></i><span>Log Out</span>
-                        </button>
+                            <button type="submit" class="dropdown-item">
+                                <i class="icon-base ti tabler-power icon-md me-3"></i><span>Log Out</span>
+                            </button>
                         </form>
                     </li>
 
